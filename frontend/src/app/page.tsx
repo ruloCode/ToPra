@@ -29,13 +29,11 @@ export default function Home() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Check current auth status
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Session data:', session);
         
         if (session?.user) {
           setUser(session.user);
-          setLoading(true);
           await fetchTasks(session.user.id);
         } else {
           setUser(null);
@@ -43,8 +41,6 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Error initializing app:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -57,13 +53,13 @@ export default function Home() {
         
         if (session?.user) {
           setUser(session.user);
-          setLoading(true);
-          await fetchTasks(session.user.id);
+          if (_event === 'SIGNED_IN') {
+            await fetchTasks(session.user.id);
+          }
         } else {
           setUser(null);
           setTasks([]);
         }
-        setLoading(false);
       }
     );
 
@@ -71,6 +67,7 @@ export default function Home() {
   }, []);
 
   const fetchTasks = async (userId: string) => {
+    setLoading(true);
     try {
       console.log('Fetching tasks for user:', userId);
       
@@ -95,6 +92,8 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching tasks:', error);
       setTasks([]);
+    } finally {
+      setLoading(false);
     }
   };
 
