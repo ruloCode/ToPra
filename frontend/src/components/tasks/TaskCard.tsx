@@ -4,7 +4,14 @@ import { Task, TaskStatus, updateTask, deleteTask } from '@/lib/tasks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState } from 'react';
-import { Circle, CheckCircle2, Calendar, Flag, MoreHorizontal } from 'lucide-react';
+import { Circle, CheckCircle2, Calendar, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TaskCardProps {
   task: Task;
@@ -16,6 +23,7 @@ interface TaskCardProps {
 export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const { toast } = useToast();
 
   const handleStatusChange = async () => {
     setIsLoading(true);
@@ -28,20 +36,34 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
       onUpdate();
     } catch (error) {
       console.error('Error updating task:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la tarea",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
     
     setIsLoading(true);
     try {
       await deleteTask(task.id);
+      toast({
+        title: "Tarea eliminada",
+        description: "La tarea ha sido eliminada correctamente",
+      });
       onDelete();
     } catch (error) {
       console.error('Error deleting task:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la tarea",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -102,12 +124,23 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
               )}
 
               <div className={`transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
-                <button
-                  onClick={() => onEdit(task)}
-                  className="p-1 hover:bg-gray-100 rounded-md"
-                >
-                  <MoreHorizontal className="h-4 w-4 text-text-secondary" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 hover:bg-gray-100 rounded-md">
+                      <MoreHorizontal className="h-4 w-4 text-text-secondary" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end"  className='bg-background'>
+                    <DropdownMenuItem onClick={() => onEdit(task)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      <span>Editar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Eliminar</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

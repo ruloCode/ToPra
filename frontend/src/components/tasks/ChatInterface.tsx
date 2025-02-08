@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Task, createTask, TaskStatus } from '@/lib/tasks';
 import { getChatResponse } from '@/lib/ai';
 import { useAuth } from '@/components/AuthProvider';
+import { MessageCircle } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -12,18 +13,27 @@ interface Message {
 
 interface ChatInterfaceProps {
   onTaskExtracted?: (taskData: Partial<Task>) => void;
+  isActive?: boolean;
 }
 
-export default function ChatInterface({ onTaskExtracted }: ChatInterfaceProps) {
+export default function ChatInterface({ onTaskExtracted, isActive = false }: ChatInterfaceProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-focus input when tab becomes active
+  useEffect(() => {
+    if (isActive && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isActive]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,7 +54,7 @@ export default function ChatInterface({ onTaskExtracted }: ChatInterfaceProps) {
         ai_metadata: {},
       });
       
-      // Notify parent component
+      // Notify parent component without closing the modal
       onTaskExtracted?.(newTask);
       
       // Add confirmation message
@@ -55,6 +65,9 @@ export default function ChatInterface({ onTaskExtracted }: ChatInterfaceProps) {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, confirmationMessage]);
+
+      // Focus back on input after task creation
+      inputRef.current?.focus();
     } catch (error) {
       console.error('Error creating task:', error);
       const errorMessage: Message = {
@@ -121,13 +134,18 @@ export default function ChatInterface({ onTaskExtracted }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex h-[500px] flex-col rounded-lg border bg-white shadow-sm">
+    <div className="flex h-[400px] flex-col rounded-lg border border-border bg-background">
       {/* Chat Header */}
-      <div className="border-b p-4">
-        <h2 className="text-lg font-medium text-gray-900">AI Assistant</h2>
-        <p className="text-sm text-gray-500">
-          Pregúntame sobre la gestión de tus tareas
-        </p>
+      <div className="flex items-center gap-2 border-b border-border p-4">
+        <div className="rounded-full bg-[#edf6ff] p-2">
+          <MessageCircle className="h-5 w-5 text-accent" />
+        </div>
+        <div>
+          <h2 className="text-sm font-medium text-foreground">AI Assistant</h2>
+          <p className="text-xs text-text-secondary">
+            Pregúntame sobre la gestión de tus tareas
+          </p>
+        </div>
       </div>
 
       {/* Messages Container */}
@@ -143,8 +161,8 @@ export default function ChatInterface({ onTaskExtracted }: ChatInterfaceProps) {
               <div
                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
                   message.role === 'user'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
+                    ? 'bg-accent text-white'
+                    : 'bg-muted text-foreground'
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
@@ -159,20 +177,21 @@ export default function ChatInterface({ onTaskExtracted }: ChatInterfaceProps) {
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSubmit} className="border-t p-4">
+      <form onSubmit={handleSubmit} className="border-t border-border p-4">
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Escribe tu mensaje..."
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
-            className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
+            className="inline-flex items-center rounded-md border border-transparent bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:bg-accent/70"
           >
             {isLoading ? (
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />

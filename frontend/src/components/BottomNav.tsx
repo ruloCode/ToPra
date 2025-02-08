@@ -9,11 +9,19 @@ import {
   Settings,
   Plus,
 } from 'lucide-react';
+import { useTaskModal } from '@/contexts/TaskModalContext';
+import { useTasks } from '@/contexts/TaskContext';
 
 export const BottomNav = () => {
   const pathname = usePathname();
+  const { openCreateTaskModal } = useTaskModal();
+  const { refreshTasks } = useTasks();
 
   const isActive = (path: string) => pathname === path;
+
+  const handleAddTask = () => {
+    openCreateTaskModal(refreshTasks);
+  };
 
   const navigation = [
     { name: 'Today', href: '/', icon: Home },
@@ -45,7 +53,11 @@ export const BottomNav = () => {
       </div>
 
       <div className="nav-group-center">
-        <button className="fab">
+        <button 
+          onClick={handleAddTask}
+          className="fab"
+          aria-label="Add new task"
+        >
           <Plus className="h-6 w-6" />
         </button>
       </div>

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Task } from '@/lib/tasks';
-import TaskCard from './TaskCard';
-import CreateTaskForm from './CreateTaskForm';
+import { useEffect, useState } from "react";
+import { Task } from "@/lib/tasks";
+import TaskCard from "./TaskCard";
+import CreateTaskForm from "./CreateTaskForm";
 
 interface TaskListProps {
   tasks: Task[];
@@ -18,10 +18,10 @@ export default function TaskList({
   onUpdate,
   onDelete,
   onEdit,
-  emptyMessage = 'No tasks found'
+  emptyMessage = "No tasks found",
 }: TaskListProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [sortBy, setSortBy] = useState<'priority' | 'dueDate'>('priority');
+  const [sortBy, setSortBy] = useState<"priority" | "dueDate">("priority");
   const [tasks, setTasks] = useState<Task[]>(initialTasks || []);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function TaskList({
   }, [initialTasks]);
 
   const sortedTasks = tasks.sort((a, b) => {
-    if (sortBy === 'priority') {
+    if (sortBy === "priority") {
       return (b.priority || 0) - (a.priority || 0);
     } else {
       if (!a.due_date) return 1;
@@ -50,15 +50,17 @@ export default function TaskList({
   }
 
   return (
-    <div className="w-full max-w-full px-4 sm:px-6 md:px-8">
+    <div className="w-full max-w-full   ">
       <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-sm font-medium text-text-secondary">
-          {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+          {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
         </h2>
         <div className="flex items-center gap-2">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'priority' | 'dueDate')}
+            onChange={(e) =>
+              setSortBy(e.target.value as "priority" | "dueDate")
+            }
             className="w-full sm:w-auto rounded-md border border-border bg-white px-3 py-2 text-sm text-text-secondary"
           >
             <option value="priority">Sort by priority</option>
@@ -96,4 +98,4 @@ export default function TaskList({
       </div>
     </div>
   );
-} 
+}

@@ -1,48 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import Auth from "@/components/Auth";
 import TaskList from "@/components/tasks/TaskList";
 import TaskStats from "@/components/tasks/TaskStats";
-import CreateTaskForm from "@/components/tasks/CreateTaskForm";
-import QuickAddTask from "@/components/tasks/QuickAddTask";
-import ChatInterface from "@/components/tasks/ChatInterface";
-import AITaskAssistant from "@/components/tasks/AITaskAssistant";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Task, getTasks, updateTask } from "@/lib/tasks";
+import { Task } from "@/lib/tasks";
+import { useTaskModal } from "@/contexts/TaskModalContext";
+import { useTasks } from "@/contexts/TaskContext";
 
 export default function TasksPage() {
-  const { user, isLoading } = useAuth();
-  const [showCreateTask, setShowCreateTask] = useState(false);
-  const [refreshTasks, setRefreshTasks] = useState(0);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskData, setNewTaskData] = useState<Partial<Task> | undefined>(
-    undefined
-  );
+  const { user, isLoading: authLoading } = useAuth();
+  const { openCreateTaskModal } = useTaskModal();
+  const { tasks, isLoading: tasksLoading, refreshTasks } = useTasks();
   const today = new Date();
 
   useEffect(() => {
     if (user) {
-      getTasks({ userId: user.id }).then(setTasks);
+      refreshTasks();
     }
   }, [user, refreshTasks]);
 
-  const handleTaskUpdate = () => {
-    setRefreshTasks((prev) => prev + 1);
-  };
-
-  const handlePriorityUpdate = async (taskId: string, priority: number) => {
-    try {
-      await updateTask(taskId, { priority });
-      handleTaskUpdate();
-    } catch (error) {
-      console.error("Error updating task priority:", error);
-    }
-  };
-
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -54,71 +35,55 @@ export default function TasksPage() {
     return <Auth />;
   }
 
+  const handleAddTask = () => {
+    openCreateTaskModal(refreshTasks);
+  };
+
+  const handleEditTask = (task: Task) => {
+    openCreateTaskModal(refreshTasks, task);
+  };
+
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {format(today, "EEEE, d 'de' MMMM", { locale: es })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowCreateTask(true)}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              New Task
-            </button>
-          </div>
+    <main className="main-content min-h-screen bg-[#fafafa] px-4 py-6 md:px-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">All Tasks</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {format(today, "EEEE, d 'de' MMMM", { locale: es })}
+          </p>
         </div>
 
-        <div className="mb-8">
+        <div className="grid gap-6">
+          {/* Quick Stats */}
           <TaskStats tasks={tasks} />
+
+          {/* Tasks Section */}
+          <section>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="section-header">Your Tasks</h2>
+              <button
+                onClick={handleAddTask}
+                className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90"
+              >
+                Add Task
+              </button>
+            </div>
+
+            {tasksLoading ? (
+              <div className="flex h-40 items-center justify-center">
+                <div className="text-text-secondary">Loading tasks...</div>
+              </div>
+            ) : (
+              <TaskList
+                tasks={tasks}
+                onUpdate={refreshTasks}
+                onDelete={refreshTasks}
+                onEdit={handleEditTask}
+                emptyMessage="No tasks yet"
+              />
+            )}
+          </section>
         </div>
-
-        <div className="mb-8">
-          {/* Asistente de IA para gestión de tareas - muestra sugerencias y análisis de prioridad 
-          <AITaskAssistant
-            tasks={tasks}
-            onPriorityUpdate={handlePriorityUpdate}
-          />
-          */}
-        </div>
-
-        <div className="mb-8">
-          <ChatInterface
-            onTaskExtracted={(taskData: Partial<Task>) => {
-              setNewTaskData(taskData);
-              setShowCreateTask(true);
-            }}
-          />
-        </div>
-
-        {showCreateTask ? (
-          <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">
-              {newTaskData ? "Crear Tarea Sugerida" : "Crear Nueva Tarea"}
-            </h2>
-            <CreateTaskForm
-              initialTask={newTaskData}
-              onSuccess={() => {
-                setShowCreateTask(false);
-                setNewTaskData(undefined);
-                handleTaskUpdate();
-              }}
-              onCancel={() => {
-                setShowCreateTask(false);
-                setNewTaskData(undefined);
-              }}
-            />
-          </div>
-        ) : null}
-
-        <TaskList key={refreshTasks} onTasksChange={setTasks} />
-        <QuickAddTask onSuccess={handleTaskUpdate} />
       </div>
     </main>
   );

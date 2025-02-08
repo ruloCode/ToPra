@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { TaskModalProvider } from "@/contexts/TaskModalContext";
+import { TaskProvider } from "@/contexts/TaskContext";
 import { Toaster } from "@/components/ui/toaster";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
@@ -23,18 +24,20 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className={`${inter.className} h-full`}>
         <AuthProvider>
-          <TaskModalProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex-1 overflow-auto">
-                <div className="main-content sidebar-expanded">
-                  {children}
+          <TaskProvider>
+            <TaskModalProvider>
+              <div className="flex min-h-screen">
+                <Sidebar />
+                <div className="flex-1 overflow-auto">
+                  <div className="main-content sidebar-expanded">
+                    {children}
+                  </div>
                 </div>
+                <BottomNav />
               </div>
-              <BottomNav />
-            </div>
-            <Toaster />
-          </TaskModalProvider>
+              <Toaster />
+            </TaskModalProvider>
+          </TaskProvider>
         </AuthProvider>
       </body>
     </html>
