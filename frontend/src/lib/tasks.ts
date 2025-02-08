@@ -116,4 +116,17 @@ export function subscribeToTasks(
       callback
     )
     .subscribe();
+}
+
+// Search tasks by title
+export async function searchTasks(userId: string, searchQuery: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('user_id', userId)
+    .ilike('title', `%${searchQuery}%`)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
 } 

@@ -7,8 +7,17 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '@/components/AuthProvider';
 
+// Extend FocusSession type to include task details
+type FocusSessionWithTask = FocusSession & {
+  task: {
+    id: string;
+    title: string;
+    description: string | null;
+  } | null;
+};
+
 export function FocusHistory() {
-  const [sessions, setSessions] = useState<FocusSession[]>([]);
+  const [sessions, setSessions] = useState<FocusSessionWithTask[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -36,11 +45,16 @@ export function FocusHistory() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="font-medium">
-                  {session.task_id ? 'Tarea asociada' : 'Sesión sin tarea'}
+                  {session.task ? session.task.title : 'Sesión sin tarea'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(session.start_time), 'PPp', { locale: es })}
                 </p>
+                {session.task?.description && (
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {session.task.description}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <p className="font-medium">

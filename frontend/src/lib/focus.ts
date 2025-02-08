@@ -45,7 +45,10 @@ export async function getFocusSessions(filters?: {
 }) {
   let query = supabase
     .from('focus_sessions')
-    .select('*')
+    .select(`
+      *,
+      task:tasks(id, title, description)
+    `)
     .eq('user_id', filters?.userId);
 
   if (filters?.status) {

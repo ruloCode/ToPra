@@ -5,6 +5,7 @@ import { Task } from '@/lib/tasks';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Timer } from './Timer';
+import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';
 import { createFocusSession, updateFocusSession, FocusSessionStatus } from '@/lib/focus';
 
@@ -13,9 +14,10 @@ interface FocusModeProps {
   defaultDuration?: number; // in minutes
 }
 
-export function FocusMode({ task, defaultDuration = 25 }: FocusModeProps) {
+export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusModeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(initialTask || null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -49,7 +51,7 @@ export function FocusMode({ task, defaultDuration = 25 }: FocusModeProps) {
       try {
         const session = await createFocusSession({
           user_id: user.id,
-          task_id: task?.id || null,
+          task_id: selectedTask?.id || null,
           start_time: new Date().toISOString(),
           status: FocusSessionStatus.ACTIVE,
           duration: defaultDuration * 60, // Convert to seconds
@@ -64,7 +66,7 @@ export function FocusMode({ task, defaultDuration = 25 }: FocusModeProps) {
         });
       }
     }
-  }, [user, task, defaultDuration, toast]);
+  }, [user, selectedTask, defaultDuration, toast]);
 
   // Handle timer interruption
   const handleTimerInterrupt = useCallback(async () => {
@@ -123,14 +125,10 @@ export function FocusMode({ task, defaultDuration = 25 }: FocusModeProps) {
   return (
     <div className="w-full max-w-2xl p-8 rounded-lg bg-card text-card-foreground shadow-lg">
       <div className="space-y-6">
-        {task && (
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold">{task.title}</h2>
-            {task.description && (
-              <p className="text-muted-foreground mt-2">{task.description}</p>
-            )}
-          </div>
-        )}
+        <div className="mb-6">
+          <h2 className="text-lg font-medium mb-2">Seleccionar Tarea (opcional)</h2>
+          <TaskSearch onTaskSelect={setSelectedTask} selectedTask={selectedTask} />
+        </div>
         <Timer
           duration={defaultDuration}
           onComplete={handleTimerComplete}
