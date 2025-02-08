@@ -1,33 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import Auth from '@/components/Auth';
-import { supabase } from '@/lib/supabase';
-import TaskList from '@/components/tasks/TaskList';
-import TaskStats from '@/components/tasks/TaskStats';
-import CreateTaskForm from '@/components/tasks/CreateTaskForm';
-import QuickAddTask from '@/components/tasks/QuickAddTask';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Task, getTasks } from '@/lib/tasks';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
-  const [showCreateTask, setShowCreateTask] = useState(false);
-  const [refreshTasks, setRefreshTasks] = useState(0);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const today = new Date();
-
-  useEffect(() => {
-    if (user) {
-      getTasks({ userId: user.id }).then(setTasks);
-    }
-  }, [user, refreshTasks]);
-
-  const handleTaskUpdate = () => {
-    setRefreshTasks(prev => prev + 1);
-  };
 
   if (isLoading) {
     return (
@@ -43,52 +23,59 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {format(today, "EEEE, d 'de' MMMM", { locale: es })}
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {format(today, "EEEE, d 'de' MMMM", { locale: es })}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {/* Welcome Section */}
+          <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-medium text-gray-900">
+              Welcome back, {user.email}
+            </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Here&apos;s an overview of your productivity today.
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowCreateTask(true)}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              New Task
-            </button>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Sign Out
-            </button>
+          {/* Quick Actions */}
+          <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <a
+                href="/tasks"
+                className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                View Tasks
+              </a>
+              <a
+                href="/focus"
+                className="flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                Start Focus Session
+              </a>
+            </div>
+          </div>
+
+          {/* Coming Soon Sections */}
+          <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-medium text-gray-900">AI Assistant</h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Coming soon: Get AI-powered suggestions for task prioritization and management.
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-medium text-gray-900">Analytics</h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Coming soon: View detailed insights about your productivity and focus sessions.
+            </p>
           </div>
         </div>
-
-        <div className="mb-8">
-          <TaskStats tasks={tasks} />
-        </div>
-
-        {showCreateTask ? (
-          <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">
-              Create New Task
-            </h2>
-            <CreateTaskForm
-              onSuccess={() => {
-                setShowCreateTask(false);
-                handleTaskUpdate();
-              }}
-              onCancel={() => setShowCreateTask(false)}
-            />
-          </div>
-        ) : null}
-
-        <TaskList key={refreshTasks} onTasksChange={setTasks} />
-        <QuickAddTask onSuccess={handleTaskUpdate} />
       </div>
     </main>
   );
