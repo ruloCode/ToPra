@@ -58,62 +58,65 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
 
   return (
     <div 
-      className="task-item group"
+      className="task-item group w-full max-w-full overflow-hidden rounded-lg border border-border bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <button
-        onClick={handleStatusChange}
-        disabled={isLoading}
-        className="flex-shrink-0"
-      >
-        {task.status === TaskStatus.COMPLETED ? (
-          <CheckCircle2 className="h-5 w-5 text-accent" />
-        ) : (
-          <Circle className="h-5 w-5 text-text-secondary hover:text-accent" />
-        )}
-      </button>
+      <div className="flex items-center gap-3 w-full">
+        <button
+          onClick={handleStatusChange}
+          disabled={isLoading}
+          className="flex-shrink-0"
+        >
+          {task.status === TaskStatus.COMPLETED ? (
+            <CheckCircle2 className="h-5 w-5 text-accent" />
+          ) : (
+            <Circle className="h-5 w-5 text-text-secondary hover:text-accent" />
+          )}
+        </button>
 
-      <div className="flex flex-1 items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <h3
-            className={`text-sm font-medium truncate ${
-              task.status === TaskStatus.COMPLETED
-                ? 'text-text-secondary line-through'
-                : 'text-foreground'
-            }`}
-          >
-            {task.title}
-          </h3>
+        <div className="flex flex-1 flex-col min-w-0 gap-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3
+              className={`text-sm font-medium break-words ${
+                task.status === TaskStatus.COMPLETED
+                  ? 'text-text-secondary line-through'
+                  : 'text-foreground'
+              }`}
+            >
+              {task.title}
+            </h3>
+            
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {task.due_date && (
+                <div className="flex items-center gap-1 text-xs text-text-secondary whitespace-nowrap">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    {format(parseISO(task.due_date), "d MMM", { locale: es })}
+                  </span>
+                </div>
+              )}
+              
+              {task.priority > 1 && (
+                <Flag className={`h-4 w-4 flex-shrink-0 ${getPriorityColor(task.priority)}`} />
+              )}
+
+              <div className={`transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+                <button
+                  onClick={() => onEdit(task)}
+                  className="p-1 hover:bg-gray-100 rounded-md"
+                >
+                  <MoreHorizontal className="h-4 w-4 text-text-secondary" />
+                </button>
+              </div>
+            </div>
+          </div>
+
           {task.description && (
-            <p className="text-xs text-text-secondary truncate mt-0.5">
+            <p className="text-xs text-text-secondary break-words">
               {task.description}
             </p>
           )}
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {task.due_date && (
-            <div className="flex items-center gap-1 text-xs text-text-secondary">
-              <Calendar className="h-4 w-4" />
-              <span>
-                {format(parseISO(task.due_date), "d MMM", { locale: es })}
-              </span>
-            </div>
-          )}
-          
-          {task.priority > 1 && (
-            <Flag className={`h-4 w-4 ${getPriorityColor(task.priority)}`} />
-          )}
-
-          <div className={`transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
-            <button
-              onClick={() => onEdit(task)}
-              className="p-1 hover:bg-gray-100 rounded-md"
-            >
-              <MoreHorizontal className="h-4 w-4 text-text-secondary" />
-            </button>
-          </div>
         </div>
       </div>
     </div>

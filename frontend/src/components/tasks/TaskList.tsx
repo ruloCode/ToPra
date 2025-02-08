@@ -50,8 +50,8 @@ export default function TaskList({
   }
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
+    <div className="w-full max-w-full px-4 sm:px-6 md:px-8">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-sm font-medium text-text-secondary">
           {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
         </h2>
@@ -59,7 +59,7 @@ export default function TaskList({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'priority' | 'dueDate')}
-            className="rounded-md border border-border bg-white px-2 py-1 text-sm text-text-secondary"
+            className="w-full sm:w-auto rounded-md border border-border bg-white px-3 py-2 text-sm text-text-secondary"
           >
             <option value="priority">Sort by priority</option>
             <option value="dueDate">Sort by due date</option>
@@ -67,9 +67,9 @@ export default function TaskList({
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {editingTask && (
-          <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
+          <div className="mb-8 rounded-lg border bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-medium text-gray-900">
               Edit Task
             </h2>
