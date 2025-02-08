@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PlayIcon, PauseIcon, RefreshCwIcon, SkipForwardIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { MotivationalMessage } from './MotivationalMessage';
 
 export interface TimerProps {
   duration: number; // in minutes
@@ -114,6 +115,7 @@ export function Timer({ duration, onComplete, showControls = true }: TimerProps)
             </Button>
           </div>
         )}
+        <MotivationalMessage isRunning={isRunning} sessionType={sessionType} />
       </div>
     </Card>
   );
