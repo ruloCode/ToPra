@@ -92,7 +92,7 @@ export default function Sidebar() {
 
             <li>
               <button 
-                onClick={openCreateTaskModal}
+                onClick={() => openCreateTaskModal()}
                 className="flex w-full items-center gap-2 rounded-lg bg-accent/10 px-4 py-2 text-accent hover:bg-accent/20"
                 title={!isExpanded ? 'Add Task' : undefined}
               >

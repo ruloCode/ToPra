@@ -18,8 +18,8 @@ export default function TaskStats({ tasks }: TaskStatsProps) {
   ).length;
 
   // Calculate focus time (example calculation - adjust based on your needs)
-  const focusTime = tasks.reduce((total, task) => {
-    return total + (task.estimated_time || 0);
+  const focusTime = tasks.reduce((total) => {
+    return total + 10;
   }, 0);
 
   const formatFocusTime = (minutes: number) => {

@@ -29,13 +29,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
     }
   };
 
-  const handleError = (error: Error) => {
-    toast({
-      title: "Error",
-      description: "No se pudo crear la tarea. Por favor, intenta de nuevo.",
-      variant: "destructive",
-    });
-  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

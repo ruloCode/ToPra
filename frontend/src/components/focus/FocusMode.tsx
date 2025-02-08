@@ -68,7 +68,11 @@ export function FocusMode({ task, defaultDuration = 25 }: FocusModeProps) {
         user_id: user.id,
         task_id: task?.id || null,
         start_time: new Date().toISOString(),
+        end_time: null,
+        duration: null,
         status: FocusSessionStatus.ACTIVE,
+        notes: null,
+        rating: null
       });
 
       setSessionId(session.id);
