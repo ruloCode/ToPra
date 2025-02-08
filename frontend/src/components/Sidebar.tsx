@@ -1,11 +1,11 @@
 'use client';
 
 import { useAuth } from '@/components/AuthProvider';
+import { useTaskModal } from '@/contexts/TaskModalContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
-  Calendar,
   Target,
   ListTodo,
   Settings,
@@ -18,6 +18,7 @@ import { useState } from 'react';
 
 export default function Sidebar() {
   const { user, signOut } = useAuth();
+  const { openCreateTaskModal } = useTaskModal();
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -91,6 +92,7 @@ export default function Sidebar() {
 
             <li>
               <button 
+                onClick={openCreateTaskModal}
                 className="flex w-full items-center gap-2 rounded-lg bg-accent/10 px-4 py-2 text-accent hover:bg-accent/20"
                 title={!isExpanded ? 'Add Task' : undefined}
               >

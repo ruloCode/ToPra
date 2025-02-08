@@ -8,13 +8,13 @@ import { Task, TaskStatus, getTasks } from '@/lib/tasks';
 import { useCallback, useEffect, useState } from 'react';
 import TaskList from '@/components/tasks/TaskList';
 import TaskStats from '@/components/tasks/TaskStats';
-import CreateTaskDialog from '@/components/tasks/CreateTaskDialog';
+import { useTaskModal } from '@/contexts/TaskModalContext';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
+  const { openCreateTaskModal } = useTaskModal();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const today = new Date();
 
   const fetchTasks = useCallback(async () => {
@@ -30,10 +30,16 @@ export default function Home() {
       todayEnd.setHours(23, 59, 59, 999);
 
       const todayTasks = allTasks.filter(task => {
-        if (task.status === TaskStatus.COMPLETED) return false;
         if (!task.due_date) return false;
         const dueDate = new Date(task.due_date);
         return dueDate <= todayEnd;
+      });
+
+      // Sort tasks: pending first, then completed
+      todayTasks.sort((a, b) => {
+        if (a.status === TaskStatus.COMPLETED && b.status !== TaskStatus.COMPLETED) return 1;
+        if (a.status !== TaskStatus.COMPLETED && b.status === TaskStatus.COMPLETED) return -1;
+        return 0;
       });
 
       setTasks(todayTasks);
@@ -60,8 +66,12 @@ export default function Home() {
     return <Auth />;
   }
 
+  const handleAddTask = () => {
+    openCreateTaskModal(fetchTasks);
+  };
+
   const handleEditTask = (task: Task) => {
-    setIsCreateDialogOpen(true);
+    openCreateTaskModal(fetchTasks, task);
   };
 
   return (
@@ -83,7 +93,7 @@ export default function Home() {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="section-header">Tasks for Today</h2>
               <button
-                onClick={() => setIsCreateDialogOpen(true)}
+                onClick={handleAddTask}
                 className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90"
               >
                 Add Task
@@ -106,12 +116,6 @@ export default function Home() {
           </section>
         </div>
       </div>
-
-      <CreateTaskDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSuccess={fetchTasks}
-      />
     </main>
   );
 }

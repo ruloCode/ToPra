@@ -23,7 +23,7 @@ export default function CreateTaskForm({
     title: '',
     description: '',
     priority: '1',
-    due_date: '',
+    due_date: format(new Date(), 'yyyy-MM-dd'),
     tags: '',
   });
 
@@ -33,7 +33,7 @@ export default function CreateTaskForm({
         title: initialTask.title || '',
         description: initialTask.description || '',
         priority: initialTask.priority?.toString() || '2',
-        due_date: initialTask.due_date ? format(parseISO(initialTask.due_date), 'yyyy-MM-dd') : '',
+        due_date: initialTask.due_date ? format(parseISO(initialTask.due_date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         tags: initialTask.tags?.join(', ') || '',
       });
     }
