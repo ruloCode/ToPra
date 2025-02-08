@@ -14,7 +14,7 @@ export interface TimerProps {
 
 export function Timer({ duration, onComplete, showControls = true }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration * 60); // Convert to seconds
-  const [isRunning, setIsRunning] = useState(true);
+  const [isRunning, setIsRunning] = useState(false); // Changed to false so timer starts paused
   const [progress, setProgress] = useState(100);
   const [sessionType, setSessionType] = useState<'focus' | 'break'>('focus');
 
@@ -70,7 +70,7 @@ export function Timer({ duration, onComplete, showControls = true }: TimerProps)
   };
 
   return (
-    <Card className="relative p-6 max-w-sm mx-auto overflow-hidden bg-white dark:bg-slate-800 shadow-lg">
+    <Card className="relative p-6 max-w-sm mx-auto overflow-hidden bg-white  shadow-lg">
       {/* Progress Bar */}
       <div 
         className="absolute top-0 left-0 h-1 bg-primary transition-all duration-1000"
@@ -78,10 +78,10 @@ export function Timer({ duration, onComplete, showControls = true }: TimerProps)
       />
       
       <div className="text-center">
-        <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200 mb-2">
+        <h2 className="text-lg font-medium text-slate-700  mb-2">
           {sessionType === 'focus' ? 'Sesión de Enfoque' : 'Tiempo de Descanso'}
         </h2>
-        <h3 className="text-6xl font-bold mb-8 text-slate-900 dark:text-white tracking-tight">
+        <h3 className="text-6xl font-bold mb-8 text-slate-900  tracking-tight">
           {formatTime(timeLeft)}
         </h3>
         <Progress value={progress} className="h-2 mb-6" />
