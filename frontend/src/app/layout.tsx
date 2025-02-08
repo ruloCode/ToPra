@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
+import { Toaster } from "@/components/ui/toaster";
+import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Productivity Focus App",
-  description: "Focus on one task at a time and boost your productivity",
+  title: "To-Pra",
+  description: "Task management and productivity app",
 };
 
 export default function RootLayout({
@@ -20,12 +22,16 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className={`${inter.className} h-full`}>
         <AuthProvider>
-          <div className="flex h-full">
+          <div className="flex min-h-screen">
             <Sidebar />
             <div className="flex-1 overflow-auto">
-              {children}
+              <div className="main-content sidebar-expanded">
+                {children}
+              </div>
             </div>
+            <BottomNav />
           </div>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

@@ -1,135 +1,99 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Task, getTasks, subscribeToTasks } from '@/lib/tasks';
+import { useEffect, useState } from 'react';
+import { Task } from '@/lib/tasks';
 import TaskCard from './TaskCard';
-import { useAuth } from '@/components/AuthProvider';
 import CreateTaskForm from './CreateTaskForm';
 
 interface TaskListProps {
-  onTasksChange?: (tasks: Task[]) => void;
+  tasks: Task[];
+  onUpdate: () => void;
+  onDelete: () => void;
+  onEdit: (task: Task) => void;
+  emptyMessage?: string;
 }
 
-export default function TaskList({ onTasksChange }: TaskListProps) {
-  const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function TaskList({
+  tasks: initialTasks,
+  onUpdate,
+  onDelete,
+  onEdit,
+  emptyMessage = 'No tasks found'
+}: TaskListProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-
-  const updateTasks = useCallback((newTasks: Task[]) => {
-    setTasks(newTasks);
-    onTasksChange?.(newTasks);
-  }, [onTasksChange]);
-
-  const fetchTasks = async () => {
-    if (!user) return;
-    
-    try {
-      const data = await getTasks({ userId: user.id });
-      updateTasks(data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load tasks');
-      console.error('Error loading tasks:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [sortBy, setSortBy] = useState<'priority' | 'dueDate'>('priority');
+  const [tasks, setTasks] = useState<Task[]>(initialTasks || []);
 
   useEffect(() => {
-    fetchTasks();
+    setTasks(initialTasks || []);
+  }, [initialTasks]);
 
-    // Set up real-time subscription
-    if (user) {
-      const subscription = subscribeToTasks(user.id, (payload) => {
-        const { event: eventType, new: newRecord, old: oldRecord } = payload;
-        
-        setTasks(currentTasks => {
-          let updatedTasks = currentTasks;
-          switch (eventType) {
-            case 'INSERT':
-              updatedTasks = [newRecord, ...currentTasks];
-              break;
-            case 'DELETE':
-              updatedTasks = currentTasks.filter(task => task.id !== oldRecord?.id);
-              break;
-            case 'UPDATE':
-              updatedTasks = currentTasks.map(task => 
-                task.id === newRecord.id ? newRecord : task
-              );
-              break;
-          }
-          updateTasks(updatedTasks);
-          return updatedTasks;
-        });
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
+  const sortedTasks = tasks.sort((a, b) => {
+    if (sortBy === 'priority') {
+      return (b.priority || 0) - (a.priority || 0);
+    } else {
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
     }
-  }, [user, updateTasks]);
+  });
 
-  if (isLoading) {
+  if (!tasks || tasks.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg bg-red-50 p-4 text-red-800">
-        <p>{error}</p>
-        <button
-          onClick={fetchTasks}
-          className="mt-2 text-sm font-medium text-red-600 hover:text-red-500"
-        >
-          Try again
+      <div className="rounded-lg border border-dashed border-text-secondary bg-white p-8 text-center">
+        <p className="text-text-secondary">{emptyMessage}</p>
+        <button className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90">
+          Add Task
         </button>
       </div>
     );
   }
 
-  if (tasks.length === 0) {
-    return (
-      <div className="flex h-40 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-        <p className="text-gray-500">No tasks yet</p>
-        <p className="mt-1 text-sm text-gray-400">
-          Create a new task to get started
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      {editingTask && (
-        <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-medium text-gray-900">
-            Edit Task
-          </h2>
-          <CreateTaskForm
-            initialTask={editingTask}
-            onSuccess={() => {
-              setEditingTask(null);
-            }}
-            onCancel={() => setEditingTask(null)}
-          />
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-medium text-text-secondary">
+          {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+        </h2>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'priority' | 'dueDate')}
+            className="rounded-md border border-border bg-white px-2 py-1 text-sm text-text-secondary"
+          >
+            <option value="priority">Sort by priority</option>
+            <option value="dueDate">Sort by due date</option>
+          </select>
         </div>
-      )}
+      </div>
 
-      {tasks.map((task) => (
-        <TaskCard
-          key={task.id}
-          task={task}
-          onUpdate={fetchTasks}
-          onDelete={fetchTasks}
-          onEdit={setEditingTask}
-        />
-      ))}
+      <div className="space-y-2">
+        {editingTask && (
+          <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-medium text-gray-900">
+              Edit Task
+            </h2>
+            <CreateTaskForm
+              initialTask={editingTask}
+              onSuccess={() => {
+                setEditingTask(null);
+                onUpdate();
+              }}
+              onCancel={() => setEditingTask(null)}
+            />
+          </div>
+        )}
+
+        {sortedTasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            onEdit={onEdit}
+          />
+        ))}
+      </div>
     </div>
   );
 } 

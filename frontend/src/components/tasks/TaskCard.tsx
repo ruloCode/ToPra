@@ -4,6 +4,7 @@ import { Task, TaskStatus, updateTask, deleteTask } from '@/lib/tasks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState } from 'react';
+import { Circle, CheckCircle2, Calendar, Flag, MoreHorizontal } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
@@ -14,6 +15,7 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const handleStatusChange = async () => {
     setIsLoading(true);
@@ -45,112 +47,74 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
     }
   };
 
+  const getPriorityColor = (priority: number) => {
+    switch (priority) {
+      case 4: return 'text-red-600';
+      case 3: return 'text-orange-500';
+      case 2: return 'text-blue-500';
+      default: return 'text-gray-400';
+    }
+  };
+
   return (
-    <div className="group relative flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div 
+      className="task-item group"
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
       <button
         onClick={handleStatusChange}
         disabled={isLoading}
-        className={`h-6 w-6 shrink-0 rounded-full border-2 transition-colors ${
-          task.status === TaskStatus.COMPLETED
-            ? 'border-green-500 bg-green-500'
-            : 'border-gray-300'
-        } ${isLoading ? 'opacity-50' : ''}`}
+        className="flex-shrink-0"
       >
-        {task.status === TaskStatus.COMPLETED && (
-          <svg
-            className="h-full w-full text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+        {task.status === TaskStatus.COMPLETED ? (
+          <CheckCircle2 className="h-5 w-5 text-accent" />
+        ) : (
+          <Circle className="h-5 w-5 text-text-secondary hover:text-accent" />
         )}
       </button>
 
-      <div className="flex-1 space-y-1">
-        <h3
-          className={`font-medium ${
-            task.status === TaskStatus.COMPLETED
-              ? 'text-gray-500 line-through'
-              : 'text-gray-900'
-          }`}
-        >
-          {task.title}
-        </h3>
-        {task.description && (
-          <p className="text-sm text-gray-500">{task.description}</p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          {task.tags?.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+      <div className="flex flex-1 items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <h3
+            className={`text-sm font-medium truncate ${
+              task.status === TaskStatus.COMPLETED
+                ? 'text-text-secondary line-through'
+                : 'text-foreground'
+            }`}
+          >
+            {task.title}
+          </h3>
+          {task.description && (
+            <p className="text-xs text-text-secondary truncate mt-0.5">
+              {task.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {task.due_date && (
+            <div className="flex items-center gap-1 text-xs text-text-secondary">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {format(parseISO(task.due_date), "d MMM", { locale: es })}
+              </span>
+            </div>
+          )}
+          
+          {task.priority > 1 && (
+            <Flag className={`h-4 w-4 ${getPriorityColor(task.priority)}`} />
+          )}
+
+          <div className={`transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+            <button
+              onClick={() => onEdit(task)}
+              className="p-1 hover:bg-gray-100 rounded-md"
             >
-              {tag}
-            </span>
-          ))}
+              <MoreHorizontal className="h-4 w-4 text-text-secondary" />
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {task.due_date && (
-          <span className="text-sm text-gray-500">
-            {format(
-              parseISO(task.due_date),
-              "d 'de' MMM",
-              { locale: es }
-            )}
-          </span>
-        )}
-        <div className="flex items-center gap-1">
-          {Array.from({ length: task.priority }).map((_, i) => (
-            <span
-              key={i}
-              className="h-2 w-2 rounded-full bg-yellow-400"
-              title={`Priority ${task.priority}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="absolute -right-2 -top-2 hidden space-x-2 group-hover:flex">
-        <button
-          onClick={() => onEdit(task)}
-          disabled={isLoading}
-          className="rounded-full bg-blue-500 p-1 text-white opacity-0 transition-opacity hover:bg-blue-600 group-hover:opacity-100"
-          title="Edit task"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
-          </svg>
-        </button>
-
-        <button
-          onClick={handleDelete}
-          disabled={isLoading}
-          className="rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
-          title="Delete task"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-        </button>
       </div>
     </div>
   );

@@ -80,10 +80,12 @@ export default function TasksPage() {
         </div>
 
         <div className="mb-8">
+          {/* Asistente de IA para gestión de tareas - muestra sugerencias y análisis de prioridad 
           <AITaskAssistant
             tasks={tasks}
             onPriorityUpdate={handlePriorityUpdate}
           />
+          */}
         </div>
 
         <div className="mb-8">

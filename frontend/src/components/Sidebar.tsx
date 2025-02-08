@@ -1,109 +1,133 @@
 'use client';
 
+import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
-
-const navigation = [
-  {
-    name: 'Dashboard',
-    href: '/',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: 'Tasks',
-    href: '/tasks',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: 'Focus',
-    href: '/focus',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-  },
- 
-];
+import {
+  Home,
+  Calendar,
+  Target,
+  ListTodo,
+  Settings,
+  LogOut,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { useState } from 'react';
 
 export default function Sidebar() {
+  const { user, signOut } = useAuth();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const [isExpanded, setIsExpanded] = useState(true);
 
   if (!user) return null;
 
+  const isActive = (path: string) => pathname === path;
+
+  const navigation = [
+    { name: 'Today', href: '/', icon: Home },
+    { name: 'Tasks', href: '/tasks', icon: ListTodo },
+    { name: 'Focus', href: '/focus', icon: Target },
+  
+  ];
+
+  const secondaryNavigation = [
+    { name: 'Settings', href: '/settings', icon: Settings },
+  ];
+
+  const toggleSidebar = () => {
+    setIsExpanded(!isExpanded);
+    // Update main content margin
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.classList.toggle('sidebar-expanded');
+      mainContent.classList.toggle('sidebar-collapsed');
+    }
+  };
+
   return (
-    <div className="flex h-full w-64 flex-col bg-white">
-      <div className="flex h-16 flex-shrink-0 items-center border-b border-gray-200 px-4">
-        <h1 className="text-lg font-semibold text-gray-900">Productivity Focus</h1>
-      </div>
-      <div className="flex flex-1 flex-col overflow-y-auto">
-        <nav className="flex-1 space-y-1 px-2 py-4">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
-                  isActive
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <span
-                  className={`mr-3 ${
-                    isActive ? 'text-gray-500' : 'text-gray-400 group-hover:text-gray-500'
-                  }`}
-                >
-                  {item.icon}
-                </span>
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
-          <div className="group block w-full flex-shrink-0">
-            <div className="flex items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-700">{user.email}</p>
-              </div>
-              <button
-                onClick={() => supabase.auth.signOut()}
-                className="ml-auto text-sm text-gray-500 hover:text-gray-700"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
+    <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
+      <button 
+        onClick={toggleSidebar}
+        className="sidebar-toggle"
+        aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+      >
+        {isExpanded ? (
+          <ChevronLeft className="h-4 w-4" />
+        ) : (
+          <ChevronRight className="h-4 w-4" />
+        )}
+      </button>
+
+      <div className="flex h-full flex-col gap-y-5 overflow-y-auto px-4">
+        <div className="flex h-16 shrink-0 items-center">
+          <h1 className="text-xl font-bold text-accent">
+            {isExpanded ? 'To-Pra' : 'TP'}
+          </h1>
         </div>
+        
+        <nav className="flex flex-1 flex-col">
+          <ul role="list" className="flex flex-1 flex-col gap-y-7">
+            <li>
+              <ul role="list" className="-mx-2 space-y-1">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
+                        title={!isExpanded ? item.name : undefined}
+                      >
+                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <span className="nav-text">{item.name}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </li>
+
+            <li>
+              <button 
+                className="flex w-full items-center gap-2 rounded-lg bg-accent/10 px-4 py-2 text-accent hover:bg-accent/20"
+                title={!isExpanded ? 'Add Task' : undefined}
+              >
+                <Plus className="h-5 w-5 flex-shrink-0" />
+                <span className="nav-text">Add Task</span>
+              </button>
+            </li>
+
+            <li className="mt-auto">
+              <div className="space-y-1">
+                {secondaryNavigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
+                      title={!isExpanded ? item.name : undefined}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="nav-text">{item.name}</span>
+                    </Link>
+                  );
+                })}
+                <button
+                  onClick={() => signOut()}
+                  className="nav-link w-full text-left hover:bg-red-50 hover:text-red-600"
+                  title={!isExpanded ? 'Log out' : undefined}
+                >
+                  <LogOut className="h-5 w-5 flex-shrink-0" />
+                  <span className="nav-text">Log out</span>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </nav>
       </div>
-    </div>
+    </aside>
   );
 } 

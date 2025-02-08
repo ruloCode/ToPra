@@ -4,18 +4,123 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #202020;
+  --accent: #db4c3f;
+  --text-secondary: #808080;
+  --border: #e6e6e6;
+  --sidebar-width: 256px;
+  --sidebar-width-collapsed: 72px;
+  --bottom-nav-height: 4rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-[#fafafa] text-foreground antialiased;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 grid h-[var(--bottom-nav-height)] grid-cols-[1fr,auto,1fr] items-center border-t bg-white px-2 md:hidden;
+  }
+
+  .nav-group {
+    @apply flex items-center justify-around;
+  }
+
+  .nav-group-center {
+    @apply relative flex h-full items-center justify-center px-4;
+  }
+
+  .bottom-nav .nav-link {
+    @apply flex flex-1 flex-col items-center justify-center gap-0.5 px-2 py-1 text-text-secondary;
+  }
+
+  .fab {
+    @apply absolute -top-5 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-lg transition-transform hover:scale-105;
+  }
+
+  .task-item {
+    @apply flex items-center gap-3 rounded-lg border border-border bg-white p-4 transition-all hover:shadow-sm;
+  }
+
+  .checkbox {
+    @apply h-5 w-5 rounded-full border-2 border-text-secondary transition-colors hover:border-accent;
+  }
+
+  .checkbox.checked {
+    @apply border-accent bg-accent;
+  }
+
+  .date-header {
+    @apply mb-6 text-2xl font-bold;
+  }
+
+  .section-header {
+    @apply mb-4 text-xl font-bold text-foreground;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2 rounded-lg px-4 py-2 text-text-secondary transition-colors hover:bg-gray-100;
+  }
+
+  .nav-link.active {
+    @apply bg-[#fff3f2] text-accent;
+  }
+
+  /* Sidebar Styles */
+  .sidebar {
+    @apply fixed left-0 top-0 hidden h-full border-r border-border bg-white transition-all duration-300 ease-in-out md:flex;
+  }
+
+  .sidebar.expanded {
+    @apply w-[var(--sidebar-width)];
+  }
+
+  .sidebar.collapsed {
+    @apply w-[var(--sidebar-width-collapsed)];
+  }
+
+  .sidebar-toggle {
+    @apply absolute -right-3 top-4 hidden h-6 w-6 items-center justify-center rounded-full border bg-white text-text-secondary shadow-sm hover:bg-gray-50 md:flex;
+  }
+
+  .nav-text {
+    @apply transition-opacity duration-200;
+  }
+
+  .sidebar.collapsed .nav-text {
+    @apply opacity-0;
+  }
+
+  .sidebar.expanded .nav-text {
+    @apply opacity-100;
+  }
 }
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .main-content {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .main-content.sidebar-expanded {
+    @apply ml-[var(--sidebar-width)];
+  }
+
+  .main-content.sidebar-collapsed {
+    @apply ml-[var(--sidebar-width-collapsed)];
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 767px) {
+  .main-content {
+    @apply pb-[var(--bottom-nav-height)];  /* Space for bottom nav */
+  }
+
+  .bottom-nav .nav-link.active {
+    @apply bg-transparent;
+  }
+}
+

@@ -1,102 +1,68 @@
 'use client';
 
 import { Task, TaskStatus } from '@/lib/tasks';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Calendar, CheckCircle2, Target } from 'lucide-react';
 
 interface TaskStatsProps {
   tasks: Task[];
 }
 
 export default function TaskStats({ tasks }: TaskStatsProps) {
+  const completedTasks = tasks.filter(
+    (task) => task.status === TaskStatus.COMPLETED
+  ).length;
+
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => task.status === TaskStatus.COMPLETED).length;
-  const pendingTasks = tasks.filter(task => task.status === TaskStatus.PENDING).length;
-  const inProgressTasks = tasks.filter(task => task.status === TaskStatus.IN_PROGRESS).length;
-  
-  const priorityDistribution = {
-    high: tasks.filter(task => task.priority === 3).length,
-    medium: tasks.filter(task => task.priority === 2).length,
-    low: tasks.filter(task => task.priority === 1).length,
+  const upcomingTasks = tasks.filter(
+    (task) => task.status === TaskStatus.PENDING && task.due_date
+  ).length;
+
+  // Calculate focus time (example calculation - adjust based on your needs)
+  const focusTime = tasks.reduce((total, task) => {
+    return total + (task.estimated_time || 0);
+  }, 0);
+
+  const formatFocusTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours === 0) return `${mins}m`;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
   };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueTodayTasks = tasks.filter(task => {
-    if (!task.due_date) return false;
-    const dueDate = new Date(task.due_date);
-    dueDate.setHours(0, 0, 0, 0);
-    return dueDate.getTime() === today.getTime();
-  }).length;
-
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {/* Total Tasks */}
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-500">Total Tasks</h3>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{totalTasks}</p>
-        <div className="mt-2 flex items-center text-sm text-gray-500">
-          <span className="mr-1.5 h-2.5 w-2.5 rounded-full bg-gray-400"></span>
-          {completedTasks} completed
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
+        <div className="rounded-full bg-[#fff3f2] p-2">
+          <CheckCircle2 className="h-5 w-5 text-accent" />
+        </div>
+        <div>
+          <p className="text-sm text-text-secondary">Completed</p>
+          <p className="text-lg font-semibold">
+            {completedTasks}/{totalTasks}
+          </p>
         </div>
       </div>
 
-      {/* Due Today */}
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-500">Due Today</h3>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{dueTodayTasks}</p>
-        <div className="mt-2 text-sm text-gray-500">
-          {format(today, "EEEE, d 'de' MMMM", { locale: es })}
+      <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
+        <div className="rounded-full bg-[#edf6ff] p-2">
+          <Target className="h-5 w-5 text-blue-500" />
+        </div>
+        <div>
+          <p className="text-sm text-text-secondary">Focus Time</p>
+          <p className="text-lg font-semibold">{formatFocusTime(focusTime)}</p>
         </div>
       </div>
 
-      {/* Task Status */}
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-500">Task Status</h3>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{pendingTasks}</p>
-        <div className="mt-2 space-y-1">
-          <div className="flex items-center text-sm text-gray-500">
-            <span className="mr-1.5 h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
-            {pendingTasks} pending
-          </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <span className="mr-1.5 h-2.5 w-2.5 rounded-full bg-blue-400"></span>
-            {inProgressTasks} in progress
-          </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <span className="mr-1.5 h-2.5 w-2.5 rounded-full bg-green-400"></span>
-            {completedTasks} completed
-          </div>
+      <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
+        <div className="rounded-full bg-[#fff8e7] p-2">
+          <Calendar className="h-5 w-5 text-yellow-500" />
         </div>
-      </div>
-
-      {/* Priority Distribution */}
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-500">Priority Distribution</h3>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{priorityDistribution.high}</p>
-        <div className="mt-2 space-y-1">
-          <div className="flex items-center text-sm text-gray-500">
-            <div className="mr-1.5 flex">
-              {[1,2,3].map(dot => (
-                <span key={dot} className="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
-              ))}
-            </div>
-            {priorityDistribution.high} high priority
-          </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <div className="mr-1.5 flex">
-              {[1,2].map(dot => (
-                <span key={dot} className="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
-              ))}
-            </div>
-            {priorityDistribution.medium} medium priority
-          </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <div className="mr-1.5 flex">
-              <span className="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
-            </div>
-            {priorityDistribution.low} low priority
-          </div>
+        <div>
+          <p className="text-sm text-text-secondary">Upcoming</p>
+          <p className="text-lg font-semibold">
+            {upcomingTasks} {upcomingTasks === 1 ? 'task' : 'tasks'}
+          </p>
         </div>
       </div>
     </div>
