@@ -139,7 +139,6 @@ export async function extractTaskMetadata(title: string, description?: string): 
       throw new Error('Failed to extract task metadata');
     }
 
-    const data = await response.json();
     // Parse AI response and extract metadata
     // This is a simplified example - we'll need to properly parse the AI response
     return {
@@ -205,7 +204,6 @@ export async function suggestNextTask(tasks: Task[]): Promise<Task | null> {
       throw new Error('Failed to suggest next task');
     }
 
-    const data = await response.json();
     // Parse AI response and find the suggested task
     // This is a simplified example - we'll need to properly parse the AI response
     return tasks[0];

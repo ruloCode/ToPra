@@ -1,24 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/components/AuthProvider';
-import Auth from '@/components/Auth';
-import TaskList from '@/components/tasks/TaskList';
-import TaskStats from '@/components/tasks/TaskStats';
-import CreateTaskForm from '@/components/tasks/CreateTaskForm';
-import QuickAddTask from '@/components/tasks/QuickAddTask';
-import ChatInterface from '@/components/tasks/ChatInterface';
-import AITaskAssistant from '@/components/tasks/AITaskAssistant';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { Task, getTasks, updateTask } from '@/lib/tasks';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/components/AuthProvider";
+import Auth from "@/components/Auth";
+import TaskList from "@/components/tasks/TaskList";
+import TaskStats from "@/components/tasks/TaskStats";
+import CreateTaskForm from "@/components/tasks/CreateTaskForm";
+import QuickAddTask from "@/components/tasks/QuickAddTask";
+import ChatInterface from "@/components/tasks/ChatInterface";
+import AITaskAssistant from "@/components/tasks/AITaskAssistant";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Task, getTasks, updateTask } from "@/lib/tasks";
 
 export default function TasksPage() {
   const { user, isLoading } = useAuth();
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [refreshTasks, setRefreshTasks] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskData, setNewTaskData] = useState<Partial<Task> | undefined>(undefined);
+  const [newTaskData, setNewTaskData] = useState<Partial<Task> | undefined>(
+    undefined
+  );
   const today = new Date();
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function TasksPage() {
   }, [user, refreshTasks]);
 
   const handleTaskUpdate = () => {
-    setRefreshTasks(prev => prev + 1);
+    setRefreshTasks((prev) => prev + 1);
   };
 
   const handlePriorityUpdate = async (taskId: string, priority: number) => {
@@ -36,7 +38,7 @@ export default function TasksPage() {
       await updateTask(taskId, { priority });
       handleTaskUpdate();
     } catch (error) {
-      console.error('Error updating task priority:', error);
+      console.error("Error updating task priority:", error);
     }
   };
 
@@ -77,10 +79,15 @@ export default function TasksPage() {
           <TaskStats tasks={tasks} />
         </div>
 
-   
+        <div className="mb-8">
+          <AITaskAssistant
+            tasks={tasks}
+            onPriorityUpdate={handlePriorityUpdate}
+          />
+        </div>
 
         <div className="mb-8">
-          <ChatInterface 
+          <ChatInterface
             onTaskExtracted={(taskData: Partial<Task>) => {
               setNewTaskData(taskData);
               setShowCreateTask(true);
@@ -91,7 +98,7 @@ export default function TasksPage() {
         {showCreateTask ? (
           <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-medium text-gray-900">
-              {newTaskData ? 'Crear Tarea Sugerida' : 'Crear Nueva Tarea'}
+              {newTaskData ? "Crear Tarea Sugerida" : "Crear Nueva Tarea"}
             </h2>
             <CreateTaskForm
               initialTask={newTaskData}
@@ -113,4 +120,4 @@ export default function TasksPage() {
       </div>
     </main>
   );
-} 
+}

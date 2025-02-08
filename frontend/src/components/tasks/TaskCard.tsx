@@ -3,7 +3,6 @@
 import { Task, TaskStatus, updateTask, deleteTask } from '@/lib/tasks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { zonedTimeToUtc } from 'date-fns-tz';
 import { useState } from 'react';
 
 interface TaskCardProps {

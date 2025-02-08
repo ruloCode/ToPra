@@ -95,12 +95,18 @@ export async function deleteTask(taskId: string) {
 // Subscribe to task changes for a user
 export function subscribeToTasks(
   userId: string,
-  callback: (payload: any) => void
+  callback: (payload: { 
+    event: string;
+    schema: string;
+    table: string;
+    old: Task | null;
+    new: Task;
+   }) => void
 ) {
   return supabase
     .channel('tasks_channel')
     .on(
-      'postgres_changes',
+      'system',
       {
         event: '*',
         schema: 'public',

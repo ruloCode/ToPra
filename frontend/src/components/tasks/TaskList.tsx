@@ -43,7 +43,7 @@ export default function TaskList({ onTasksChange }: TaskListProps) {
     // Set up real-time subscription
     if (user) {
       const subscription = subscribeToTasks(user.id, (payload) => {
-        const { eventType, new: newRecord, old: oldRecord } = payload;
+        const { event: eventType, new: newRecord, old: oldRecord } = payload;
         
         setTasks(currentTasks => {
           let updatedTasks = currentTasks;
@@ -52,7 +52,7 @@ export default function TaskList({ onTasksChange }: TaskListProps) {
               updatedTasks = [newRecord, ...currentTasks];
               break;
             case 'DELETE':
-              updatedTasks = currentTasks.filter(task => task.id !== oldRecord.id);
+              updatedTasks = currentTasks.filter(task => task.id !== oldRecord?.id);
               break;
             case 'UPDATE':
               updatedTasks = currentTasks.map(task => 

@@ -16,7 +16,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           last_login: string | null;
-          settings: Record<string, any>;
+          settings: { [key: string]: string | number | boolean };
         };
       };
       tasks: {
@@ -30,7 +30,7 @@ export type Database = {
           status: string;
           created_at: string;
           updated_at: string;
-          ai_metadata: Record<string, any>;
+          ai_metadata: { [key: string]: string | number | boolean };
           tags: string[];
         };
       };
