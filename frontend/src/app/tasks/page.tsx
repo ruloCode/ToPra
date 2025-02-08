@@ -7,9 +7,10 @@ import TaskList from '@/components/tasks/TaskList';
 import TaskStats from '@/components/tasks/TaskStats';
 import CreateTaskForm from '@/components/tasks/CreateTaskForm';
 import QuickAddTask from '@/components/tasks/QuickAddTask';
+import AITaskAssistant from '@/components/tasks/AITaskAssistant';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Task, getTasks } from '@/lib/tasks';
+import { Task, getTasks, updateTask } from '@/lib/tasks';
 
 export default function TasksPage() {
   const { user, isLoading } = useAuth();
@@ -26,6 +27,15 @@ export default function TasksPage() {
 
   const handleTaskUpdate = () => {
     setRefreshTasks(prev => prev + 1);
+  };
+
+  const handlePriorityUpdate = async (taskId: string, priority: number) => {
+    try {
+      await updateTask(taskId, { priority });
+      handleTaskUpdate();
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+    }
   };
 
   if (isLoading) {
@@ -63,6 +73,10 @@ export default function TasksPage() {
 
         <div className="mb-8">
           <TaskStats tasks={tasks} />
+        </div>
+
+        <div className="mb-8">
+          <AITaskAssistant tasks={tasks} onPriorityUpdate={handlePriorityUpdate} />
         </div>
 
         {showCreateTask ? (
