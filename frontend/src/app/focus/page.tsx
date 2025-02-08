@@ -24,8 +24,8 @@ function FocusPageContent() {
 
 export default function FocusPage() {
   return (
-    <main className="min-h-screen bg-background">
-      <Suspense fallback={<div>Loading...</div>}>
+    <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <Suspense fallback={<div className="text-foreground">Loading...</div>}>
         <FocusPageContent />
       </Suspense>
     </main>
