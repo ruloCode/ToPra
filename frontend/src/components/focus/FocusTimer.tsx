@@ -7,9 +7,9 @@ export type TimerMode = 'timer' | 'chronometer';
 
 interface FocusTimerProps {
   defaultDuration?: number; // in minutes
-  onComplete?: () => void;
-  onStart?: () => void;
-  onInterrupt?: () => void;
+  onComplete?: (duration: number) => void;
+  onStart?: (duration: number) => void;
+  onInterrupt?: (elapsedTime: number) => void;
 }
 
 const AVAILABLE_DURATIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
@@ -69,7 +69,7 @@ export function FocusTimer({
         setTimeInSeconds((prev) => {
           if (prev <= 1) {
             setIsRunning(false);
-            onComplete?.();
+            onComplete?.(selectedDuration * 60);
             return 0;
           }
           return prev - 1;
@@ -82,21 +82,33 @@ export function FocusTimer({
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, mode, timeInSeconds, onComplete]);
+  }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration]);
 
   const toggleTimer = useCallback(() => {
     const newIsRunning = !isRunning;
     setIsRunning(newIsRunning);
     if (newIsRunning) {
-      onStart?.();
+      if (mode === 'timer') {
+        onStart?.(selectedDuration * 60);
+      } else {
+        onStart?.(0);
+      }
     } else {
-      onInterrupt?.();
+      if (mode === 'timer') {
+        onInterrupt?.(selectedDuration * 60 - timeInSeconds);
+      } else {
+        onInterrupt?.(chronometerTime);
+      }
     }
-  }, [isRunning, onStart, onInterrupt]);
+  }, [isRunning, mode, selectedDuration, timeInSeconds, chronometerTime, onStart, onInterrupt]);
 
   const resetTimer = useCallback(() => {
     if (isRunning) {
-      onInterrupt?.();
+      if (mode === 'timer') {
+        onInterrupt?.(selectedDuration * 60 - timeInSeconds);
+      } else {
+        onInterrupt?.(chronometerTime);
+      }
     }
     setIsRunning(false);
     if (mode === 'timer') {
@@ -104,7 +116,7 @@ export function FocusTimer({
     } else {
       setChronometerTime(0);
     }
-  }, [isRunning, mode, selectedDuration, onInterrupt]);
+  }, [isRunning, mode, selectedDuration, timeInSeconds, chronometerTime, onInterrupt]);
 
   return (
     <div className="p-3 sm:p-4 md:p-6">

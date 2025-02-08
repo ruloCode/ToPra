@@ -86,7 +86,7 @@ export function TaskSearch({ onTaskSelect, selectedTask }: TaskSearchProps) {
       )}
 
       {searchQuery && tasks.length > 0 && !selectedTask && (
-        <Card className="absolute z-10 w-full max-h-60 overflow-y-auto">
+        <Card className="absolute z-10 w-[90%] max-h-60 overflow-y-auto bg-white">
           <div className="p-2 space-y-1">
             {tasks.map((task) => (
               <button
@@ -96,7 +96,7 @@ export function TaskSearch({ onTaskSelect, selectedTask }: TaskSearchProps) {
                   setSearchQuery('');
                   setTasks([]);
                 }}
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-primary/5 transition-colors"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-primary/5 transition-colors bg-white"
               >
                 <p className="font-medium">{task.title}</p>
                 {task.description && (

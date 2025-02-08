@@ -3,42 +3,69 @@ import { Database } from './supabase';
 
 export type FocusSession = Database['public']['Tables']['focus_sessions']['Row'];
 
+export type FocusSessionStatus = 'active' | 'completed' | 'interrupted';
+
+export const FocusSessionStatus = {
+  ACTIVE: 'active' as const,
+  COMPLETED: 'completed' as const,
+  INTERRUPTED: 'interrupted' as const,
+} as const;
+
 export type CreateFocusSessionInput = {
   user_id: string;
   task_id?: string | null;
-  start_time: string;
+  start_time?: string;
   end_time?: string | null;
   duration?: number | null;
-  status: string;
+  status?: FocusSessionStatus;
   notes?: string | null;
   rating?: number | null;
 };
+
 export type UpdateFocusSessionInput = Partial<Omit<FocusSession, 'id' | 'created_at' | 'updated_at'>>;
 
-export const FocusSessionStatus = {
-  ACTIVE: 'active',
-  COMPLETED: 'completed',
-  INTERRUPTED: 'interrupted',
-} as const;
-
-export type FocusSessionStatusType = typeof FocusSessionStatus[keyof typeof FocusSessionStatus];
-
 // Create a new focus session
-export async function createFocusSession(session: CreateFocusSessionInput) {
+export async function createFocusSession(session: CreateFocusSessionInput): Promise<FocusSession> {
+  if (!session.user_id) {
+    throw new Error('user_id is required');
+  }
+
+  // No necesitamos validar start_time ni status porque tienen valores por defecto en la BD
   const { data, error } = await supabase
     .from('focus_sessions')
-    .insert([session])
+    .insert([{
+      user_id: session.user_id,
+      task_id: session.task_id || null,
+      duration: session.duration || null,
+      notes: session.notes || null,
+      rating: session.rating || null,
+      // Dejamos que la BD maneje los valores por defecto para start_time y status
+    }])
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Supabase error creating focus session:', {
+      error,
+      errorMessage: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('No data returned from focus session creation');
+  }
+
   return data;
 }
 
 // Get focus sessions with optional filters
 export async function getFocusSessions(filters?: {
   userId: string;
-  status?: FocusSessionStatusType;
+  status?: FocusSessionStatus;
   taskId?: string;
   startDate?: Date;
   endDate?: Date;

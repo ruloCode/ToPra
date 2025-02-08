@@ -8,6 +8,7 @@ import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';
 import { createFocusSession, updateFocusSession, FocusSessionStatus } from '@/lib/focus';
 import { FocusTimer } from './FocusTimer';
+import { PostgrestError } from '@supabase/supabase-js';
 
 interface FocusModeProps {
   task?: Task;
@@ -22,12 +23,13 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
   const { user } = useAuth();
 
   // Handle timer completion
-  const handleTimerComplete = useCallback(async () => {
+  const handleTimerComplete = useCallback(async (duration: number) => {
     if (currentSessionId && user) {
       try {
         await updateFocusSession(currentSessionId, {
           status: FocusSessionStatus.COMPLETED,
           end_time: new Date().toISOString(),
+          duration: duration || null,
         });
         
         toast({
@@ -46,42 +48,84 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
   }, [currentSessionId, user, toast]);
 
   // Handle timer start
-  const handleTimerStart = useCallback(async () => {
-    if (user) {
-      try {
-        const session = await createFocusSession({
-          user_id: user.id,
-          task_id: selectedTask?.id || null,
-          start_time: new Date().toISOString(),
-          status: FocusSessionStatus.ACTIVE,
-          duration: defaultDuration * 60, // Convert to seconds
-        });
-        setCurrentSessionId(session.id);
-      } catch (error) {
-        console.error('Error creating focus session:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo iniciar la sesión de enfoque.",
-          variant: "destructive",
-        });
-      }
+  const handleTimerStart = useCallback(async (duration: number) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para registrar tu tiempo de enfoque.",
+        variant: "destructive",
+      });
+      return;
     }
-  }, [user, selectedTask, defaultDuration, toast]);
+
+    try {
+      const sessionData = {
+        user_id: user.id,
+        task_id: selectedTask?.id || null,
+        duration: duration || null,
+        // Dejamos que la BD maneje los valores por defecto
+      };
+
+      console.log('Creating focus session with data:', sessionData);
+      const session = await createFocusSession(sessionData);
+      console.log('Focus session created:', session);
+
+      if (session?.id) {
+        setCurrentSessionId(session.id);
+        toast({
+          title: "Sesión iniciada",
+          description: "Tu sesión de enfoque ha comenzado.",
+        });
+      } else {
+        throw new Error('No se recibió ID de sesión');
+      }
+    } catch (error) {
+      const pgError = error as PostgrestError;
+      console.error('Error creating focus session:', {
+        error: pgError,
+        message: pgError?.message,
+        details: pgError?.details,
+        user_id: user.id,
+        task_id: selectedTask?.id,
+        duration
+      });
+      toast({
+        title: "Error",
+        description: pgError?.message || "No se pudo iniciar la sesión de enfoque. Por favor, intenta de nuevo.",
+        variant: "destructive",
+      });
+    }
+  }, [user, selectedTask, toast]);
 
   // Handle timer interruption
-  const handleTimerInterrupt = useCallback(async () => {
-    if (currentSessionId && user) {
-      try {
-        await updateFocusSession(currentSessionId, {
-          status: FocusSessionStatus.INTERRUPTED,
-          end_time: new Date().toISOString(),
-        });
-        setCurrentSessionId(null);
-      } catch (error) {
-        console.error('Error interrupting focus session:', error);
-      }
+  const handleTimerInterrupt = useCallback(async (elapsedTime: number) => {
+    if (!currentSessionId || !user) return;
+
+    try {
+      const updateData = {
+        status: FocusSessionStatus.INTERRUPTED,
+        end_time: new Date().toISOString(),
+        duration: elapsedTime || null,
+      };
+
+      console.log('Interrupting session with data:', { sessionId: currentSessionId, ...updateData });
+      await updateFocusSession(currentSessionId, updateData);
+      setCurrentSessionId(null);
+    } catch (error) {
+      const pgError = error as PostgrestError;
+      console.error('Error interrupting focus session:', {
+        error: pgError,
+        message: pgError?.message,
+        sessionId: currentSessionId,
+        elapsedTime
+      });
+      toast({
+        title: "Error",
+        description: pgError?.message || "No se pudo interrumpir la sesión correctamente.",
+        variant: "destructive",
+      });
     }
-  }, [currentSessionId, user]);
+  }, [currentSessionId, user, toast]);
 
   // Handle fullscreen changes
   const toggleFullscreen = useCallback(async () => {
@@ -117,7 +161,7 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
   useEffect(() => {
     return () => {
       if (currentSessionId) {
-        handleTimerInterrupt();
+        handleTimerInterrupt(0);
       }
     };
   }, [currentSessionId, handleTimerInterrupt]);
