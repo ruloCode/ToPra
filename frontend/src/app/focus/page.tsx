@@ -21,12 +21,12 @@ function FocusPageContent() {
   }, [taskId]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid gap-8 md:grid-cols-[1fr,400px]">
-        <div className="order-2 md:order-1">
+    <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8 min-h-[calc(100vh-4rem)]">
+      <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[1fr,minmax(auto,500px)]">
+        <div className="order-2 lg:order-1">
           <FocusHistory />
         </div>
-        <div className="order-1 md:order-2">
+        <div className="order-1 lg:order-2 lg:sticky lg:top-4">
           <FocusMode task={task || undefined} />
         </div>
       </div>
@@ -36,8 +36,12 @@ function FocusPageContent() {
 
 export default function FocusPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Suspense fallback={<div className="text-foreground">Loading...</div>}>
+    <main className="min-h-screen bg-background">
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-pulse text-foreground">Cargando...</div>
+        </div>
+      }>
         <FocusPageContent />
       </Suspense>
     </main>

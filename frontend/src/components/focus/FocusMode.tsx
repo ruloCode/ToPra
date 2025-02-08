@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/lib/tasks';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Timer } from './Timer';
 import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';
 import { createFocusSession, updateFocusSession, FocusSessionStatus } from '@/lib/focus';
+import { FocusTimer } from './FocusTimer';
 
 interface FocusModeProps {
   task?: Task;
@@ -123,27 +123,31 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
   }, [currentSessionId, handleTimerInterrupt]);
 
   return (
-    <div className="w-full max-w-2xl p-8 rounded-lg bg-card text-card-foreground shadow-lg">
-      <div className="space-y-6">
-        <div className="mb-6">
-          <h2 className="text-lg font-medium mb-2">Seleccionar Tarea (opcional)</h2>
+    <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="p-4 sm:p-6 border-b">
+          <h2 className="text-base sm:text-lg font-medium mb-2">Seleccionar Tarea (opcional)</h2>
           <TaskSearch onTaskSelect={setSelectedTask} selectedTask={selectedTask} />
         </div>
-        <Timer
-          duration={defaultDuration}
-          onComplete={handleTimerComplete}
-          onStart={handleTimerStart}
-          onInterrupt={handleTimerInterrupt}
-          showControls={true}
-        />
-        <div className="flex justify-center gap-4">
-          <Button
-            variant="outline"
-            onClick={toggleFullscreen}
-            className="bg-primary-foreground hover:bg-primary/90"
-          >
-            {isFullscreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
-          </Button>
+        
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <FocusTimer
+            defaultDuration={defaultDuration}
+            onComplete={handleTimerComplete}
+            onStart={handleTimerStart}
+            onInterrupt={handleTimerInterrupt}
+          />
+          
+          <div className="mt-4 sm:mt-6 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={toggleFullscreen}
+              className="w-full sm:w-auto text-sm sm:text-base"
+              size="sm"
+            >
+              {isFullscreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
