@@ -7,6 +7,7 @@ import TaskList from '@/components/tasks/TaskList';
 import TaskStats from '@/components/tasks/TaskStats';
 import CreateTaskForm from '@/components/tasks/CreateTaskForm';
 import QuickAddTask from '@/components/tasks/QuickAddTask';
+import ChatInterface from '@/components/tasks/ChatInterface';
 import AITaskAssistant from '@/components/tasks/AITaskAssistant';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -17,6 +18,7 @@ export default function TasksPage() {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [refreshTasks, setRefreshTasks] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTaskData, setNewTaskData] = useState<Partial<Task> | undefined>(undefined);
   const today = new Date();
 
   useEffect(() => {
@@ -75,21 +77,33 @@ export default function TasksPage() {
           <TaskStats tasks={tasks} />
         </div>
 
+   
+
         <div className="mb-8">
-          <AITaskAssistant tasks={tasks} onPriorityUpdate={handlePriorityUpdate} />
+          <ChatInterface 
+            onTaskExtracted={(taskData: Partial<Task>) => {
+              setNewTaskData(taskData);
+              setShowCreateTask(true);
+            }}
+          />
         </div>
 
         {showCreateTask ? (
           <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-medium text-gray-900">
-              Create New Task
+              {newTaskData ? 'Crear Tarea Sugerida' : 'Crear Nueva Tarea'}
             </h2>
             <CreateTaskForm
+              initialTask={newTaskData}
               onSuccess={() => {
                 setShowCreateTask(false);
+                setNewTaskData(undefined);
                 handleTaskUpdate();
               }}
-              onCancel={() => setShowCreateTask(false)}
+              onCancel={() => {
+                setShowCreateTask(false);
+                setNewTaskData(undefined);
+              }}
             />
           </div>
         ) : null}

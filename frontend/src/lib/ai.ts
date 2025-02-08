@@ -1,4 +1,4 @@
-import { Task } from './tasks';
+import { Task, TaskStatus } from './tasks';
 
 const DEEPSEEK_API_URL = process.env.NEXT_PUBLIC_DEEPSEEK_API_URL;
 const DEEPSEEK_API_KEY = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY;
@@ -14,6 +14,24 @@ interface TaskMetadata {
   estimatedDuration?: string;
   suggestedTags: string[];
   complexity: 'low' | 'medium' | 'high';
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface ChatResponse {
+  message: string;
+  extractedTask?: Partial<Task>;
+  suggestedActions?: {
+    type: 'create_task' | 'update_priority' | 'set_due_date';
+    data: {
+      priority?: number;
+      dueDate?: string;
+      taskId?: string;
+    };
+  }[];
 }
 
 export async function analyzePriority(task: Task): Promise<PriorityScore> {
@@ -195,4 +213,159 @@ export async function suggestNextTask(tasks: Task[]): Promise<Task | null> {
     console.error('Error suggesting next task:', error);
     return null;
   }
-} 
+}
+
+function extractActionsFromMessage(message: string): ChatResponse['suggestedActions'] {
+  const actions: ChatResponse['suggestedActions'] = [];
+
+  // Check for priority suggestions
+  const priorityMatch = message.match(/sugerir prioridad:?\s*(\d)/i);
+  if (priorityMatch) {
+    actions.push({
+      type: 'update_priority',
+      data: { priority: parseInt(priorityMatch[1]) },
+    });
+  }
+
+  // Check for due date suggestions
+  const dueDateMatch = message.match(/fecha límite:?\s*"([^"]+)"/i);
+  if (dueDateMatch) {
+    actions.push({
+      type: 'set_due_date',
+      data: { dueDate: dueDateMatch[1] },
+    });
+  }
+
+  return actions;
+}
+
+export async function getChatResponse(messages: ChatMessage[]): Promise<ChatResponse> {
+  try {
+    if (!DEEPSEEK_API_URL || !DEEPSEEK_API_KEY) {
+      throw new Error('DeepSeek API configuration is missing');
+    }
+
+    console.log('Sending request to DeepSeek API:', {
+      url: DEEPSEEK_API_URL,
+      messages: messages,
+    });
+
+    const response = await fetch(DEEPSEEK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `Eres un asistente de gestión de tareas que habla español. 
+            Cuando el usuario quiera crear una tarea, responde en este formato exacto:
+            TASK_START
+            título: "título de la tarea"
+            descripción: "descripción detallada"
+            prioridad: (1-3)
+            fecha límite: "YYYY-MM-DD"
+            etiquetas: tag1, tag2, tag3
+            TASK_END
+            
+            Luego añade tu respuesta conversacional normal.
+            
+            Ejemplo de respuesta:
+            TASK_START
+            título: "Estudiar para el examen de matemáticas"
+            descripción: "Repasar los temas de álgebra y geometría"
+            prioridad: 2
+            fecha límite: "2024-02-20"
+            etiquetas: estudio, matemáticas, examen
+            TASK_END
+            
+            Entiendo. He creado una tarea para tu estudio. ¿Necesitas que ajuste algún detalle?`,
+          },
+          ...messages.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      console.error('DeepSeek API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+      });
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('DeepSeek API response:', data);
+
+    const aiMessage = data.choices[0].message.content;
+    const extractedTask = extractTaskFromMessage(aiMessage);
+
+    console.log('Extracted task:', extractedTask);
+
+    return {
+      message: aiMessage.replace(/TASK_START[\s\S]*?TASK_END\n?/g, '').trim(),
+      extractedTask,
+      suggestedActions: extractActionsFromMessage(aiMessage),
+    };
+  } catch (error) {
+    console.error('Error in chat response:', error);
+    throw new Error(
+      error instanceof Error 
+        ? error.message 
+        : 'Error al comunicarse con el asistente de IA'
+    );
+  }
+}
+
+function extractTaskFromMessage(message: string): Partial<Task> | undefined {
+  try {
+    const taskMatch = message.match(/TASK_START([\s\S]*?)TASK_END/);
+    if (!taskMatch) {
+      console.log('No task data found in message');
+      return undefined;
+    }
+
+    const taskContent = taskMatch[1];
+    console.log('Found task content:', taskContent);
+
+    const titleMatch = taskContent.match(/título:\s*"([^"]+)"/i);
+    const descriptionMatch = taskContent.match(/descripción:\s*"([^"]+)"/i);
+    const priorityMatch = taskContent.match(/prioridad:\s*(\d)/i);
+    const dueDateMatch = taskContent.match(/fecha límite:\s*"([^"]+)"/i);
+    const tagsMatch = taskContent.match(/etiquetas:\s*([^\n]+)/i);
+
+    if (!titleMatch) {
+      console.log('No title found in task content');
+      return undefined;
+    }
+
+    const tags = tagsMatch ? 
+      tagsMatch[1].split(',').map(tag => tag.trim()).filter(Boolean) : 
+      [];
+
+    const task = {
+      title: titleMatch[1],
+      description: descriptionMatch?.[1] || null,
+      priority: priorityMatch ? parseInt(priorityMatch[1]) : 2,
+      due_date: dueDateMatch?.[1] || null,
+      status: TaskStatus.PENDING,
+      tags,
+    };
+
+    console.log('Extracted task data:', task);
+    return task;
+  } catch (error) {
+    console.error('Error extracting task data:', error);
+    return undefined;
+  }
+}

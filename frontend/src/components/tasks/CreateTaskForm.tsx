@@ -6,7 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { format, parseISO, startOfDay, addHours } from 'date-fns';
 
 interface CreateTaskFormProps {
-  initialTask?: Task;
+  initialTask?: Partial<Task>;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -30,11 +30,11 @@ export default function CreateTaskForm({
   useEffect(() => {
     if (initialTask) {
       setFormData({
-        title: initialTask.title,
+        title: initialTask.title || '',
         description: initialTask.description || '',
-        priority: initialTask.priority.toString(),
+        priority: initialTask.priority?.toString() || '2',
         due_date: initialTask.due_date ? format(parseISO(initialTask.due_date), 'yyyy-MM-dd') : '',
-        tags: initialTask.tags.join(', '),
+        tags: initialTask.tags?.join(', ') || '',
       });
     }
   }, [initialTask]);
@@ -63,7 +63,7 @@ export default function CreateTaskForm({
     };
 
     try {
-      if (initialTask) {
+      if (initialTask?.id) {
         await updateTask(initialTask.id, taskData);
       } else {
         await createTask(taskData);
@@ -71,9 +71,9 @@ export default function CreateTaskForm({
       onSuccess();
     } catch (err) {
       setError(
-        initialTask
-          ? 'Failed to update task. Please try again.'
-          : 'Failed to create task. Please try again.'
+        initialTask?.id
+          ? 'Error al actualizar la tarea. Por favor, intenta de nuevo.'
+          : 'Error al crear la tarea. Por favor, intenta de nuevo.'
       );
       console.error('Error saving task:', err);
     } finally {
