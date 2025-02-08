@@ -1,5 +1,6 @@
 {
 	"dependencies": {
-		"@radix-ui/react-slot": "^1.1.2"
+		"@radix-ui/react-slot": "^1.1.2",
+		"clsx": "^2.1.1"
 	}
 }
