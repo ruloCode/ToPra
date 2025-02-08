@@ -3,9 +3,13 @@ import { Database } from './supabase';
 
 export type FocusSession = Database['public']['Tables']['focus_sessions']['Row'];
 
-export type CreateFocusSessionInput = Omit<FocusSession, 'id' | 'created_at' | 'updated_at'> & {
-  duration?: number | null;
+export type CreateFocusSessionInput = {
+  user_id: string;
+  task_id?: string | null;
+  start_time: string;
   end_time?: string | null;
+  duration?: number | null;
+  status: string;
   notes?: string | null;
   rating?: number | null;
 };

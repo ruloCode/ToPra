@@ -2,30 +2,84 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/lib/tasks';
-
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Timer } from './Timer';
+import { useAuth } from '@/components/AuthProvider';
+import { createFocusSession, updateFocusSession, FocusSessionStatus } from '@/lib/focus';
 
 interface FocusModeProps {
   task?: Task;
   defaultDuration?: number; // in minutes
 }
 
-export function FocusMode({  defaultDuration = 25 }: FocusModeProps) {
+export function FocusMode({ task, defaultDuration = 25 }: FocusModeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
- 
-  
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Handle timer completion
-  const handleTimerComplete = useCallback(() => {
-    toast({
-      title: "¡Tiempo completado!",
-      description: "Has completado tu sesión de enfoque.",
-    });
-    // You can add more completion logic here if needed
-  }, [toast]);
+  const handleTimerComplete = useCallback(async () => {
+    if (currentSessionId && user) {
+      try {
+        await updateFocusSession(currentSessionId, {
+          status: FocusSessionStatus.COMPLETED,
+          end_time: new Date().toISOString(),
+        });
+        
+        toast({
+          title: "¡Tiempo completado!",
+          description: "Has completado tu sesión de enfoque.",
+        });
+      } catch (error) {
+        console.error('Error updating focus session:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo guardar la sesión completada.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [currentSessionId, user, toast]);
+
+  // Handle timer start
+  const handleTimerStart = useCallback(async () => {
+    if (user) {
+      try {
+        const session = await createFocusSession({
+          user_id: user.id,
+          task_id: task?.id || null,
+          start_time: new Date().toISOString(),
+          status: FocusSessionStatus.ACTIVE,
+          duration: defaultDuration * 60, // Convert to seconds
+        });
+        setCurrentSessionId(session.id);
+      } catch (error) {
+        console.error('Error creating focus session:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo iniciar la sesión de enfoque.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [user, task, defaultDuration, toast]);
+
+  // Handle timer interruption
+  const handleTimerInterrupt = useCallback(async () => {
+    if (currentSessionId && user) {
+      try {
+        await updateFocusSession(currentSessionId, {
+          status: FocusSessionStatus.INTERRUPTED,
+          end_time: new Date().toISOString(),
+        });
+        setCurrentSessionId(null);
+      } catch (error) {
+        console.error('Error interrupting focus session:', error);
+      }
+    }
+  }, [currentSessionId, user]);
 
   // Handle fullscreen changes
   const toggleFullscreen = useCallback(async () => {
@@ -57,19 +111,31 @@ export function FocusMode({  defaultDuration = 25 }: FocusModeProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Start a new focus session
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (currentSessionId) {
+        handleTimerInterrupt();
+      }
+    };
+  }, [currentSessionId, handleTimerInterrupt]);
 
-  // Complete the focus session
-
-  // Interrupt the focus session
- 
   return (
     <div className="w-full max-w-2xl p-8 rounded-lg bg-card text-card-foreground shadow-lg">
       <div className="space-y-6">
-       
+        {task && (
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-semibold">{task.title}</h2>
+            {task.description && (
+              <p className="text-muted-foreground mt-2">{task.description}</p>
+            )}
+          </div>
+        )}
         <Timer
           duration={defaultDuration}
           onComplete={handleTimerComplete}
+          onStart={handleTimerStart}
+          onInterrupt={handleTimerInterrupt}
           showControls={true}
         />
         <div className="flex justify-center gap-4">

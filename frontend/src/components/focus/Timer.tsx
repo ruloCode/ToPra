@@ -10,10 +10,12 @@ import { MotivationalMessage } from './MotivationalMessage';
 export interface TimerProps {
   duration: number; // in minutes
   onComplete: () => void;
+  onStart?: () => void;
+  onInterrupt?: () => void;
   showControls?: boolean;
 }
 
-export function Timer({ duration, onComplete, showControls = true }: TimerProps) {
+export function Timer({ duration, onComplete, onStart, onInterrupt, showControls = true }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration * 60); // Convert to seconds
   const [isRunning, setIsRunning] = useState(false); // Changed to false so timer starts paused
   const [progress, setProgress] = useState(100);
@@ -50,16 +52,28 @@ export function Timer({ duration, onComplete, showControls = true }: TimerProps)
   }, [isRunning, timeLeft, duration, onComplete, playSound]);
 
   const toggleTimer = () => {
-    setIsRunning((prev) => !prev);
+    const newIsRunning = !isRunning;
+    setIsRunning(newIsRunning);
+    if (newIsRunning && onStart) {
+      onStart();
+    } else if (!newIsRunning && onInterrupt) {
+      onInterrupt();
+    }
   };
 
   const resetTimer = () => {
+    if (isRunning && onInterrupt) {
+      onInterrupt();
+    }
     setTimeLeft(duration * 60);
     setProgress(100);
-    setIsRunning(true);
+    setIsRunning(false);
   };
 
   const switchSession = () => {
+    if (isRunning && onInterrupt) {
+      onInterrupt();
+    }
     setIsRunning(false);
     if (sessionType === 'focus') {
       setSessionType('break');
