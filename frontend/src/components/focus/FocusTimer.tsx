@@ -56,7 +56,7 @@ export function FocusTimer({
         setTimeInSeconds(prev => Math.max(0, prev - elapsedSeconds));
       }
     }
-  }, []);
+  }, [savedState?.isRunning, savedState?.startTime, savedState?.mode]);
 
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);

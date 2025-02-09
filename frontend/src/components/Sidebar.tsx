@@ -13,6 +13,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  BarChart,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -30,7 +31,7 @@ export default function Sidebar() {
     { name: 'Today', href: '/', icon: Home },
     { name: 'Tasks', href: '/tasks', icon: ListTodo },
     { name: 'Focus', href: '/focus', icon: Target },
-  
+    { name: 'Analytics', href: '/analytics', icon: BarChart },
   ];
 
   const secondaryNavigation = [
@@ -132,4 +133,4 @@ export default function Sidebar() {
       </div>
     </aside>
   );
-} 
+}

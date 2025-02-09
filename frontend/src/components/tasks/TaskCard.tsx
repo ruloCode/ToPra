@@ -32,7 +32,13 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
         task.status === TaskStatus.COMPLETED
           ? TaskStatus.PENDING
           : TaskStatus.COMPLETED;
-      await updateTask(task.id, { status: newStatus });
+      
+      const updates = {
+        status: newStatus,
+        completed_at: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : null
+      };
+      
+      await updateTask(task.id, updates);
       onUpdate();
     } catch (error) {
       console.error('Error updating task:', error);
@@ -154,4 +160,4 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
       </div>
     </div>
   );
-} 
+}
