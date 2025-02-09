@@ -128,39 +128,40 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
 
   return (
     <>
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Historial de Sesiones</h2>
-        <div className="grid gap-4">
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Historial de Sesiones</h2>
+        <div className="grid gap-2 sm:gap-4">
           {sessions.map((session) => (
-            <Card key={session.id} className="p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">
+            <Card key={session.id} className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm sm:text-base truncate">
                     {session.task ? session.task.title : 'Sesión sin tarea'}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {format(new Date(session.start_time), 'PPp', { locale: es })}
                   </p>
                   {session.task?.description && (
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
                       {session.task.description}
                     </p>
                   )}
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto gap-2">
                   <div className="text-right">
-                    <p className="font-medium">
+                    <p className="font-medium text-sm sm:text-base">
                       {session.status === 'active' 
                         ? formatDuration(activeDurations[session.id] || 0)
                         : formatDuration(session.duration)}
                     </p>
-                    <p className={`text-sm ${getStatusColor(session.status)}`}>
+                    <p className={`text-xs sm:text-sm ${getStatusColor(session.status)}`}>
                       {getStatusText(session.status)}
                     </p>
                   </div>
                   <Button
                     variant="destructive"
                     size="sm"
+                    className="text-xs sm:text-sm px-2 py-1 h-auto"
                     onClick={() => setSessionToDelete(session.id)}
                   >
                     Eliminar
@@ -168,12 +169,12 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
                 </div>
               </div>
               {session.notes && (
-                <p className="mt-2 text-sm text-muted-foreground">{session.notes}</p>
+                <p className="mt-2 text-xs sm:text-sm text-muted-foreground">{session.notes}</p>
               )}
               {session.rating && (
                 <div className="mt-2 flex items-center gap-1">
-                  <span className="text-sm text-muted-foreground">Valoración:</span>
-                  <span className="font-medium">{session.rating}/5</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">Valoración:</span>
+                  <span className="font-medium text-xs sm:text-sm">{session.rating}/5</span>
                 </div>
               )}
             </Card>

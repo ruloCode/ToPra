@@ -43,71 +43,64 @@ export function TaskSearch({ onTaskSelect, selectedTask }: TaskSearchProps) {
   }, [debouncedSearch, user]);
 
   return (
-    <div className="space-y-2">
-      <div className="relative">
+    <div className="w-full flex flex-col gap-2">
+      <div className="w-full relative">
         <Input
           type="text"
           placeholder="Buscar tarea..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-10"
+          className="w-full px-3 py-2 text-sm sm:text-base rounded-md border border-input bg-background"
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        {searchQuery && (
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setTasks([]);
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        {isSearching && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <span className="loading loading-spinner loading-sm" />
+          </div>
         )}
       </div>
 
       {selectedTask && (
-        <Card className="p-3 flex justify-between items-center bg-primary/5">
-          <div>
-            <p className="font-medium">{selectedTask.title}</p>
+        <div className="flex items-center gap-2 p-2 rounded-md bg-accent/10">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm sm:text-base truncate">{selectedTask.title}</p>
             {selectedTask.description && (
-              <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
+                {selectedTask.description}
+              </p>
             )}
           </div>
           <Button
             variant="ghost"
             size="sm"
+            className="h-auto py-1 px-2 text-xs sm:text-sm"
             onClick={() => onTaskSelect(null)}
-            className="ml-2"
           >
-            <X className="h-4 w-4" />
+            Quitar
           </Button>
-        </Card>
+        </div>
       )}
 
       {searchQuery && tasks.length > 0 && !selectedTask && (
-        <Card className="absolute z-10 w-[90%] max-h-60 overflow-y-auto bg-white">
-          <div className="p-2 space-y-1">
-            {tasks.map((task) => (
-              <button
-                key={task.id}
-                onClick={() => {
-                  onTaskSelect(task);
-                  setSearchQuery('');
-                  setTasks([]);
-                }}
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-primary/5 transition-colors bg-white"
-              >
-                <p className="font-medium">{task.title}</p>
-                {task.description && (
-                  <p className="text-sm text-muted-foreground truncate">
-                    {task.description}
-                  </p>
-                )}
-              </button>
-            ))}
-          </div>
-        </Card>
+        <ul className="mt-1 max-h-48 overflow-auto rounded-md border bg-popover p-2 shadow-md">
+          {tasks.map((task) => (
+            <li
+              key={task.id}
+              onClick={() => {
+                onTaskSelect(task);
+                setSearchQuery('');
+                setTasks([]);
+              }}
+              className="cursor-pointer rounded-sm px-2 py-1.5 text-xs sm:text-sm hover:bg-accent hover:text-accent-foreground"
+            >
+              <div className="font-medium">{task.title}</div>
+              {task.description && (
+                <div className="text-muted-foreground text-xs line-clamp-1">
+                  {task.description}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
 
       {searchQuery && !isSearching && tasks.length === 0 && (
@@ -117,4 +110,4 @@ export function TaskSearch({ onTaskSelect, selectedTask }: TaskSearchProps) {
       )}
     </div>
   );
-} 
+}

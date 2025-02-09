@@ -245,18 +245,18 @@ export function FocusMode({
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
-        <div className="space-y-4 sm:space-y-6">
-          <div className="p-4 sm:p-6 border-b">
-            <h2 className="text-base sm:text-lg font-medium mb-2">Seleccionar Tarea (opcional)</h2>
+        <div className="space-y-2 sm:space-y-4">
+          <div className="p-2 sm:p-4 border-b">
+            <h2 className="text-sm sm:text-base lg:text-lg font-medium mb-2">Seleccionar Tarea (opcional)</h2>
             <TaskSearch
               selectedTask={selectedTask}
               onTaskSelect={handleTaskSelect}
             />
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="p-2 sm:p-4">
             <FocusTimer
               defaultDuration={defaultDuration}
               onStart={handleTimerStart}

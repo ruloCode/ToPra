@@ -261,9 +261,9 @@ export function FocusTimer({
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6" data-mode={mode}>
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
-        <div className="flex space-x-2 sm:space-x-4">
+    <div className="p-2 sm:p-3 md:p-4" data-mode={mode}>
+      <div className="flex justify-between items-center mb-3 sm:mb-4">
+        <div className="flex space-x-1 sm:space-x-2">
           <Button
             variant={mode === 'timer' ? 'default' : 'outline'}
             onClick={() => {
@@ -272,7 +272,7 @@ export function FocusTimer({
                 resetTimer();
               }
             }}
-            className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
+            className="w-20 sm:w-24 md:w-28 text-xs sm:text-sm px-1 sm:px-2"
             size="sm"
             disabled={isRunning}
           >
@@ -286,7 +286,7 @@ export function FocusTimer({
                 resetTimer();
               }
             }}
-            className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
+            className="w-20 sm:w-24 md:w-28 text-xs sm:text-sm px-1 sm:px-2"
             size="sm"
             disabled={isRunning}
           >
@@ -298,7 +298,7 @@ export function FocusTimer({
             variant="ghost"
             size="sm"
             onClick={onToggleFullscreen}
-            className="ml-2"
+            className="ml-1 sm:ml-2"
           >
             {isFullscreen ? (
               <Minimize2Icon className="h-4 w-4" />
@@ -310,7 +310,7 @@ export function FocusTimer({
       </div>
 
       {mode === 'timer' && !isRunning && (
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-3 sm:mb-4">
           <h3 className="text-center text-xs sm:text-sm text-muted-foreground mb-2">
             Tiempo de concentración
           </h3>
@@ -321,15 +321,30 @@ export function FocusTimer({
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               onMouseMove={handleMouseMove}
+              onTouchStart={(e) => {
+                const touch = e.touches[0];
+                setIsDragging(true);
+                setStartX(touch.pageX - e.currentTarget.offsetLeft);
+                setScrollLeft(e.currentTarget.scrollLeft);
+              }}
+              onTouchMove={(e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                const x = touch.pageX - e.currentTarget.offsetLeft;
+                const walk = (x - startX) * 2;
+                e.currentTarget.scrollLeft = scrollLeft - walk;
+              }}
+              onTouchEnd={() => setIsDragging(false)}
             >
-              <div className="flex space-x-2 px-2 sm:px-4 py-2 min-w-max">
+              <div className="flex space-x-2 px-2 py-2 min-w-max">
                 {AVAILABLE_DURATIONS.map((duration) => (
                   <Button
                     key={duration}
                     variant={selectedDuration === duration ? "default" : "ghost"}
                     onClick={() => handleDurationChange(duration)}
                     className={cn(
-                      "w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full p-0 flex-shrink-0 text-xs sm:text-sm md:text-base",
+                      "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full p-0 flex-shrink-0 text-xs sm:text-sm",
                       selectedDuration === duration && "bg-primary text-primary-foreground"
                     )}
                   >
@@ -338,33 +353,18 @@ export function FocusTimer({
                 ))}
               </div>
             </div>
-            <style jsx global>{`
-              .scrollbar-hide::-webkit-scrollbar {
-                display: none;
-              }
-              .scrollbar-hide {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-              }
-              .cursor-grab {
-                cursor: grab;
-              }
-              .cursor-grabbing {
-                cursor: grabbing;
-              }
-            `}</style>
           </div>
         </div>
       )}
 
       <div className="text-center">
         {countdown !== null ? (
-          <div className="flex flex-col items-center justify-center space-y-4">
+          <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
             <div className="space-y-2">
-              <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold font-mono">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-mono">
                 {countdown}
               </h3>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
                 {countdown === 3 ? "En sus marcas..." : countdown === 2 ? "Listos..." : "¡Ya!"}
               </p>
             </div>
@@ -372,25 +372,25 @@ export function FocusTimer({
               onClick={cancelCountdown}
               variant="outline"
               size="sm"
-              className="text-sm"
+              className="text-xs sm:text-sm"
             >
               Cancelar ({countdown})
             </Button>
           </div>
         ) : (
           <>
-            <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 md:mb-8 font-mono">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 font-mono">
               {mode === 'timer' ? formatTime(timeInSeconds) : formatTime(chronometerTime)}
             </h3>
             {mode === 'chronometer' && !isRunning && chronometerTime > 0 && (
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                 Tiempo registrado: {formatTime(chronometerTime)}
               </p>
             )}
           </>
         )}
 
-        <div className="flex justify-center space-x-3 sm:space-x-4">
+        <div className="flex justify-center space-x-2 sm:space-x-3">
           {mode === 'timer' ? (
             <>
               <Button
@@ -398,7 +398,7 @@ export function FocusTimer({
                 variant="default"
                 size="default"
                 className={cn(
-                  "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0",
+                  "w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full p-0",
                   isRunning ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
                 )}
                 disabled={isStarting}
@@ -414,7 +414,7 @@ export function FocusTimer({
                   onClick={resetTimer}
                   variant="outline"
                   size="default"
-                  className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0"
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full p-0"
                   disabled={isStarting}
                 >
                   <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
@@ -426,6 +426,22 @@ export function FocusTimer({
           )}
         </div>
       </div>
+
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .cursor-grab {
+          cursor: grab;
+        }
+        .cursor-grabbing {
+          cursor: grabbing;
+        }
+      `}</style>
     </div>
   );
 }
