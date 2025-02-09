@@ -37,10 +37,15 @@ export function FocusTimer({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isStarting, setIsStarting] = useState(false);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const formatTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const handleDurationChange = (duration: number) => {
@@ -132,7 +137,9 @@ export function FocusTimer({
       if (isRunning) {
         // Si está corriendo, lo pausamos y completamos la sesión
         setIsRunning(false);
-        onChronometerStop?.(chronometerTime);
+        // Convertir los segundos a minutos, redondeando hacia arriba
+        const minutesElapsed = Math.ceil(chronometerTime / 60);
+        onChronometerStop?.(minutesElapsed);
         setChronometerTime(0);
       } else {
         // Si no está corriendo, iniciamos

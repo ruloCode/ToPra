@@ -130,9 +130,7 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
                 <div className="flex flex-col items-end gap-2">
                   <div className="text-right">
                     <p className="font-medium">
-                      {session.duration
-                        ? `${Math.floor(session.duration / 60)} minutos`
-                        : 'En progreso'}
+                      {formatDuration(session.duration)}
                     </p>
                     <p className={`text-sm ${getStatusColor(session.status)}`}>
                       {getStatusText(session.status)}
@@ -210,4 +208,15 @@ function getStatusText(status: string) {
     default:
       return status;
   }
+}
+
+function formatDuration(minutes: number | null): string {
+  if (!minutes) return 'En progreso';
+  
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  
+  if (hours === 0) return `${minutes} minuto${minutes === 1 ? '' : 's'}`;
+  if (mins === 0) return `${hours} hora${hours === 1 ? '' : 's'}`;
+  return `${hours} hora${hours === 1 ? '' : 's'} y ${mins} minuto${mins === 1 ? '' : 's'}`;
 }

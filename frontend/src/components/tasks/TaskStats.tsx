@@ -53,10 +53,15 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
 
   const formatFocusTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours === 0) return `${mins}m`;
-    if (mins === 0) return `${hours}h`;
-    return `${hours}h ${mins}m`;
+    const mins = Math.floor(minutes % 60);
+    const secs = Math.round((minutes - Math.floor(minutes)) * 60);
+
+    const parts = [];
+    if (hours > 0) parts.push(`${hours}h`);
+    if (mins > 0) parts.push(`${mins}m`);
+    if (secs > 0) parts.push(`${secs}s`);
+    
+    return parts.length > 0 ? parts.join(' ') : '0s';
   };
 
   return (
