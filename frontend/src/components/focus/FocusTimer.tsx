@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlayIcon, PauseIcon, RefreshCwIcon } from 'lucide-react';
+import { PlayIcon, PauseIcon, RefreshCwIcon, Maximize2Icon, Minimize2Icon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type TimerMode = 'timer' | 'chronometer';
@@ -10,6 +10,9 @@ interface FocusTimerProps {
   onComplete?: (duration: number) => void;
   onStart?: (duration: number) => void;
   onInterrupt?: (elapsedTime: number) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
+  onChronometerStop?: (elapsedTime: number) => void;
 }
 
 const AVAILABLE_DURATIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
@@ -18,7 +21,10 @@ export function FocusTimer({
   defaultDuration = 25,
   onComplete,
   onStart,
-  onInterrupt
+  onInterrupt,
+  isFullscreen,
+  onToggleFullscreen,
+  onChronometerStop
 }: FocusTimerProps) {
   const [mode, setMode] = useState<TimerMode>('timer');
   const [selectedDuration, setSelectedDuration] = useState(defaultDuration);
@@ -30,6 +36,7 @@ export function FocusTimer({
   const [scrollLeft, setScrollLeft] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,14 +84,14 @@ export function FocusTimer({
           return prev - 1;
         });
       }, 1000);
-    } else if (isRunning && mode === 'chronometer') {
+    } else if (isRunning && mode === 'chronometer' && !isPaused) {
       interval = setInterval(() => {
         setChronometerTime((prev) => prev + 1);
       }, 1000);
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration]);
+  }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration, isPaused]);
 
   const startCountdown = useCallback(() => {
     setIsStarting(true);
@@ -122,24 +129,28 @@ export function FocusTimer({
   }, [countdown, mode, selectedDuration, onStart]);
 
   const toggleTimer = useCallback(() => {
-    if (isRunning) {
-      setIsRunning(false);
-      if (mode === 'timer') {
+    if (mode === 'chronometer') {
+      if (isRunning) {
+        // Si está corriendo, lo pausamos y completamos la sesión
+        setIsRunning(false);
+        onChronometerStop?.(chronometerTime);
+        setChronometerTime(0);
+      } else {
+        // Si no está corriendo, iniciamos
+        startCountdown();
+      }
+    } else {
+      // Lógica existente para el timer...
+      if (isRunning) {
+        setIsRunning(false);
         if (timeInSeconds > 0) {
           onInterrupt?.(selectedDuration * 60 - timeInSeconds);
         }
-      } else {
-        onComplete?.(chronometerTime);
-      }
-    } else if (!isStarting) {
-      if (mode === 'chronometer' && chronometerTime > 0) {
-        setChronometerTime(0);
-        startCountdown();
-      } else {
+      } else if (!isStarting) {
         startCountdown();
       }
     }
-  }, [isRunning, isStarting, mode, selectedDuration, timeInSeconds, chronometerTime, onInterrupt, onComplete, startCountdown]);
+  }, [isRunning, isStarting, mode, selectedDuration, timeInSeconds, onInterrupt, startCountdown, chronometerTime, onChronometerStop]);
 
   const resetTimer = useCallback(() => {
     if (isRunning && mode === 'timer') {
@@ -153,37 +164,89 @@ export function FocusTimer({
     }
   }, [isRunning, mode, selectedDuration, timeInSeconds, onInterrupt]);
 
+  const handleStop = useCallback(() => {
+    if (isRunning && mode === 'chronometer') {
+      onChronometerStop?.(chronometerTime);
+    }
+    setIsRunning(false);
+    setChronometerTime(0);
+  }, [isRunning, mode, chronometerTime, onChronometerStop]);
+
+  const renderChronometerButton = () => {
+    let icon;
+    let variant = "default";
+    
+    if (isRunning) {
+      icon = <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />;
+      variant = "destructive";
+    } else {
+      icon = <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />;
+    }
+
+    return (
+      <Button
+        onClick={toggleTimer}
+        variant={variant}
+        size="default"
+        className={cn(
+          "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0",
+          isRunning && "bg-destructive hover:bg-destructive/90",
+          !isRunning && "bg-primary hover:bg-primary/90"
+        )}
+        disabled={isStarting}
+      >
+        {icon}
+      </Button>
+    );
+  };
+
   return (
     <div className="p-3 sm:p-4 md:p-6" data-mode={mode}>
-      <div className="flex justify-center space-x-2 sm:space-x-4 mb-4 sm:mb-6">
-        <Button
-          variant={mode === 'timer' ? 'default' : 'outline'}
-          onClick={() => {
-            if (!isRunning) {
-              setMode('timer');
-              resetTimer();
-            }
-          }}
-          className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
-          size="sm"
-          disabled={isRunning}
-        >
-          Temporizador
-        </Button>
-        <Button
-          variant={mode === 'chronometer' ? 'default' : 'outline'}
-          onClick={() => {
-            if (!isRunning) {
-              setMode('chronometer');
-              resetTimer();
-            }
-          }}
-          className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
-          size="sm"
-          disabled={isRunning}
-        >
-          Cronómetro
-        </Button>
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <div className="flex space-x-2 sm:space-x-4">
+          <Button
+            variant={mode === 'timer' ? 'default' : 'outline'}
+            onClick={() => {
+              if (!isRunning) {
+                setMode('timer');
+                resetTimer();
+              }
+            }}
+            className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
+            size="sm"
+            disabled={isRunning}
+          >
+            Temporizador
+          </Button>
+          <Button
+            variant={mode === 'chronometer' ? 'default' : 'outline'}
+            onClick={() => {
+              if (!isRunning) {
+                setMode('chronometer');
+                resetTimer();
+              }
+            }}
+            className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
+            size="sm"
+            disabled={isRunning}
+          >
+            Cronómetro
+          </Button>
+        </div>
+        {onToggleFullscreen && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleFullscreen}
+            className="ml-2"
+          >
+            {isFullscreen ? (
+              <Minimize2Icon className="h-4 w-4" />
+            ) : (
+              <Maximize2Icon className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
 
       {mode === 'timer' && !isRunning && (
@@ -268,37 +331,41 @@ export function FocusTimer({
         )}
 
         <div className="flex justify-center space-x-3 sm:space-x-4">
-          <Button
-            onClick={toggleTimer}
-            variant="default"
-            size="default"
-            className={cn(
-              "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0",
-              isRunning ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
-            )}
-            disabled={isStarting}
-          >
-            {isRunning ? (
-              <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            ) : mode === 'chronometer' && chronometerTime > 0 ? (
-              <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            ) : (
-              <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            )}
-          </Button>
-          {mode === 'timer' && !isRunning && (
-            <Button
-              onClick={resetTimer}
-              variant="outline"
-              size="default"
-              className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0"
-              disabled={isStarting}
-            >
-              <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </Button>
+          {mode === 'timer' ? (
+            <>
+              <Button
+                onClick={toggleTimer}
+                variant="default"
+                size="default"
+                className={cn(
+                  "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0",
+                  isRunning ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+                )}
+                disabled={isStarting}
+              >
+                {isRunning ? (
+                  <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                ) : (
+                  <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                )}
+              </Button>
+              {!isRunning && (
+                <Button
+                  onClick={resetTimer}
+                  variant="outline"
+                  size="default"
+                  className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0"
+                  disabled={isStarting}
+                >
+                  <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                </Button>
+              )}
+            </>
+          ) : (
+            renderChronometerButton()
           )}
         </div>
       </div>
     </div>
   );
-} 
+}

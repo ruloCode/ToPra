@@ -81,21 +81,17 @@ export async function getFocusSessions(filters?: {
   if (filters?.status) {
     query = query.eq('status', filters.status);
   }
-
   if (filters?.taskId) {
     query = query.eq('task_id', filters.taskId);
   }
-
   if (filters?.startDate) {
     query = query.gte('start_time', filters.startDate.toISOString());
   }
-
   if (filters?.endDate) {
     query = query.lte('end_time', filters.endDate.toISOString());
   }
 
   const { data, error } = await query.order('start_time', { ascending: false });
-
   if (error) throw error;
   return data;
 }
@@ -104,7 +100,10 @@ export async function getFocusSessions(filters?: {
 export async function getFocusSessionById(sessionId: string) {
   const { data, error } = await supabase
     .from('focus_sessions')
-    .select('*')
+    .select(`
+      *,
+      task:tasks(id, title, description)
+    `)
     .eq('id', sessionId)
     .single();
 
@@ -166,29 +165,3 @@ export async function getFocusSessionStats(userId: string, startDate?: Date, end
 
   return stats;
 }
-
-// Subscribe to focus session changes for a user
-export function subscribeToFocusSessions(
-  userId: string,
-  callback: (payload: {
-    event: string;
-    schema: string;
-    table: string;
-    old: FocusSession | null;
-    new: FocusSession;
-  }) => void
-) {
-  return supabase
-    .channel('focus_sessions_channel')
-    .on(
-      'system',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'focus_sessions',
-        filter: `user_id=eq.${userId}`,
-      },
-      callback
-    )
-    .subscribe();
-} 

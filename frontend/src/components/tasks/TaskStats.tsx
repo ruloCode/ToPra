@@ -34,6 +34,8 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
 
   // Calculate total focus time from completed sessions
   const focusTime = sessions.reduce((total, session) => {
+    if (!session.duration || session.status !== 'completed') return total;
+    
     if (todayOnly) {
       const sessionDate = new Date(session.start_time);
       const today = new Date();
@@ -43,17 +45,10 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
                       sessionDate.getMonth() === today.getMonth() &&
                       sessionDate.getFullYear() === today.getFullYear();
 
-      // Only count completed sessions from today
-      if (session.status === 'completed' && isToday) {
-        return total + (session.duration || 0);
-      }
-    } else {
-      // Count all completed sessions
-      if (session.status === 'completed') {
-        return total + (session.duration || 0);
-      }
+      return isToday ? total + session.duration : total;
     }
-    return total;
+    
+    return total + session.duration;
   }, 0);
 
   const formatFocusTime = (minutes: number) => {
