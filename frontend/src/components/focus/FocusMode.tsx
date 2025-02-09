@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Task } from '@/lib/tasks';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';

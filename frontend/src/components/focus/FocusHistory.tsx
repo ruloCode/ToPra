@@ -186,6 +186,8 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
   );
 });
 
+FocusHistory.displayName = 'FocusHistory';
+
 function getStatusColor(status: string) {
   switch (status) {
     case 'completed':

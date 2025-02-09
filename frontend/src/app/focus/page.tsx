@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { FocusMode } from '@/components/focus/FocusMode';
 import { FocusHistory, type FocusHistoryRef } from '@/components/focus/FocusHistory';
 import { getTaskById } from '@/lib/tasks';

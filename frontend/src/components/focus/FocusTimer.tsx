@@ -36,7 +36,6 @@ export function FocusTimer({
   const [scrollLeft, setScrollLeft] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isStarting, setIsStarting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -84,14 +83,14 @@ export function FocusTimer({
           return prev - 1;
         });
       }, 1000);
-    } else if (isRunning && mode === 'chronometer' && !isPaused) {
+    } else if (isRunning && mode === 'chronometer') {
       interval = setInterval(() => {
         setChronometerTime((prev) => prev + 1);
       }, 1000);
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration, isPaused]);
+  }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration]);
 
   const startCountdown = useCallback(() => {
     setIsStarting(true);
@@ -164,17 +163,9 @@ export function FocusTimer({
     }
   }, [isRunning, mode, selectedDuration, timeInSeconds, onInterrupt]);
 
-  const handleStop = useCallback(() => {
-    if (isRunning && mode === 'chronometer') {
-      onChronometerStop?.(chronometerTime);
-    }
-    setIsRunning(false);
-    setChronometerTime(0);
-  }, [isRunning, mode, chronometerTime, onChronometerStop]);
-
   const renderChronometerButton = () => {
     let icon;
-    let variant = "default";
+    let variant: "default" | "destructive" = "default";
     
     if (isRunning) {
       icon = <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />;
