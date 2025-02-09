@@ -125,22 +125,25 @@ export function FocusTimer({
     if (isRunning) {
       setIsRunning(false);
       if (mode === 'timer') {
-        onInterrupt?.(selectedDuration * 60 - timeInSeconds);
+        if (timeInSeconds > 0) {
+          onInterrupt?.(selectedDuration * 60 - timeInSeconds);
+        }
       } else {
         onComplete?.(chronometerTime);
       }
     } else if (!isStarting) {
-      startCountdown();
+      if (mode === 'chronometer' && chronometerTime > 0) {
+        setChronometerTime(0);
+        startCountdown();
+      } else {
+        startCountdown();
+      }
     }
   }, [isRunning, isStarting, mode, selectedDuration, timeInSeconds, chronometerTime, onInterrupt, onComplete, startCountdown]);
 
   const resetTimer = useCallback(() => {
-    if (isRunning) {
-      if (mode === 'timer') {
-        onInterrupt?.(selectedDuration * 60 - timeInSeconds);
-      } else {
-        onInterrupt?.(chronometerTime);
-      }
+    if (isRunning && mode === 'timer') {
+      onInterrupt?.(selectedDuration * 60 - timeInSeconds);
     }
     setIsRunning(false);
     if (mode === 'timer') {
@@ -148,30 +151,36 @@ export function FocusTimer({
     } else {
       setChronometerTime(0);
     }
-  }, [isRunning, mode, selectedDuration, timeInSeconds, chronometerTime, onInterrupt]);
+  }, [isRunning, mode, selectedDuration, timeInSeconds, onInterrupt]);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6">
+    <div className="p-3 sm:p-4 md:p-6" data-mode={mode}>
       <div className="flex justify-center space-x-2 sm:space-x-4 mb-4 sm:mb-6">
         <Button
           variant={mode === 'timer' ? 'default' : 'outline'}
           onClick={() => {
-            setMode('timer');
-            resetTimer();
+            if (!isRunning) {
+              setMode('timer');
+              resetTimer();
+            }
           }}
           className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
           size="sm"
+          disabled={isRunning}
         >
           Temporizador
         </Button>
         <Button
           variant={mode === 'chronometer' ? 'default' : 'outline'}
           onClick={() => {
-            setMode('chronometer');
-            resetTimer();
+            if (!isRunning) {
+              setMode('chronometer');
+              resetTimer();
+            }
           }}
           className="w-24 sm:w-28 md:w-32 text-xs sm:text-sm md:text-base px-1 sm:px-2"
           size="sm"
+          disabled={isRunning}
         >
           Cronómetro
         </Button>
@@ -246,9 +255,16 @@ export function FocusTimer({
             </Button>
           </div>
         ) : (
-          <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 md:mb-8 font-mono">
-            {mode === 'timer' ? formatTime(timeInSeconds) : formatTime(chronometerTime)}
-          </h3>
+          <>
+            <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 md:mb-8 font-mono">
+              {mode === 'timer' ? formatTime(timeInSeconds) : formatTime(chronometerTime)}
+            </h3>
+            {mode === 'chronometer' && !isRunning && chronometerTime > 0 && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Tiempo registrado: {formatTime(chronometerTime)}
+              </p>
+            )}
+          </>
         )}
 
         <div className="flex justify-center space-x-3 sm:space-x-4">
@@ -262,20 +278,25 @@ export function FocusTimer({
             )}
             disabled={isStarting}
           >
-            {isRunning ? 
-              <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" /> : 
+            {isRunning ? (
+              <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            ) : mode === 'chronometer' && chronometerTime > 0 ? (
+              <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            ) : (
               <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            }
+            )}
           </Button>
-          <Button
-            onClick={resetTimer}
-            variant="outline"
-            size="default"
-            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0"
-            disabled={isStarting}
-          >
-            <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-          </Button>
+          {mode === 'timer' && !isRunning && (
+            <Button
+              onClick={resetTimer}
+              variant="outline"
+              size="default"
+              className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0"
+              disabled={isStarting}
+            >
+              <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

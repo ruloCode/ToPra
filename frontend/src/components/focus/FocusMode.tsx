@@ -8,47 +8,88 @@ import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';
 import { createFocusSession, updateFocusSession, FocusSessionStatus } from '@/lib/focus';
 import { FocusTimer } from './FocusTimer';
-import { PostgrestError } from '@supabase/supabase-js';
 
 interface FocusModeProps {
   task?: Task;
   defaultDuration?: number; // in minutes
+  onSessionChange?: () => void; // Callback para actualizar la lista
 }
 
-export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusModeProps) {
+export function FocusMode({ 
+  task: initialTask, 
+  defaultDuration = 25,
+  onSessionChange 
+}: FocusModeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(initialTask || null);
+  const [timerMode, setTimerMode] = useState<'timer' | 'chronometer'>('timer');
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Notificar cambios en las sesiones
+  const notifySessionChange = useCallback(() => {
+    onSessionChange?.();
+  }, [onSessionChange]);
+
+  // Handle timer interruption (solo para temporizador)
+  const handleTimerInterrupt = useCallback(async (elapsedTime: number) => {
+    if (!currentSessionId || !user || timerMode !== 'timer') return;
+
+    try {
+      await updateFocusSession(currentSessionId, {
+        status: FocusSessionStatus.INTERRUPTED,
+        end_time: new Date().toISOString(),
+        duration: elapsedTime > 0 ? elapsedTime : null,
+      });
+
+      setCurrentSessionId(null);
+      notifySessionChange();
+      
+      toast({
+        title: "Sesión interrumpida",
+        description: "Has pausado tu sesión de enfoque.",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "No se pudo interrumpir la sesión correctamente.",
+        variant: "destructive",
+      });
+    }
+  }, [currentSessionId, user, timerMode, toast, notifySessionChange]);
+
   // Handle timer completion
   const handleTimerComplete = useCallback(async (duration: number) => {
-    if (currentSessionId && user) {
-      try {
-        await updateFocusSession(currentSessionId, {
-          status: FocusSessionStatus.COMPLETED,
-          end_time: new Date().toISOString(),
-          duration: duration || null,
-        });
-        
-        toast({
-          title: "¡Tiempo completado!",
-          description: "Has completado tu sesión de enfoque.",
-        });
-      } catch (error) {
-        console.error('Error updating focus session:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo guardar la sesión completada.",
-          variant: "destructive",
-        });
-      }
+    if (!currentSessionId || !user) return;
+
+    try {
+      await updateFocusSession(currentSessionId, {
+        status: FocusSessionStatus.COMPLETED,
+        end_time: new Date().toISOString(),
+        duration: duration > 0 ? duration : null,
+      });
+
+      setCurrentSessionId(null);
+      notifySessionChange();
+      
+      toast({
+        title: "¡Tiempo completado!",
+        description: timerMode === 'timer' 
+          ? "Has completado tu sesión de enfoque programada."
+          : "Has completado tu sesión de enfoque libre.",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la sesión completada.",
+        variant: "destructive",
+      });
     }
-  }, [currentSessionId, user, toast]);
+  }, [currentSessionId, user, timerMode, toast, notifySessionChange]);
 
   // Handle timer start
-  const handleTimerStart = useCallback(async (duration: number) => {
+  const handleTimerStart = useCallback(async (_duration: number) => {
     if (!user) {
       toast({
         title: "Error",
@@ -59,73 +100,34 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
     }
 
     try {
-      const sessionData = {
+      const mode = _duration > 0 ? 'timer' : 'chronometer';
+      const session = await createFocusSession({
         user_id: user.id,
         task_id: selectedTask?.id || null,
-        duration: duration || null,
-        // Dejamos que la BD maneje los valores por defecto
-      };
-
-      console.log('Creating focus session with data:', sessionData);
-      const session = await createFocusSession(sessionData);
-      console.log('Focus session created:', session);
-
-      if (session?.id) {
-        setCurrentSessionId(session.id);
-        toast({
-          title: "Sesión iniciada",
-          description: "Tu sesión de enfoque ha comenzado.",
-        });
-      } else {
-        throw new Error('No se recibió ID de sesión');
-      }
-    } catch (error) {
-      const pgError = error as PostgrestError;
-      console.error('Error creating focus session:', {
-        error: pgError,
-        message: pgError?.message,
-        details: pgError?.details,
-        user_id: user.id,
-        task_id: selectedTask?.id,
-        duration
+        duration: mode === 'timer' ? _duration : null,
+        status: FocusSessionStatus.ACTIVE,
       });
+
+      if (!session?.id) return;
+
+      setCurrentSessionId(session.id);
+      setTimerMode(mode);
+      notifySessionChange();
+      
+      toast({
+        title: "Sesión iniciada",
+        description: mode === 'timer' 
+          ? "Tu sesión de enfoque programada ha comenzado."
+          : "Tu sesión de enfoque libre ha comenzado.",
+      });
+    } catch {
       toast({
         title: "Error",
-        description: pgError?.message || "No se pudo iniciar la sesión de enfoque. Por favor, intenta de nuevo.",
+        description: "No se pudo iniciar la sesión de enfoque.",
         variant: "destructive",
       });
     }
-  }, [user, selectedTask, toast]);
-
-  // Handle timer interruption
-  const handleTimerInterrupt = useCallback(async (elapsedTime: number) => {
-    if (!currentSessionId || !user) return;
-
-    try {
-      const updateData = {
-        status: FocusSessionStatus.INTERRUPTED,
-        end_time: new Date().toISOString(),
-        duration: elapsedTime || null,
-      };
-
-      console.log('Interrupting session with data:', { sessionId: currentSessionId, ...updateData });
-      await updateFocusSession(currentSessionId, updateData);
-      setCurrentSessionId(null);
-    } catch (error) {
-      const pgError = error as PostgrestError;
-      console.error('Error interrupting focus session:', {
-        error: pgError,
-        message: pgError?.message,
-        sessionId: currentSessionId,
-        elapsedTime
-      });
-      toast({
-        title: "Error",
-        description: pgError?.message || "No se pudo interrumpir la sesión correctamente.",
-        variant: "destructive",
-      });
-    }
-  }, [currentSessionId, user, toast]);
+  }, [user, selectedTask, toast, notifySessionChange]);
 
   // Handle fullscreen changes
   const toggleFullscreen = useCallback(async () => {
@@ -137,8 +139,7 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
         await document.exitFullscreen();
         setIsFullscreen(false);
       }
-    } catch (error) {
-      console.error('Error toggling fullscreen:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'No se pudo activar el modo pantalla completa',
@@ -156,15 +157,6 @@ export function FocusMode({ task: initialTask, defaultDuration = 25 }: FocusMode
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (currentSessionId) {
-        handleTimerInterrupt(0);
-      }
-    };
-  }, [currentSessionId, handleTimerInterrupt]);
 
   return (
     <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
