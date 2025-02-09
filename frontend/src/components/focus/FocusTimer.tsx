@@ -28,6 +28,8 @@ export function FocusTimer({
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -84,23 +86,53 @@ export function FocusTimer({
     return () => clearInterval(interval);
   }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration]);
 
+  const startCountdown = useCallback(() => {
+    setIsStarting(true);
+    setCountdown(3);
+  }, []);
+
+  const cancelCountdown = useCallback(() => {
+    setIsStarting(false);
+    setCountdown(null);
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (countdown !== null && countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null) return null;
+          if (prev === 1) {
+            setIsRunning(true);
+            setIsStarting(false);
+            if (mode === 'timer') {
+              onStart?.(selectedDuration * 60);
+            } else {
+              onStart?.(0);
+            }
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [countdown, mode, selectedDuration, onStart]);
+
   const toggleTimer = useCallback(() => {
-    const newIsRunning = !isRunning;
-    setIsRunning(newIsRunning);
-    if (newIsRunning) {
-      if (mode === 'timer') {
-        onStart?.(selectedDuration * 60);
-      } else {
-        onStart?.(0);
-      }
-    } else {
+    if (isRunning) {
+      setIsRunning(false);
       if (mode === 'timer') {
         onInterrupt?.(selectedDuration * 60 - timeInSeconds);
       } else {
-        onInterrupt?.(chronometerTime);
+        onComplete?.(chronometerTime);
       }
+    } else if (!isStarting) {
+      startCountdown();
     }
-  }, [isRunning, mode, selectedDuration, timeInSeconds, chronometerTime, onStart, onInterrupt]);
+  }, [isRunning, isStarting, mode, selectedDuration, timeInSeconds, chronometerTime, onInterrupt, onComplete, startCountdown]);
 
   const resetTimer = useCallback(() => {
     if (isRunning) {
@@ -194,9 +226,30 @@ export function FocusTimer({
       )}
 
       <div className="text-center">
-        <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 md:mb-8 font-mono">
-          {mode === 'timer' ? formatTime(timeInSeconds) : formatTime(chronometerTime)}
-        </h3>
+        {countdown !== null ? (
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold font-mono">
+                {countdown}
+              </h3>
+              <p className="text-lg text-muted-foreground">
+                {countdown === 3 ? "En sus marcas..." : countdown === 2 ? "Listos..." : "¡Ya!"}
+              </p>
+            </div>
+            <Button
+              onClick={cancelCountdown}
+              variant="outline"
+              size="sm"
+              className="text-sm"
+            >
+              Cancelar ({countdown})
+            </Button>
+          </div>
+        ) : (
+          <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 md:mb-8 font-mono">
+            {mode === 'timer' ? formatTime(timeInSeconds) : formatTime(chronometerTime)}
+          </h3>
+        )}
 
         <div className="flex justify-center space-x-3 sm:space-x-4">
           <Button
@@ -207,6 +260,7 @@ export function FocusTimer({
               "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0",
               isRunning ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
             )}
+            disabled={isStarting}
           >
             {isRunning ? 
               <PauseIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" /> : 
@@ -218,6 +272,7 @@ export function FocusTimer({
             variant="outline"
             size="default"
             className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full p-0"
+            disabled={isStarting}
           >
             <RefreshCwIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
           </Button>
