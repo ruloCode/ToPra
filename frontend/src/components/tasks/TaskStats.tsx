@@ -2,12 +2,19 @@
 
 import { Task, TaskStatus } from '@/lib/tasks';
 import { Calendar, CheckCircle2, Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getFocusSessions, type FocusSession } from '@/lib/focus';
+import { useAuth } from '@/components/AuthProvider';
 
 interface TaskStatsProps {
   tasks: Task[];
+  todayOnly?: boolean;
 }
 
-export default function TaskStats({ tasks }: TaskStatsProps) {
+export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) {
+  const [sessions, setSessions] = useState<FocusSession[]>([]);
+  const { user } = useAuth();
+  
   const completedTasks = tasks.filter(
     (task) => task.status === TaskStatus.COMPLETED
   ).length;
@@ -17,9 +24,36 @@ export default function TaskStats({ tasks }: TaskStatsProps) {
     (task) => task.status === TaskStatus.PENDING && task.due_date
   ).length;
 
-  // Calculate focus time (example calculation - adjust based on your needs)
-  const focusTime = tasks.reduce((total) => {
-    return total + 10;
+  useEffect(() => {
+    if (user) {
+      getFocusSessions({ userId: user.id })
+        .then(setSessions)
+        .catch(console.error);
+    }
+  }, [user]);
+
+  // Calculate total focus time from completed sessions
+  const focusTime = sessions.reduce((total, session) => {
+    if (todayOnly) {
+      const sessionDate = new Date(session.start_time);
+      const today = new Date();
+      
+      // Check if the session is from today
+      const isToday = sessionDate.getDate() === today.getDate() &&
+                      sessionDate.getMonth() === today.getMonth() &&
+                      sessionDate.getFullYear() === today.getFullYear();
+
+      // Only count completed sessions from today
+      if (session.status === 'completed' && isToday) {
+        return total + (session.duration || 0);
+      }
+    } else {
+      // Count all completed sessions
+      if (session.status === 'completed') {
+        return total + (session.duration || 0);
+      }
+    }
+    return total;
   }, 0);
 
   const formatFocusTime = (minutes: number) => {
@@ -67,4 +101,4 @@ export default function TaskStats({ tasks }: TaskStatsProps) {
       </div>
     </div>
   );
-} 
+}

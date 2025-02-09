@@ -86,7 +86,7 @@ export default function Home() {
 
         <div className="grid gap-6">
           {/* Quick Stats */}
-          <TaskStats tasks={tasks} />
+          <TaskStats tasks={tasks} todayOnly={true} />
 
           {/* Tasks Section */}
           <section>

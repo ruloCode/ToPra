@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 
 export default function Auth() {
@@ -9,6 +12,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,78 +41,85 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleAuth}>
-          <div className="-space-y-px rounded-md shadow-sm">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+    <div className="min-h-screen w-full flex justify-center items-center bg-[#1C1C24]">
+    
+      <div className="p-8 lg:p-12 flex flex-col bg-[#1C1C24] max-w-md w-full lg:w-1/2">
+        <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center">
+          <div className="mb-8">
+            <h2 className="text-4xl font-semibold text-white mb-2">
+              {isSignUp ? 'Create your account' : 'Sign in to your account'}
+            </h2>
+            <p className="text-gray-400">
+              {isSignUp ? (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(false)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    Sign in
+                  </button>
+                </>
+              ) : (
+                <>
+                  Dont have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(true)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
+
+          <form className="space-y-4" onSubmit={handleAuth}>
+            <Input
+              type="email"
+              placeholder="Email"
+              className="bg-[#28282F] border-0 text-white placeholder:text-gray-500"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <div className="relative">
+              <Input
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
+                className="bg-[#28282F] border-0 text-white placeholder:text-gray-500 pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+              >
+                <Eye className="h-5 w-5" />
+              </button>
             </div>
-          </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
 
-          <div>
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-indigo-400"
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
               {loading ? 'Processing...' : isSignUp ? 'Sign up' : 'Sign in'}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-indigo-600 hover:text-indigo-500"
-            >
-              {isSignUp
-                ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"}
-            </button>
-          </div>
-        </form>
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );
-} 
+}
