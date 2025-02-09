@@ -4,7 +4,7 @@ import { Task } from '@/lib/tasks';
 import { useToast } from '@/components/ui/use-toast';
 import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';
-import { createFocusSession, updateFocusSession, FocusSessionStatus } from '@/lib/focus';
+import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
 import { FocusTimer } from './FocusTimer';
 import type { FocusHistoryRef } from './FocusHistory';
 
@@ -27,6 +27,31 @@ export function FocusMode({
   const { user } = useAuth();
   const isCreatingSession = useRef(false);
 
+  // Separar la carga inicial y el manejo de errores
+  useEffect(() => {
+    const loadActiveSession = async () => {
+      if (!user) return;
+      try {
+        const sessions = await getFocusSessions({ 
+          userId: user.id,
+          status: FocusSessionStatus.ACTIVE 
+        });
+        const activeSession = sessions[0];
+        
+        // Solo actualizar el estado si realmente hay una sesión activa
+        if (activeSession?.id && activeSession.id !== currentSessionId) {
+          setCurrentSessionId(activeSession.id);
+          setSelectedTask(activeSession.task || null);
+          setTimerMode(activeSession.duration ? 'timer' : 'chronometer');
+        }
+      } catch (error) {
+        console.error('Error loading active session:', error);
+      }
+    };
+    
+    loadActiveSession();
+  }, [user, currentSessionId]);
+
   // Handle task selection
   const handleTaskSelect = useCallback((task: Task | null) => {
     if (!currentSessionId) {
@@ -39,17 +64,18 @@ export function FocusMode({
     if (!currentSessionId || !user || timerMode !== 'chronometer') return;
 
     try {
+      const durationInMinutes = Math.ceil(elapsedTime / 60);
       await updateFocusSession(currentSessionId, {
         status: FocusSessionStatus.COMPLETED,
         end_time: new Date().toISOString(),
-        duration: elapsedTime,
+        duration: durationInMinutes,
       });
 
       setCurrentSessionId(null);
       await historyRef.current?.reloadSessions();
       toast({
         title: "¡Sesión finalizada!",
-        description: `Has completado ${Math.floor(elapsedTime / 60)} minutos de enfoque.`,
+        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
       });
     } catch (error) {
       console.error('Error completing session:', error);
@@ -66,10 +92,11 @@ export function FocusMode({
     if (!currentSessionId || !user || timerMode !== 'timer') return;
 
     try {
+      const durationInMinutes = Math.ceil(elapsedTime / 60);
       await updateFocusSession(currentSessionId, {
         status: FocusSessionStatus.INTERRUPTED,
         end_time: new Date().toISOString(),
-        duration: elapsedTime > 0 ? elapsedTime : null,
+        duration: durationInMinutes > 0 ? durationInMinutes : null,
       });
 
       setCurrentSessionId(null);
@@ -77,7 +104,7 @@ export function FocusMode({
       await historyRef.current?.reloadSessions();
       toast({
         title: "Sesión interrumpida",
-        description: "Has pausado tu sesión de enfoque.",
+        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
       });
     } catch (error) {
       console.error('Error interrupting session:', error);
@@ -94,10 +121,11 @@ export function FocusMode({
     if (!currentSessionId || !user || timerMode !== 'timer') return;
 
     try {
+      const durationInMinutes = Math.ceil(elapsedTime / 60);
       await updateFocusSession(currentSessionId, {
         status: FocusSessionStatus.COMPLETED,
         end_time: new Date().toISOString(),
-        duration: elapsedTime,
+        duration: durationInMinutes,
       });
 
       setCurrentSessionId(null);
@@ -105,7 +133,7 @@ export function FocusMode({
       await historyRef.current?.reloadSessions();
       toast({
         title: "¡Felicidades!",
-        description: "Has completado tu sesión de enfoque.",
+        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
       });
     } catch {
       toast({
@@ -127,28 +155,34 @@ export function FocusMode({
       return;
     }
 
-    if (currentSessionId) {
-      toast({
-        title: "Error",
-        description: "Ya hay una sesión activa.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Prevenir múltiples creaciones de sesión
-    if (isCreatingSession.current) {
-      return;
-    }
-
+    if (isCreatingSession.current) return;
     isCreatingSession.current = true;
 
     try {
+      const sessions = await getFocusSessions({ 
+        userId: user.id,
+        status: FocusSessionStatus.ACTIVE 
+      });
+      
+      if (sessions[0]?.id) {
+        // Finalizar la sesión activa anterior
+        const startTime = new Date(sessions[0].start_time).getTime();
+        const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
+        
+        await updateFocusSession(sessions[0].id, {
+          status: FocusSessionStatus.INTERRUPTED,
+          end_time: new Date().toISOString(),
+          duration: elapsedMinutes || null,
+        });
+      }
+
       const mode = _duration > 0 ? 'timer' : 'chronometer';
+      const durationInMinutes = mode === 'timer' ? Math.floor(_duration / 60) : null;
+      
       const session = await createFocusSession({
         user_id: user.id,
         task_id: selectedTask?.id || null,
-        duration: mode === 'timer' ? _duration : null,
+        duration: durationInMinutes,
         status: FocusSessionStatus.ACTIVE,
       });
 
@@ -156,8 +190,8 @@ export function FocusMode({
 
       setCurrentSessionId(session.id);
       setTimerMode(mode);
-      // Actualizar el historial
       await historyRef.current?.reloadSessions();
+      
       toast({
         title: "Sesión iniciada",
         description: mode === 'timer' 
@@ -174,7 +208,7 @@ export function FocusMode({
     } finally {
       isCreatingSession.current = false;
     }
-  }, [user, selectedTask, currentSessionId, toast, historyRef]);
+  }, [user, selectedTask, toast, historyRef]);
 
   // Update selected task when initial task changes
   useEffect(() => {

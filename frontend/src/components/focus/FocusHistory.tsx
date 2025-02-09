@@ -40,6 +40,9 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Añadir estado para el tiempo de las sesiones activas
+  const [activeDurations, setActiveDurations] = useState<Record<string, number>>({});
+
   const loadSessions = useCallback(async () => {
     if (!user) return;
     
@@ -67,6 +70,23 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
   useEffect(() => {
     loadSessions();
   }, [loadSessions]);
+
+  // Actualizar el tiempo de las sesiones activas
+  useEffect(() => {
+    const activeSessionsInterval = setInterval(() => {
+      const newDurations: Record<string, number> = {};
+      sessions.forEach(session => {
+        if (session.status === 'active') {
+          const startTime = new Date(session.start_time).getTime();
+          const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
+          newDurations[session.id] = elapsedMinutes;
+        }
+      });
+      setActiveDurations(newDurations);
+    }, 1000);
+
+    return () => clearInterval(activeSessionsInterval);
+  }, [sessions]);
 
   const handleDelete = async (sessionId: string) => {
     try {
@@ -130,7 +150,9 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
                 <div className="flex flex-col items-end gap-2">
                   <div className="text-right">
                     <p className="font-medium">
-                      {formatDuration(session.duration)}
+                      {session.status === 'active' 
+                        ? formatDuration(activeDurations[session.id] || 0)
+                        : formatDuration(session.duration)}
                     </p>
                     <p className={`text-sm ${getStatusColor(session.status)}`}>
                       {getStatusText(session.status)}
@@ -212,11 +234,5 @@ function getStatusText(status: string) {
 
 function formatDuration(minutes: number | null): string {
   if (!minutes) return 'En progreso';
-  
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  
-  if (hours === 0) return `${minutes} minuto${minutes === 1 ? '' : 's'}`;
-  if (mins === 0) return `${hours} hora${hours === 1 ? '' : 's'}`;
-  return `${hours} hora${hours === 1 ? '' : 's'} y ${mins} minuto${mins === 1 ? '' : 's'}`;
+  return `${minutes} minuto${minutes === 1 ? '' : 's'}`;
 }

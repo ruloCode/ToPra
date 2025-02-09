@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlayIcon, PauseIcon, RefreshCwIcon, Maximize2Icon, Minimize2Icon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { saveTimerState, getTimerState, clearTimerState } from '@/lib/focus';
 
 export type TimerMode = 'timer' | 'chronometer';
 
@@ -26,25 +27,40 @@ export function FocusTimer({
   onToggleFullscreen,
   onChronometerStop
 }: FocusTimerProps) {
-  const [mode, setMode] = useState<TimerMode>('timer');
-  const [selectedDuration, setSelectedDuration] = useState(defaultDuration);
-  const [timeInSeconds, setTimeInSeconds] = useState(defaultDuration * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [chronometerTime, setChronometerTime] = useState(0);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Recuperar el estado guardado o usar valores por defecto
+  const savedState = isClient ? getTimerState() : null;
+  const [mode, setMode] = useState<TimerMode>(savedState?.mode || 'timer');
+  const [selectedDuration, setSelectedDuration] = useState(savedState?.selectedDuration || defaultDuration);
+  const [timeInSeconds, setTimeInSeconds] = useState(savedState?.timeInSeconds || defaultDuration * 60);
+  const [isRunning, setIsRunning] = useState(savedState?.isRunning || false);
+  const [chronometerTime, setChronometerTime] = useState(savedState?.chronometerTime || 0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isStarting, setIsStarting] = useState(false);
 
-  const formatTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  // Si había una sesión en progreso, restaurar el tiempo transcurrido
+  useEffect(() => {
+    if (savedState?.isRunning && savedState?.startTime) {
+      const elapsedSeconds = Math.floor((Date.now() - savedState.startTime) / 1000);
+      if (savedState.mode === 'chronometer') {
+        setChronometerTime(prev => prev + elapsedSeconds);
+      } else {
+        setTimeInSeconds(prev => Math.max(0, prev - elapsedSeconds));
+      }
     }
+  }, []);
+
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
@@ -135,22 +151,20 @@ export function FocusTimer({
   const toggleTimer = useCallback(() => {
     if (mode === 'chronometer') {
       if (isRunning) {
-        // Si está corriendo, lo pausamos y completamos la sesión
         setIsRunning(false);
-        // Convertir los segundos a minutos, redondeando hacia arriba
         const minutesElapsed = Math.ceil(chronometerTime / 60);
         onChronometerStop?.(minutesElapsed);
         setChronometerTime(0);
+        clearTimerState(); // Limpiar estado al detener el cronómetro
       } else {
-        // Si no está corriendo, iniciamos
         startCountdown();
       }
     } else {
-      // Lógica existente para el timer...
       if (isRunning) {
         setIsRunning(false);
         if (timeInSeconds > 0) {
           onInterrupt?.(selectedDuration * 60 - timeInSeconds);
+          clearTimerState(); // Limpiar estado al interrumpir
         }
       } else if (!isStarting) {
         startCountdown();
@@ -168,7 +182,55 @@ export function FocusTimer({
     } else {
       setChronometerTime(0);
     }
+    clearTimerState();
   }, [isRunning, mode, selectedDuration, timeInSeconds, onInterrupt]);
+
+  // Guardar el estado cuando cambie (solo en el cliente)
+  useEffect(() => {
+    if (!isClient) return;
+
+    if (isRunning || timeInSeconds !== defaultDuration * 60 || chronometerTime > 0) {
+      saveTimerState({
+        mode,
+        isRunning,
+        timeInSeconds,
+        selectedDuration,
+        chronometerTime,
+        startTime: Date.now()
+      });
+    } else {
+      clearTimerState();
+    }
+  }, [mode, isRunning, timeInSeconds, selectedDuration, chronometerTime, defaultDuration, isClient]);
+
+  useEffect(() => {
+    if (timeInSeconds === 0 && isRunning && mode === 'timer') {
+      setIsRunning(false);
+      clearTimerState();
+      onComplete?.(selectedDuration * 60);
+    }
+  }, [timeInSeconds, isRunning, mode, selectedDuration, onComplete]);
+
+  // Efecto para manejar el beforeunload (solo en el cliente)
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleBeforeUnload = () => {
+      if (isRunning) {
+        saveTimerState({
+          mode,
+          isRunning,
+          timeInSeconds,
+          selectedDuration,
+          chronometerTime,
+          startTime: Date.now()
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [mode, isRunning, timeInSeconds, selectedDuration, chronometerTime, isClient]);
 
   const renderChronometerButton = () => {
     let icon;

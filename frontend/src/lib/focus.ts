@@ -24,6 +24,65 @@ export type CreateFocusSessionInput = {
 
 export type UpdateFocusSessionInput = Partial<Omit<FocusSession, 'id' | 'created_at' | 'updated_at'>>;
 
+interface TimerState {
+  mode: 'timer' | 'chronometer';
+  isRunning: boolean;
+  timeInSeconds: number;
+  selectedDuration: number;
+  chronometerTime: number;
+  startTime: number;
+}
+
+const isClient = typeof window !== 'undefined';
+
+export const saveTimerState = (state: TimerState) => {
+  if (!isClient) return;
+  
+  try {
+    localStorage.setItem('timerState', JSON.stringify({
+      ...state,
+      startTime: Date.now()
+    }));
+  } catch (error) {
+    console.error('Error saving timer state:', error);
+  }
+};
+
+export const getTimerState = (): TimerState | null => {
+  if (!isClient) return null;
+  
+  try {
+    const savedState = localStorage.getItem('timerState');
+    if (!savedState) return null;
+
+    const state = JSON.parse(savedState) as TimerState;
+    const elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+
+    if (state.isRunning) {
+      if (state.mode === 'chronometer') {
+        state.chronometerTime += elapsedSeconds;
+      } else if (state.mode === 'timer') {
+        state.timeInSeconds = Math.max(0, state.timeInSeconds - elapsedSeconds);
+      }
+    }
+
+    return state;
+  } catch (error) {
+    console.error('Error getting timer state:', error);
+    return null;
+  }
+};
+
+export const clearTimerState = () => {
+  if (!isClient) return;
+  
+  try {
+    localStorage.removeItem('timerState');
+  } catch (error) {
+    console.error('Error clearing timer state:', error);
+  }
+};
+
 // Create a new focus session
 export async function createFocusSession(session: CreateFocusSessionInput): Promise<FocusSession> {
   if (!session.user_id) {
@@ -62,33 +121,30 @@ export async function createFocusSession(session: CreateFocusSessionInput): Prom
   return data;
 }
 
-// Get focus sessions with optional filters
-export async function getFocusSessions(filters?: {
+interface GetFocusSessionsParams {
   userId: string;
   status?: FocusSessionStatus;
-  taskId?: string;
   startDate?: Date;
   endDate?: Date;
-}) {
+}
+
+export async function getFocusSessions({ userId, status, startDate, endDate }: GetFocusSessionsParams) {
   let query = supabase
     .from('focus_sessions')
     .select(`
       *,
       task:tasks(id, title, description)
     `)
-    .eq('user_id', filters?.userId);
+    .eq('user_id', userId);
 
-  if (filters?.status) {
-    query = query.eq('status', filters.status);
+  if (status) {
+    query = query.eq('status', status);
   }
-  if (filters?.taskId) {
-    query = query.eq('task_id', filters.taskId);
+  if (startDate) {
+    query = query.gte('start_time', startDate.toISOString());
   }
-  if (filters?.startDate) {
-    query = query.gte('start_time', filters.startDate.toISOString());
-  }
-  if (filters?.endDate) {
-    query = query.lte('end_time', filters.endDate.toISOString());
+  if (endDate) {
+    query = query.lte('end_time', endDate.toISOString());
   }
 
   const { data, error } = await query.order('start_time', { ascending: false });
