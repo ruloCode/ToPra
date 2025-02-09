@@ -60,32 +60,32 @@ export function FocusMode({
   }, [currentSessionId]);
 
   // Handle chronometer stop
-  const handleChronometerStop = useCallback(async (elapsedTime: number) => {
-    if (!currentSessionId || !user || timerMode !== 'chronometer') return;
+  const handleChronometerStop = useCallback(async (elapsedMinutes: number) => {
+    if (!user || !currentSessionId) return;
 
     try {
-      const durationInMinutes = Math.ceil(elapsedTime / 60);
       await updateFocusSession(currentSessionId, {
         status: FocusSessionStatus.COMPLETED,
         end_time: new Date().toISOString(),
-        duration: durationInMinutes,
+        duration: elapsedMinutes, // Aquí guardamos los minutos que vienen del cronómetro
       });
 
       setCurrentSessionId(null);
       await historyRef.current?.reloadSessions();
+
       toast({
-        title: "¡Sesión finalizada!",
-        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
+        title: "¡Bien hecho!",
+        description: `Has completado una sesión de ${elapsedMinutes} minutos.`,
       });
     } catch (error) {
-      console.error('Error completing session:', error);
+      console.error('Error al finalizar la sesión:', error);
       toast({
         title: "Error",
-        description: "No se pudo finalizar la sesión correctamente.",
+        description: "No se pudo guardar la sesión.",
         variant: "destructive",
       });
     }
-  }, [currentSessionId, user, timerMode, toast, historyRef]);
+  }, [user, currentSessionId, toast, historyRef]);
 
   // Handle timer interruption - solo para el temporizador
   const handleTimerInterrupt = useCallback(async (elapsedTime: number) => {

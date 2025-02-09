@@ -152,10 +152,11 @@ export function FocusTimer({
     if (mode === 'chronometer') {
       if (isRunning) {
         setIsRunning(false);
-        const minutesElapsed = Math.ceil(chronometerTime / 60);
+        // Siempre redondeamos hacia arriba para asegurar que se guarde el minuto completo
+        const minutesElapsed = Math.max(1, Math.ceil(chronometerTime / 60));
         onChronometerStop?.(minutesElapsed);
         setChronometerTime(0);
-        clearTimerState(); // Limpiar estado al detener el cronómetro
+        clearTimerState();
       } else {
         startCountdown();
       }
