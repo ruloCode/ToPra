@@ -261,9 +261,9 @@ export function FocusTimer({
   };
 
   return (
-    <div className="p-2 sm:p-3 md:p-4" data-mode={mode}>
-      <div className="flex justify-between items-center mb-3 sm:mb-4">
-        <div className="flex space-x-1 sm:space-x-2">
+    <div className="p-2 sm:p-3 md:p-4  " data-mode={mode}>
+      <div className="flex justify-between items-center mb-3 sm:mb-4 relative">
+        <div className="flex justify-stretch space-x-1 sm:space-x-2">
           <Button
             variant={mode === 'timer' ? 'default' : 'outline'}
             onClick={() => {
@@ -298,7 +298,7 @@ export function FocusTimer({
             variant="ghost"
             size="sm"
             onClick={onToggleFullscreen}
-            className="ml-1 sm:ml-2"
+            className="ml-1 sm:ml-2  top-2 right-2 sm:top-3 sm:right-3"
           >
             {isFullscreen ? (
               <Minimize2Icon className="h-4 w-4" />

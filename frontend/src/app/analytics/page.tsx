@@ -1,7 +1,6 @@
 import ProductivityDashboard from '@/components/analytics/ProductivityDashboard';
 import HistoricalStats from '@/components/analytics/HistoricalStats';
 import TaskAnalytics from '@/components/analytics/TaskAnalytics';
-import ExportData from '@/components/analytics/ExportData';
 import { Suspense } from 'react';
 
 export default function AnalyticsPage() {
@@ -12,9 +11,9 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-bold">Productivity Analytics</h1>
           <p className="text-gray-500 mt-2">Track your progress and productivity metrics</p>
         </div>
-        <div className="w-full sm:w-auto">
+        {/* <div className="w-full sm:w-auto">
           <ExportData />
-        </div>
+        </div> */}
       </header>
       
       <div className="grid gap-8">

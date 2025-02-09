@@ -6,33 +6,40 @@ import {
   Home,
   ListTodo,
   Target,
-  Settings,
+  BarChart,
   Plus,
 } from 'lucide-react';
 import { useTaskModal } from '@/contexts/TaskModalContext';
 import { useTasks } from '@/contexts/TaskContext';
+import { useAuth } from '@/components/AuthProvider';
 
 export const BottomNav = () => {
   const pathname = usePathname();
   const { openCreateTaskModal } = useTaskModal();
   const { refreshTasks } = useTasks();
+  const { user } = useAuth();
 
-  const isActive = (path: string) => pathname === path;
-
-  const handleAddTask = () => {
-    openCreateTaskModal(refreshTasks);
-  };
+  if (!user) return null;
 
   const navigation = [
     { name: 'Today', href: '/', icon: Home },
     { name: 'Tasks', href: '/tasks', icon: ListTodo },
     { name: 'Focus', href: '/focus', icon: Target },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Analytics', href: '/analytics', icon: BarChart },
   ];
 
-  // Dividir la navegación en dos grupos para el botón central
   const leftNav = navigation.slice(0, 2);
   const rightNav = navigation.slice(2);
+
+  const handleAddTask = () => {
+    openCreateTaskModal(refreshTasks);
+  };
+
+  const isActive = (path: string) => {
+    if (path === '/' && pathname === '/') return true;
+    if (path !== '/' && pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
     <nav className="bottom-nav">
@@ -43,7 +50,7 @@ export const BottomNav = () => {
             <Link
               key={item.name}
               href={item.href}
-              className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
+              className={`nav-link ${isActive(item.href) ? '!active' : ''}`}
             >
               <Icon className="h-5 w-5" />
               <span className="text-xs">{item.name}</span>
@@ -69,7 +76,7 @@ export const BottomNav = () => {
             <Link
               key={item.name}
               href={item.href}
-              className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
+              className={`nav-link ${isActive(item.href) ? '!active' : ''}`}
             >
               <Icon className="h-5 w-5" />
               <span className="text-xs">{item.name}</span>
@@ -81,4 +88,4 @@ export const BottomNav = () => {
   );
 };
 
-export default BottomNav; 
+export default BottomNav;

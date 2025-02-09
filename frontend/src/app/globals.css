@@ -13,6 +13,16 @@
   --bottom-nav-height: 4rem;
 }
 
+/* Prevenir scroll cuando el menú está abierto */
+.radix-dropdown-menu-content {
+  position: fixed !important;
+  transform: none !important;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
 @layer base {
   body {
     @apply bg-[#fafafa] text-foreground antialiased;

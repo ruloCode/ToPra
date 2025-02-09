@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Switch } from "../ui/switch";
+import { Switch } from "@radix-ui/react-switch";
 import { Button } from '../ui/button';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '../ui/use-toast';

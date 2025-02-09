@@ -7,6 +7,7 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import { Toaster } from "@/components/ui/toaster";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
+import { MobileMenu } from "@/components/MobileMenu";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,14 +22,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} h-full`}>
+    <html lang="en" className="h-full overflow-x-hidden">
+      <body className={`${inter.className} h-full overflow-x-hidden`}>
         <AuthProvider>
           <TaskProvider>
             <TaskModalProvider>
-              <div className="flex min-h-screen">
+              <div className="flex min-h-screen pb-[64px] md:pb-0 relative overflow-x-hidden">
                 <Sidebar />
                 <div className="flex-1 overflow-auto">
+                  <MobileMenu />
                   <div className="main-content sidebar-expanded">
                     {children}
                   </div>

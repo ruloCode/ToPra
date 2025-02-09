@@ -245,7 +245,7 @@ export function FocusMode({
   }, []);
 
   return (
-    <div className="space-y-4 sm:space-y-8">
+    <div className="w-full max-w-xl mx-auto px-2 sm:px-4 py-2 sm:py-6">
       <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
         <div className="space-y-2 sm:space-y-4">
           <div className="p-2 sm:p-4 border-b">
@@ -256,7 +256,7 @@ export function FocusMode({
             />
           </div>
 
-          <div className="p-2 sm:p-4">
+          <div className="p-2 sm:p-4 max-w-[85vw] ">
             <FocusTimer
               defaultDuration={defaultDuration}
               onStart={handleTimerStart}
