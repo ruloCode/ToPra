@@ -53,11 +53,31 @@ export function FocusMode({
   }, [user, currentSessionId]);
 
   // Handle task selection
-  const handleTaskSelect = useCallback((task: Task | null) => {
-    if (!currentSessionId) {
+  const handleTaskSelect = useCallback(async (task: Task | null) => {
+    if (!user) return;
+
+    if (currentSessionId) {
+      try {
+        await updateFocusSession(currentSessionId, {
+          task_id: task?.id || null
+        });
+        setSelectedTask(task);
+        toast({
+          title: task ? "Tarea actualizada" : "Tarea removida",
+          description: task ? "Se ha vinculado una nueva tarea a la sesión" : "Se ha desvinculado la tarea de la sesión",
+        });
+      } catch (error) {
+        console.error('Error updating session task:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar la tarea de la sesión",
+          variant: "destructive",
+        });
+      }
+    } else {
       setSelectedTask(task);
     }
-  }, [currentSessionId]);
+  }, [currentSessionId, user, toast]);
 
   // Handle chronometer stop
   const handleChronometerStop = useCallback(async (elapsedMinutes: number) => {

@@ -23,23 +23,23 @@ export default function Home() {
     setIsLoadingTasks(true);
     try {
       const allTasks = await getTasks({ userId: user.id });
-      // Filter tasks due today or overdue
+      // Filter tasks: only pending tasks due today or overdue
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
 
       const todayTasks = allTasks.filter(task => {
+        // Only include pending tasks
+        if (task.status === TaskStatus.COMPLETED) return false;
         if (!task.due_date) return false;
         const dueDate = new Date(task.due_date);
         return dueDate <= todayEnd;
       });
 
-      // Sort tasks: pending first, then completed
+      // Sort tasks by priority
       todayTasks.sort((a, b) => {
-        if (a.status === TaskStatus.COMPLETED && b.status !== TaskStatus.COMPLETED) return 1;
-        if (a.status !== TaskStatus.COMPLETED && b.status === TaskStatus.COMPLETED) return -1;
-        return 0;
+        return (b.priority || 0) - (a.priority || 0);
       });
 
       setTasks(todayTasks);
