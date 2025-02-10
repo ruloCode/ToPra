@@ -116,8 +116,8 @@ export default function TaskList({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-sm font-medium text-text-secondary">
             {sortedTasks.length} {sortedTasks.length === 1 ? "task" : "tasks"}
-            {selectedTag && <span className="ml-1">con etiqueta "{selectedTag}"</span>}
-            {searchQuery && <span className="ml-1">coinciden con "{searchQuery}"</span>}
+            {selectedTag && <span className="ml-1">con etiqueta &quot;{selectedTag}&quot;</span>}
+            {searchQuery && <span className="ml-1">coinciden con &quot;{searchQuery}&quot;</span>}
           </h2>
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             {availableTags.length > 0 && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/lib/tasks';
 import { analyzePriority, suggestNextTask } from '@/lib/ai';
 
@@ -15,13 +15,7 @@ export default function AITaskAssistant({ tasks, onPriorityUpdate }: AITaskAssis
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  useEffect(() => {
-    if (tasks.length > 0) {
-      loadSuggestions();
-    }
-  }, [tasks]);
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -33,7 +27,13 @@ export default function AITaskAssistant({ tasks, onPriorityUpdate }: AITaskAssis
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [tasks]);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      loadSuggestions();
+    }
+  }, [tasks, loadSuggestions]);
 
   const handleAnalyzePriority = async (task: Task) => {
     setIsLoading(true);
@@ -148,4 +148,4 @@ export default function AITaskAssistant({ tasks, onPriorityUpdate }: AITaskAssis
       </div>
     </div>
   );
-} 
+}
