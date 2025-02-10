@@ -146,7 +146,6 @@ export default function CreateTaskForm({
             <option value="1">Baja</option>
             <option value="2">Media</option>
             <option value="3">Alta</option>
-            <option value="4">Urgente</option>
           </select>
         </div>
 
@@ -175,15 +174,47 @@ export default function CreateTaskForm({
         >
           Etiquetas
         </label>
-        <input
-          type="text"
-          name="tags"
-          id="tags"
-          value={formData.tags}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-          placeholder="Etiquetas separadas por comas"
-        />
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const currentTags = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+                const tag = "personal";
+                if (!currentTags.includes(tag)) {
+                  const newTags = [...currentTags, tag];
+                  setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
+                }
+              }}
+              className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-600 hover:bg-yellow-200"
+            >
+              + personal
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const currentTags = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+                const tag = "trabajo";
+                if (!currentTags.includes(tag)) {
+                  const newTags = [...currentTags, tag];
+                  setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
+                }
+              }}
+              className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200"
+            >
+              + trabajo
+            </button>
+          </div>
+          <input
+            type="text"
+            name="tags"
+            id="tags"
+            value={formData.tags}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            placeholder="Etiquetas separadas por comas"
+          />
+        </div>
       </div>
 
       {error && (
@@ -216,4 +247,4 @@ export default function CreateTaskForm({
       </div>
     </form>
   );
-} 
+}

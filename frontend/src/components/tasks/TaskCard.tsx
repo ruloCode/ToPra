@@ -84,6 +84,17 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
     }
   };
 
+  const getTagColor = (tag: string) => {
+    switch (tag.toLowerCase()) {
+      case 'trabajo':
+        return 'bg-blue-100 text-blue-600';
+      case 'personal':
+        return 'bg-yellow-100 text-yellow-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
   return (
     <div 
       className="task-item group w-full max-w-full overflow-hidden rounded-lg border border-border bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
@@ -155,6 +166,18 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
             <p className="text-xs text-text-secondary break-words">
               {task.description}
             </p>
+          )}
+          {task.tags && task.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {task.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${getTagColor(tag)}`}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>
