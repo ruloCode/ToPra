@@ -15,9 +15,17 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
   const [sessions, setSessions] = useState<FocusSession[]>([]);
   const { user } = useAuth();
   
-  const completedTasks = tasks.filter(
-    (task) => task.status === TaskStatus.COMPLETED
-  ).length;
+  const completedTasks = tasks.filter((task) => {
+    if (task.status !== TaskStatus.COMPLETED) return false;
+    if (todayOnly) {
+      const completionDate = new Date(task.updated_at);
+      const today = new Date();
+      return completionDate.getDate() === today.getDate() &&
+             completionDate.getMonth() === today.getMonth() &&
+             completionDate.getFullYear() === today.getFullYear();
+    }
+    return true;
+  }).length;
 
   const totalTasks = tasks.length;
   const upcomingTasks = tasks.filter(
@@ -66,10 +74,13 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+    {!todayOnly && (
       <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
         <div className="rounded-full bg-[#fff3f2] p-2">
           <CheckCircle2 className="h-5 w-5 text-accent" />
         </div>
+
         <div>
           <p className="text-sm text-text-secondary">Completed</p>
           <p className="text-lg font-semibold">
@@ -77,6 +88,9 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
           </p>
         </div>
       </div>
+    )}
+
+  
 
       <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
         <div className="rounded-full bg-[#edf6ff] p-2">

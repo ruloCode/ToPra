@@ -36,11 +36,19 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, onInteractOutside, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay className="bg-black/80 z-[150]" />
     <DialogPrimitive.Content
       ref={ref}
+      onInteractOutside={(e) => {
+        // Prevenir cierre al hacer clic fuera si onInteractOutside no está definido
+        if (!onInteractOutside) {
+          e.preventDefault();
+        } else {
+          onInteractOutside(e);
+        }
+      }}
       className={cn(
         "z-[151] w-full border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%] sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%] overflow-hidden",
         className

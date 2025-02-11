@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Task, createTask, TaskStatus } from '@/lib/tasks';
 import { getChatResponse } from '@/lib/ai';
 import { useAuth } from '@/components/AuthProvider';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Bot } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -54,19 +54,15 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
         ai_metadata: {},
       });
       
-      // Notify parent component without closing the modal
       onTaskExtracted?.(newTask);
       
-      // Add confirmation message
       const confirmationMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: `✅ Tarea creada exitosamente: "${newTask.title}"`,
+        content: `✅ ¡He creado la tarea "${newTask.title}" exitosamente! ¿Necesitas algo más?`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, confirmationMessage]);
-
-      // Focus back on input after task creation
       inputRef.current?.focus();
     } catch (error) {
       console.error('Error creating task:', error);
@@ -96,6 +92,14 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
     setIsLoading(true);
 
     try {
+      const thinkingMessage: Message = {
+        id: 'thinking',
+        role: 'assistant',
+        content: '🤔 Pensando...',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, thinkingMessage]);
+
       const chatHistory = messages.map(m => ({
         role: m.role,
         content: m.content,
@@ -105,6 +109,9 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
         role: 'user',
         content: userMessage.content,
       }]);
+
+      // Remove thinking message
+      setMessages(prev => prev.filter(m => m.id !== 'thinking'));
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -121,6 +128,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
 
     } catch (error) {
       console.error('Error getting AI response:', error);
+      setMessages(prev => prev.filter(m => m.id !== 'thinking'));
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -149,6 +157,17 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
 
       <div className="flex-1 overflow-y-auto p-4 min-h-0">
         <div className="space-y-4">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+              <Bot className="h-12 w-12 mb-4 text-accent/40" />
+              <h3 className="text-lg font-medium mb-2">¡Bienvenido al Asistente de Tareas!</h3>
+              <p className="text-sm max-w-md">
+                Puedo ayudarte a crear tareas de manera natural. Por ejemplo, prueba diciendo:
+                "Necesito crear una tarea para estudiar mañana"
+              </p>
+            </div>
+          )}
+          
           {messages.map((message) => (
             <div
               key={message.id}
@@ -160,13 +179,17 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
                   message.role === 'user'
                     ? 'bg-accent text-white'
+                    : message.id === 'thinking'
+                    ? 'bg-accent/10 animate-pulse'
                     : 'bg-muted text-foreground'
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
-                <span className="mt-1 block text-xs opacity-70">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </span>
+                {message.id !== 'thinking' && (
+                  <span className="mt-1 block text-xs opacity-70">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
+                )}
               </div>
             </div>
           ))}

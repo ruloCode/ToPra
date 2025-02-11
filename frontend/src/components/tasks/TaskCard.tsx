@@ -4,7 +4,7 @@ import { Task, TaskStatus, updateTask, deleteTask } from '@/lib/tasks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState } from 'react';
-import { Circle, CheckCircle2, Calendar, Flag,Pencil, Trash2 } from 'lucide-react';
+import { Circle, CheckCircle2, Calendar, Flag, Pencil, Trash2 } from 'lucide-react';
 
 import { useToast } from "@/components/ui/use-toast";
 
@@ -115,6 +115,13 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
             >
               {task.title}
             </h3>
+            {task.description && (
+              <p className={`text-xs text-text-secondary break-words ${
+                task.status === TaskStatus.COMPLETED ? 'line-through' : ''
+              }`}>
+                {task.description}
+              </p>
+            )}
             {task.due_date && (
               <div className="flex items-center gap-1 text-xs text-text-secondary">
                 <Calendar className="h-3.5 w-3.5" />

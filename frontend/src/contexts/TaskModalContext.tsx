@@ -38,7 +38,6 @@ export function TaskModalProvider({ children }: { children: ReactNode }) {
           if (onSuccessCallback) {
             onSuccessCallback();
           }
-          closeCreateTaskModal();
         }}
         taskToEdit={taskToEdit}
       />
