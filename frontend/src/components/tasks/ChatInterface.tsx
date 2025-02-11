@@ -134,9 +134,8 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
   };
 
   return (
-    <div className="flex h-[400px] flex-col rounded-lg border border-border bg-background">
-      {/* Chat Header */}
-      <div className="flex items-center gap-2 border-b border-border p-4">
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center gap-2 border-b border-border p-4 flex-shrink-0">
         <div className="rounded-full bg-[#edf6ff] p-2">
           <MessageCircle className="h-5 w-5 text-accent" />
         </div>
@@ -148,8 +147,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
         </div>
       </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 min-h-0">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -176,8 +174,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
         </div>
       </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="border-t border-border p-4">
+      <form onSubmit={handleSubmit} className="border-t border-border p-4 bg-background">
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -203,4 +200,4 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
       </form>
     </div>
   );
-} 
+}

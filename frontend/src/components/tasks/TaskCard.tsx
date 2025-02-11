@@ -22,7 +22,6 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [showActions, setShowActions] = useState(false);
   const { toast } = useToast();
 
   const handleStatusChange = async () => {
@@ -96,26 +95,22 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
   };
 
   return (
-    <div 
-      className="task-item group w-full max-w-full overflow-hidden rounded-lg border border-border bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-    >
-      <div className="flex items-center gap-3 w-full">
-        <button
-          onClick={handleStatusChange}
-          disabled={isLoading}
-          className="flex-shrink-0"
-        >
-          {task.status === TaskStatus.COMPLETED ? (
-            <CheckCircle2 className="h-5 w-5 text-accent" />
-          ) : (
-            <Circle className="h-5 w-5 text-text-secondary hover:text-accent" />
-          )}
-        </button>
+    <div className="group flex items-start gap-3 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-accent/5">
+      <button
+        onClick={handleStatusChange}
+        disabled={isLoading}
+        className="mt-0.5 flex-shrink-0"
+      >
+        {task.status === TaskStatus.COMPLETED ? (
+          <CheckCircle2 className="h-5 w-5 text-accent" />
+        ) : (
+          <Circle className="h-5 w-5 text-text-secondary hover:text-accent" />
+        )}
+      </button>
 
-        <div className="flex flex-1 flex-col min-w-0 gap-1">
-          <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-1 flex-col min-w-0 gap-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-1">
             <h3
               className={`text-sm font-medium break-words ${
                 task.status === TaskStatus.COMPLETED
@@ -125,61 +120,50 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
             >
               {task.title}
             </h3>
-            
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {task.due_date && (
-                <div className="flex items-center gap-1 text-xs text-text-secondary whitespace-nowrap">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {format(parseISO(task.due_date), "d MMM", { locale: es })}
-                  </span>
-                </div>
-              )}
-              
-              {task.priority > 1 && (
-                <Flag className={`h-4 w-4 flex-shrink-0 ${getPriorityColor(task.priority)}`} />
-              )}
-
-              <div className={`transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1 hover:bg-gray-100 rounded-md">
-                      <MoreHorizontal className="h-4 w-4 text-text-secondary" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end"  className='bg-background'>
-                    <DropdownMenuItem onClick={() => onEdit(task)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      <span>Editar</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Eliminar</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+            {task.due_date && (
+              <div className="flex items-center gap-1 text-xs text-text-secondary">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>
+                  {format(parseISO(task.due_date), "d MMM", { locale: es })}
+                </span>
               </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {task.priority > 1 && (
+              <Flag className={`h-4 w-4 flex-shrink-0 ${getPriorityColor(task.priority)}`} />
+            )}
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onEdit(task)}
+                className="p-1 text-text-secondary/50 hover:text-accent hover:bg-accent/10 rounded-md transition-colors"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-1 text-text-secondary/50 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
           </div>
-
-          {task.description && (
-            <p className="text-xs text-text-secondary break-words">
-              {task.description}
-            </p>
-          )}
-          {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {task.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${getTagColor(tag)}`}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
+
+        {task.tags && task.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {task.tags.map((tag, index) => (
+              <span
+                key={index}
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${getTagColor(tag)}`}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
