@@ -22,7 +22,7 @@ export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
   const { user, signOut } = useAuth();
   const { openCreateTaskModal } = useTaskModal();
-  const { theme } = useTheme();
+  const { isDark } = useTheme();
   const pathname = usePathname();
 
   if (!user) return null;
@@ -51,10 +51,10 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`sidebar ${expanded ? 'expanded' : 'collapsed'} ${theme === 'dark' ? 'bg-[#1C1C24] border-[#28282F]' : 'bg-white'}`}>
+    <aside className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
       <button
         onClick={toggleSidebar}
-        className={`sidebar-toggle hover:bg-secondary ${theme === 'dark' ? 'border-[#28282F] hover:bg-[#28282F]' : ''}`}
+        className="sidebar-toggle"
         aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
       >
         {expanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -92,7 +92,7 @@ export default function Sidebar() {
             <li>
               <button 
                 onClick={() => openCreateTaskModal()}
-                className={`flex w-full items-center gap-2 rounded-lg px-4 py-2 text-accent hover:bg-secondary ${theme === 'dark' ? 'hover:bg-[#28282F]' : 'hover:bg-accent/10'}`}
+                className="nav-link w-full hover:bg-accent/10"
                 title={!expanded ? 'Add Task' : undefined}
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
@@ -118,7 +118,7 @@ export default function Sidebar() {
                 })}
                 <button
                   onClick={() => signOut()}
-                  className={`nav-link w-full text-left ${theme === 'dark' ? 'hover:bg-red-500/10 hover:text-red-400' : 'hover:bg-red-50 hover:text-red-600'}`}
+                  className="nav-link w-full text-left hover:text-red-500"
                   title={!expanded ? 'Log out' : undefined}
                 >
                   <LogOut className="h-5 w-5 flex-shrink-0" />

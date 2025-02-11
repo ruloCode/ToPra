@@ -88,7 +88,7 @@ export default function CreateTaskForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-background dark:bg-background-paper p-4 rounded-lg">
       <div>
         <label
           htmlFor="title"
@@ -103,7 +103,7 @@ export default function CreateTaskForm({
           value={formData.title}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
           placeholder="Título de la tarea"
         />
       </div>
@@ -121,7 +121,7 @@ export default function CreateTaskForm({
           rows={3}
           value={formData.description}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
           placeholder="Descripción de la tarea"
         />
       </div>
@@ -140,7 +140,7 @@ export default function CreateTaskForm({
             value={formData.priority}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
           >
             <option value="1">Baja</option>
             <option value="2">Media</option>
@@ -161,7 +161,7 @@ export default function CreateTaskForm({
             id="due_date"
             value={formData.due_date}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
           />
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function CreateTaskForm({
                   setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
                 }
               }}
-              className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-600 hover:bg-yellow-200"
+              className="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-500/5 px-2 py-0.5 text-xs text-yellow-600 hover:bg-yellow-200 dark:hover:bg-yellow-500/10"
             >
               + personal
             </button>
@@ -199,7 +199,7 @@ export default function CreateTaskForm({
                   setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
                 }
               }}
-              className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200"
+              className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-500/5 px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-500/10"
             >
               + trabajo
             </button>
@@ -210,7 +210,7 @@ export default function CreateTaskForm({
             id="tags"
             value={formData.tags}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
             placeholder="Etiquetas separadas por comas"
           />
         </div>

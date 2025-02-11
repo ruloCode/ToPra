@@ -21,7 +21,7 @@ export default function UserSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { theme: currentTheme, setTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -31,10 +31,11 @@ export default function UserSettings() {
   }, [user]);
 
   useEffect(() => {
-    if (currentTheme !== settings.theme) {
-      setSettings(prev => ({ ...prev, theme: currentTheme }));
+    const themeValue = isDark ? 'dark' : 'light';
+    if (themeValue !== settings.theme) {
+      setSettings(prev => ({ ...prev, theme: themeValue }));
     }
-  }, [currentTheme]);
+  }, [isDark]);
 
   const handleFocusSection = (sectionId: string) => {
     const section = document.getElementById(sectionId);
@@ -135,7 +136,18 @@ export default function UserSettings() {
 
   const handleThemeChange = (value: 'light' | 'dark' | 'system') => {
     setSettings(prev => ({ ...prev, theme: value }));
-    setTheme(value);
+    
+    if (value === 'system') {
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (systemDark !== isDark) {
+        toggleTheme();
+      }
+    } else {
+      const shouldBeDark = value === 'dark';
+      if (shouldBeDark !== isDark) {
+        toggleTheme();
+      }
+    }
   };
 
   return (

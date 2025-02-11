@@ -18,17 +18,13 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
   const { toast } = useToast();
 
   const handleTaskCreated = (fromChat: boolean = false) => {
-    // Actualizar la lista de tareas
     onSuccess();
-
-    // Mostrar toast de confirmación
     toast({
       title: "¡Éxito!",
       description: "La tarea ha sido creada correctamente",
       duration: 3000,
     });
     
-    // Solo cerrar el modal si viene del formulario
     if (!fromChat) {
       onClose();
     }
@@ -36,21 +32,24 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open ) {
+      if (!open) {
         onClose();
       }
     }}>
-      <DialogContent onInteractOutside={(e) => {
-        if (activeTab === "chat") {
-          e.preventDefault();
-        }
-      }} className="fixed left-0 right-0 bottom-0 sm:left-[50%] sm:top-[50%] sm:-translate-x-[50%] sm:-translate-y-[50%] sm:bottom-auto sm:max-w-[600px] sm:h-auto rounded-t-lg sm:rounded-lg p-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b border-border">
+      <DialogContent 
+        onInteractOutside={(e) => {
+          if (activeTab === "chat") {
+            e.preventDefault();
+          }
+        }}
+        className="fixed left-0 right-0 bottom-0 sm:left-[50%] sm:top-[50%] sm:-translate-x-[50%] sm:-translate-y-[50%] sm:bottom-auto sm:max-w-[600px] sm:h-auto rounded-t-lg sm:rounded-lg p-0 overflow-hidden bg-white dark:bg-background-paper border border-border dark:border-[#28282F]"
+      >
+        <DialogHeader className="px-6 py-4 border-b border-border dark:border-[#28282F]">
           <DialogTitle>{taskToEdit ? 'Edit Task' : 'Create New Task'}</DialogTitle>
         </DialogHeader>
 
         {taskToEdit ? (
-          <div className="px-6 pt-4">
+          <div className="px-6 pt-4 bg-white dark:bg-background-paper">
             <CreateTaskForm
               initialTask={taskToEdit}
               onSuccess={() => handleTaskCreated(false)}
@@ -59,12 +58,12 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 px-6">
+            <TabsList className="grid w-full grid-cols-2 px-6 bg-white dark:bg-background-paper">
               <TabsTrigger value="form">Formulario</TabsTrigger>
               <TabsTrigger value="chat">Chat</TabsTrigger>
             </TabsList>
 
-            <div className="sm:max-h-[600px]">
+            <div className="sm:max-h-[600px] bg-white dark:bg-background-paper">
               <TabsContent value="form" className="px-6 pt-4 m-0 overflow-y-auto">
                 <CreateTaskForm
                   initialTask={taskToEdit}

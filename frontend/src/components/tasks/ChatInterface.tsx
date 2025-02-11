@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useRef, useEffect } from 'react';
 import { Task, createTask, TaskStatus } from '@/lib/tasks';
 import { getChatResponse } from '@/lib/ai';
@@ -142,9 +144,9 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center gap-2 border-b border-border p-4 flex-shrink-0">
-        <div className="rounded-full bg-[#edf6ff] p-2">
+    <div className="flex flex-col h-full bg-background dark:bg-background-paper">
+      <div className="flex items-center gap-2 border-b border-border dark:border-[#28282F] p-4 flex-shrink-0">
+        <div className="rounded-full bg-[#edf6ff] dark:bg-blue-500/5 p-2">
           <MessageCircle className="h-5 w-5 text-accent" />
         </div>
         <div>
@@ -181,7 +183,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
                     ? 'bg-accent text-white'
                     : message.id === 'thinking'
                     ? 'bg-accent/10 animate-pulse'
-                    : 'bg-muted text-foreground'
+                    : 'bg-muted text-foreground dark:bg-secondary'
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
@@ -197,7 +199,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-border p-4 bg-background">
+      <form onSubmit={handleSubmit} className="border-t border-border dark:border-[#28282F] p-4 bg-background dark:bg-background-paper">
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -205,7 +207,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={`Escribe tu mensaje...`}
-            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
             disabled={isLoading}
           />
           <button

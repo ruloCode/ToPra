@@ -4,143 +4,64 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: #db4c3f;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    /* Base colors */
+    --primary-main: #6C5CE7;
+    --primary-light: #A8A5FF;
+    --primary-dark: #4834D4;
+    --primary-contrast: #FFFFFF;
 
-    --text-secondary: #808080;
-    --border: #e6e6e6;
+    /* Light theme */
+    --background-default: #FFFFFF;
+    --background-paper: #F7F7F7;
+    --background-elevated: #FFFFFF;
+    --text-primary: #1A1A1A;
+    --text-secondary: #666666;
+    --text-disabled: #999999;
+
+    /* UI colors */
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    --accent: #6C5CE7;
+    --accent-foreground: #FFFFFF;
+    --secondary: #F1F5F9;
+    --secondary-foreground: #1E293B;
+
     --sidebar-width: 256px;
     --sidebar-width-collapsed: 72px;
     --bottom-nav-height: 4rem;
-
-    /* Theme variables */
-    --theme-primary: var(--primary);
-    --theme-secondary: var(--secondary);
-    --theme-background: var(--background);
-    
-    /* Accessibility variables */
-    --text-size-base: 1rem;
-    --text-size-large: 1.125rem;
-    --motion-duration: 200ms;
-    --contrast-ratio: 1;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: #ff6b6b;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
+    /* Dark theme */
+    --background-default: #121212;
+    --background-paper: #1E1E1E;
+    --background-elevated: #2D2D2D;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B3B3B3;
+    --text-disabled: #666666;
 
-  /* High contrast mode */
-  .high-contrast {
-    --contrast-ratio: 1.5;
-    --foreground: 0 0% 0%;
-    --background: 0 0% 100%;
-    --border: 0 0% 0%;
-  }
-
-  /* Dark mode with high contrast */
-  .dark.high-contrast {
-    --foreground: 0 0% 100%;
-    --background: 0 0% 0%;
-    --border: 0 0% 100%;
-  }
-
-  /* Large text mode */
-  .large-text {
-    --text-size-base: 1.125rem;
-    --text-size-large: 1.25rem;
-  }
-
-  .large-text h1 { font-size: 2.5rem; }
-  .large-text h2 { font-size: 2rem; }
-  .large-text h3 { font-size: 1.75rem; }
-  .large-text .text-sm { font-size: 1rem; }
-
-  /* Reduced motion mode */
-  .reduce-motion {
-    --motion-duration: 0ms;
-    * {
-      animation-duration: 0ms !important;
-      transition-duration: 0ms !important;
-    }
+    /* UI colors dark */
+    --muted: #1E293B;
+    --muted-foreground: #94A3B8;
+    --accent: #6C5CE7;
+    --accent-foreground: #FFFFFF;
+    --secondary: #1E293B;
+    --secondary-foreground: #F8FAFC;
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-size: var(--text-size-base);
+    @apply bg-background-default text-text-primary;
   }
 
-  /* Apply transition durations */
   * {
-    transition-duration: var(--motion-duration);
-  }
-
-  /* Apply contrast adjustments */
-  img, video {
-    filter: contrast(var(--contrast-ratio));
-  }
-
-  /* Enhanced focus indicators for accessibility */
-  :focus-visible {
-    outline: 2px solid var(--theme-primary);
-    outline-offset: 2px;
-    border-radius: 0.25rem;
-  }
-
-  /* Skip to content link for keyboard users */
-  .skip-to-content {
-    @apply sr-only;
-  }
-
-  .skip-to-content:focus {
-    @apply not-sr-only fixed left-4 top-4 z-50 block rounded bg-white px-4 py-2 text-sm font-medium shadow-lg;
-  }
-
-  /* High contrast focus indicators */
-  .high-contrast :focus-visible {
-    outline-width: 3px;
-    outline-style: dashed;
+    transition: background-color 0.2s ease, color 0.1s ease;
   }
 }
 
 @layer components {
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 grid h-[var(--bottom-nav-height)] grid-cols-[1fr,auto,1fr] items-center border-t bg-white px-2 md:hidden;
+    @apply fixed bottom-0 left-0 right-0 grid h-[var(--bottom-nav-height)] grid-cols-[1fr,auto,1fr] items-center border-t bg-background-default px-2 md:hidden;
   }
 
   .nav-group {
@@ -160,8 +81,8 @@
   }
 
   .task-item {
-    @apply flex items-center gap-3 rounded-lg border border-border p-4 transition-all hover:shadow-sm;
-    @apply bg-white dark:bg-[#1C1C24] dark:border-[#28282F];
+    @apply flex items-center gap-3 rounded-lg border p-4 transition-all hover:shadow-sm;
+    @apply bg-background-default dark:bg-background-paper;
   }
 
   .checkbox {
@@ -173,11 +94,11 @@
   }
 
   .date-header {
-    @apply mb-6 text-2xl font-bold text-foreground;
+    @apply mb-6 text-2xl font-bold text-text-primary;
   }
 
   .section-header {
-    @apply mb-4 text-xl font-bold text-foreground;
+    @apply mb-4 text-xl font-bold text-text-primary;
   }
 
   .nav-link {
@@ -190,7 +111,7 @@
 
   /* Sidebar Styles */
   .sidebar {
-    @apply fixed left-0 top-0 hidden h-full border-r border-border bg-white transition-all duration-300 ease-in-out md:flex;
+    @apply fixed left-0 top-0 hidden h-full border-r bg-background-default transition-all duration-300 ease-in-out md:flex;
   }
 
   .sidebar.expanded {
