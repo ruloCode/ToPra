@@ -3,12 +3,8 @@ import { Suspense } from 'react';
 
 export default function SettingsPage() {
   return (
-    <div className="container mx-auto p-4 lg:p-8 space-y-8 max-w-3xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-gray-500 mt-2">Customize your app experience and preferences</p>
-      </header>
-
+    <div className="container max-w-4xl py-8">
+      <h1 className="text-3xl font-bold mb-8">Settings</h1>
       <Suspense fallback={
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (

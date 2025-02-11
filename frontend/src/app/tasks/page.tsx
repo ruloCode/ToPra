@@ -57,11 +57,11 @@ export default function TasksPage() {
   });
 
   return (
-    <main className="main-content min-h-screen bg-[#fafafa] px-4 py-6 md:px-8">
+    <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">All Tasks</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-3xl font-bold text-foreground">All Tasks</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {format(today, "EEEE, d 'de' MMMM", { locale: es })}
           </p>
         </div>
@@ -74,14 +74,13 @@ export default function TasksPage() {
           <section>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                
-                <div className="inline-flex items-center bg-gray-100/50 p-0.5 rounded-lg gap-0.5">
+                <div className="inline-flex items-center bg-secondary/50 p-0.5 rounded-lg gap-0.5 dark:bg-[#28282F]">
                   <button
                     onClick={() => setFilter('all')}
                     className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'all' 
-                        ? 'bg-white text-accent shadow-sm ring-1 ring-accent/20' 
-                        : 'text-text-secondary hover:text-accent/90 hover:bg-white/50'
+                        ? 'bg-background text-accent shadow-sm ring-1 ring-accent/20 dark:bg-[#1C1C24]' 
+                        : 'text-white hover:bg-background/50 dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
                     }`}
                   >
                     <ListFilter className="h-3.5 w-3.5" />
@@ -91,8 +90,8 @@ export default function TasksPage() {
                     onClick={() => setFilter('pending')}
                     className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'pending' 
-                        ? 'bg-white text-accent shadow-sm ring-1 ring-accent/20' 
-                        : 'text-text-secondary hover:text-accent/90 hover:bg-white/50'
+                        ? 'bg-background text-accent shadow-sm ring-1 ring-accent/20 dark:bg-[#1C1C24]' 
+                        : 'text-white hover:bg-background/50 dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
                     }`}
                   >
                     <ListTodo className="h-3.5 w-3.5" />
@@ -102,8 +101,8 @@ export default function TasksPage() {
                     onClick={() => setFilter('completed')}
                     className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'completed' 
-                        ? 'bg-white text-accent shadow-sm ring-1 ring-accent/20' 
-                        : 'text-text-secondary hover:text-accent/90 hover:bg-white/50'
+                        ? 'bg-background text-accent shadow-sm ring-1 ring-accent/20 dark:bg-[#1C1C24]' 
+                        : 'text-white hover:bg-background/50 dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
                     }`}
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
@@ -113,7 +112,7 @@ export default function TasksPage() {
               </div>
               <button
                 onClick={handleAddTask}
-                className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90"
+                className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90 transition-colors"
               >
                 Add Task
               </button>
@@ -121,7 +120,7 @@ export default function TasksPage() {
 
             {tasksLoading ? (
               <div className="flex h-40 items-center justify-center">
-                <div className="text-text-secondary">Loading tasks...</div>
+                <div className="text-muted-foreground">Loading tasks...</div>
               </div>
             ) : (
               <TaskList

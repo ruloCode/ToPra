@@ -75,11 +75,11 @@ export default function Home() {
   };
 
   return (
-    <main className="main-content min-h-screen bg-[#fafafa] px-4 py-6 md:px-8">
+    <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
           <h1 className="date-header">Today</h1>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-muted-foreground">
             {format(today, "EEEE, d 'de' MMMM", { locale: es })}
           </p>
         </div>
@@ -94,7 +94,7 @@ export default function Home() {
               <h2 className="section-header">Tasks for Today</h2>
               <button
                 onClick={handleAddTask}
-                className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90"
+                 className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90 transition-colors"
               >
                 Add Task
               </button>
@@ -102,7 +102,7 @@ export default function Home() {
 
             {isLoadingTasks ? (
               <div className="flex h-40 items-center justify-center">
-                <div className="text-text-secondary">Loading tasks...</div>
+                <div className="text-muted-foreground">Loading tasks...</div>
               </div>
             ) : (
               <TaskList

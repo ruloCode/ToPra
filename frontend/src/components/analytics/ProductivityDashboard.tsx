@@ -56,7 +56,7 @@ export default function ProductivityDashboard() {
   return (
     <div className="transition-opacity duration-300 ease-in-out">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Productivity Overview</h2>
+        <h2 className="text-lg font-semibold text-foreground">Productivity Overview</h2>
         <Select
           value={timeRange}
           onValueChange={(value: TimeRange) => setTimeRange(value)}
@@ -64,7 +64,7 @@ export default function ProductivityDashboard() {
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-card border-border">
             <SelectItem value="week">Past Week</SelectItem>
             <SelectItem value="month">Past Month</SelectItem>
             <SelectItem value="year">Past Year</SelectItem>
@@ -73,32 +73,33 @@ export default function ProductivityDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-4 lg:col-span-2 transition-all duration-300 hover:shadow-lg">
-          <h3 className="text-lg font-semibold mb-4">Focus Time Distribution</h3>
+        <Card className="p-4 lg:col-span-2 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Focus Time Distribution</h3>
           <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={focusTimeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="name" className="text-muted-foreground text-xs" />
+                <YAxis className="text-muted-foreground text-xs" />
                 <Tooltip content={<CustomTooltip title="Focus Time" />} />
                 <Bar 
                   dataKey="time" 
                   name="Hours" 
-                  fill="#8884d8"
+                  fill="var(--accent)"
+                  className="opacity-80 hover:opacity-100 transition-opacity"
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-          <h3 className="text-lg font-semibold">Task Completion</h3>
+        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h3 className="text-lg font-semibold text-foreground">Task Completion</h3>
           <div className="mt-2">
-            <p className="text-2xl font-bold animate-in slide-in-from-bottom duration-500">
+            <p className="text-2xl font-bold text-foreground animate-in slide-in-from-bottom duration-500">
               {Math.round(metrics.tasks.completionRate * 100)}%
             </p>
-            <p className="text-sm text-gray-500">Completion Rate</p>
+            <p className="text-sm text-muted-foreground">Completion Rate</p>
             <Progress 
               value={metrics.tasks.completionRate * 100} 
               className={`mt-2 transition-all duration-500 ${
@@ -110,16 +111,16 @@ export default function ProductivityDashboard() {
         </Card>
 
         {/* Remaining cards with hover and transition effects */}
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-          <h3 className="text-lg font-semibold">Streaks</h3>
+        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h3 className="text-lg font-semibold text-foreground">Streaks</h3>
           <div className="mt-2">
-            <p className="text-2xl font-bold animate-in slide-in-from-bottom duration-500">
+            <p className="text-2xl font-bold text-foreground animate-in slide-in-from-bottom duration-500">
               {metrics.streaks.current} days
             </p>
-            <p className="text-sm text-gray-500">Current Streak</p>
+            <p className="text-sm text-muted-foreground">Current Streak</p>
             <div className="mt-4">
-              <p className="text-sm text-gray-500">Longest Streak</p>
-              <p className="text-lg font-semibold">{metrics.streaks.longest} days</p>
+              <p className="text-sm text-muted-foreground">Longest Streak</p>
+              <p className="text-lg font-semibold text-foreground">{metrics.streaks.longest} days</p>
             </div>
             {metrics.streaks.dailyGoalMet && (
               <p className="mt-2 text-sm text-green-500 animate-pulse">Today&apos;s goal met! 🎯</p>
@@ -127,13 +128,13 @@ export default function ProductivityDashboard() {
           </div>
         </Card>
 
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-          <h3 className="text-lg font-semibold">Productivity Score</h3>
+        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h3 className="text-lg font-semibold text-foreground">Productivity Score</h3>
           <div className="mt-2">
-            <p className="text-2xl font-bold animate-in slide-in-from-bottom duration-500">
+            <p className="text-2xl font-bold text-foreground animate-in slide-in-from-bottom duration-500">
               {metrics.productivityScore}
             </p>
-            <p className="text-sm text-gray-500">Out of 100</p>
+            <p className="text-sm text-muted-foreground">Out of 100</p>
             <Progress 
               value={metrics.productivityScore} 
               className={`mt-2 transition-all duration-500 ${
@@ -144,23 +145,23 @@ export default function ProductivityDashboard() {
           </div>
         </Card>
 
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-          <h3 className="text-lg font-semibold">Focus Sessions</h3>
+        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h3 className="text-lg font-semibold text-foreground">Focus Sessions</h3>
           <div className="mt-2">
-            <p className="text-2xl font-bold animate-in slide-in-from-bottom duration-500">
+            <p className="text-2xl font-bold text-foreground animate-in slide-in-from-bottom duration-500">
               {metrics.sessions.completed}
             </p>
-            <p className="text-sm text-gray-500">Completed Sessions</p>
+            <p className="text-sm text-muted-foreground">Completed Sessions</p>
             <div className="mt-4 space-y-2">
               <div>
-                <p className="text-sm text-gray-500">Average Rating</p>
-                <p className="text-lg font-semibold">
+                <p className="text-sm text-muted-foreground">Average Rating</p>
+                <p className="text-lg font-semibold text-foreground">
                   {metrics.sessions.averageRating.toFixed(1)}/5 ⭐
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Completion Rate</p>
-                <p className="text-lg font-semibold">
+                <p className="text-sm text-muted-foreground">Completion Rate</p>
+                <p className="text-lg font-semibold text-foreground">
                   {Math.round((metrics.sessions.completed / metrics.sessions.total) * 100)}%
                 </p>
               </div>

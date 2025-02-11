@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card } from '../ui/card';
+import { Switch } from '../ui/switch';
 import {
   Select,
   SelectContent,
@@ -9,87 +10,84 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Switch } from "@radix-ui/react-switch";
 import { Button } from '../ui/button';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '../ui/use-toast';
-
-interface UserSettings {
-  theme: 'light' | 'dark' | 'system';
-  language: 'en' | 'es';
-  notifications: {
-    email: boolean;
-    pushNotifications: boolean;
-    soundEffects: boolean;
-  };
-  focusMode: {
-    defaultDuration: number;
-    autoStartBreaks: boolean;
-    showMotivationalMessages: boolean;
-  };
-  accessibility: {
-    highContrast: boolean;
-    reducedMotion: boolean;
-    largeText: boolean;
-  };
-}
-
-const defaultSettings: UserSettings = {
-  theme: 'system',
-  language: 'en',
-  notifications: {
-    email: true,
-    pushNotifications: true,
-    soundEffects: true,
-  },
-  focusMode: {
-    defaultDuration: 25,
-    autoStartBreaks: false,
-    showMotivationalMessages: true,
-  },
-  accessibility: {
-    highContrast: false,
-    reducedMotion: false,
-    largeText: false,
-  },
-};
+import { useTheme } from '@/contexts/ThemeContext';
+import { defaultSettings, loadUserSettings, saveUserSettings } from '@/lib/settings';
+import type { UserSettings } from '@/lib/settings';
 
 export default function UserSettings() {
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { theme: currentTheme, setTheme } = useTheme();
 
   useEffect(() => {
-    async function loadSettings() {
-      if (!user) return;
-      
-      const { data: userSettings } = await supabase
-        .from('users')
-        .select('settings')
-        .eq('id', user.id)
-        .single();
+    if (user) {
+      const userSettings = loadUserSettings(user.id);
+      setSettings(userSettings);
+    }
+  }, [user]);
 
-      if (userSettings?.settings) {
-        setSettings({ ...defaultSettings, ...userSettings.settings });
+  useEffect(() => {
+    if (currentTheme !== settings.theme) {
+      setSettings(prev => ({ ...prev, theme: currentTheme }));
+    }
+  }, [currentTheme]);
+
+  const handleFocusSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    section?.querySelector<HTMLElement>('input, button')?.focus();
+  };
+
+  useEffect(() => {
+    function handleKeyboardShortcuts(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 's':
+            e.preventDefault();
+            saveSettings();
+            break;
+          case ',':
+            e.preventDefault();
+            handleFocusSection('profile-section');
+            break;
+          case '1':
+            e.preventDefault();
+            handleFocusSection('profile-section');
+            break;
+          case '2':
+            e.preventDefault();
+            handleFocusSection('appearance-section');
+            break;
+          case '3':
+            e.preventDefault();
+            handleFocusSection('notifications-section');
+            break;
+          case '4':
+            e.preventDefault();
+            handleFocusSection('focus-section');
+            break;
+          case '5':
+            e.preventDefault();
+            handleFocusSection('accessibility-section');
+            break;
+        }
       }
     }
 
-    loadSettings();
-  }, [user]);
+    window.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
+  }, []);
 
   const saveSettings = async () => {
     if (!user) return;
     setIsSaving(true);
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ settings })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
+      saveUserSettings(user.id, settings);
+      
       toast({
         title: "Settings saved",
         description: "Your preferences have been updated successfully.",
@@ -135,23 +133,71 @@ export default function UserSettings() {
     }
   };
 
+  const handleThemeChange = (value: 'light' | 'dark' | 'system') => {
+    setSettings(prev => ({ ...prev, theme: value }));
+    setTheme(value);
+  };
+
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Appearance</h3>
+    <div className="space-y-6 settings-section" role="form" aria-label="User settings">
+      <Card className="p-6" id="profile-section">
+        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Profile Settings</h3>
         <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium">Display Name</label>
+            <input
+              type="text"
+              value={settings.profile.displayName}
+              onChange={(e) =>
+                setSettings(prev => ({
+                  ...prev,
+                  profile: { ...prev.profile, displayName: e.target.value }
+                }))
+              }
+              className="w-[180px] px-3 py-2 rounded-md border border-input bg-background"
+              placeholder="Your name"
+            />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium">Time Zone</label>
+            <Select
+              value={settings.profile.timeZone}
+              onValueChange={(value) =>
+                setSettings(prev => ({
+                  ...prev,
+                  profile: { ...prev.profile, timeZone: value }
+                }))
+              }
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent className='bg-background border-border'>
+                {Intl.supportedValuesOf('timeZone').map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz.replace(/_/g, ' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6" id="appearance-section">
+        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Appearance Settings</h3>
+        <div className="space-y-4" role="group" aria-label="Appearance settings">
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium">Theme</label>
             <Select
               value={settings.theme}
-              onValueChange={(value: 'light' | 'dark' | 'system') => 
-                setSettings(prev => ({ ...prev, theme: value }))
-              }
+              onValueChange={handleThemeChange}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className='bg-background border-border'>
                 <SelectItem value="light">Light</SelectItem>
                 <SelectItem value="dark">Dark</SelectItem>
                 <SelectItem value="system">System</SelectItem>
@@ -170,7 +216,7 @@ export default function UserSettings() {
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className='bg-background border-border'>
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="es">Español</SelectItem>
               </SelectContent>
@@ -179,107 +225,9 @@ export default function UserSettings() {
         </div>
       </Card>
 
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Notifications</h3>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Email Notifications</label>
-            <Switch
-              checked={settings.notifications.email}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  notifications: { ...prev.notifications, email: checked }
-                }))
-              }
-            />
-          </div>
-
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Push Notifications</label>
-            <Switch
-              checked={settings.notifications.pushNotifications}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  notifications: { ...prev.notifications, pushNotifications: checked }
-                }))
-              }
-            />
-          </div>
-
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Sound Effects</label>
-            <Switch
-              checked={settings.notifications.soundEffects}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  notifications: { ...prev.notifications, soundEffects: checked }
-                }))
-              }
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Focus Mode</h3>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Default Duration (minutes)</label>
-            <Select
-              value={settings.focusMode.defaultDuration.toString()}
-              onValueChange={(value) =>
-                setSettings(prev => ({
-                  ...prev,
-                  focusMode: { ...prev.focusMode, defaultDuration: parseInt(value) }
-                }))
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select duration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="25">25 minutes</SelectItem>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="45">45 minutes</SelectItem>
-                <SelectItem value="60">60 minutes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Auto-start Breaks</label>
-            <Switch
-              checked={settings.focusMode.autoStartBreaks}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  focusMode: { ...prev.focusMode, autoStartBreaks: checked }
-                }))
-              }
-            />
-          </div>
-
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Show Motivational Messages</label>
-            <Switch
-              checked={settings.focusMode.showMotivationalMessages}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  focusMode: { ...prev.focusMode, showMotivationalMessages: checked }
-                }))
-              }
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Accessibility</h3>
-        <div className="space-y-4">
+      <Card className="p-6" id="accessibility-section">
+        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Accessibility Options</h3>
+        <div className="space-y-4" role="group" aria-label="Accessibility settings">
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium">High Contrast</label>
             <Switch
@@ -321,11 +269,12 @@ export default function UserSettings() {
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center">
         <Button
           onClick={saveSettings}
           disabled={isSaving}
           className="min-w-[120px]"
+          aria-live="polite"
         >
           {isSaving ? "Saving..." : "Save Settings"}
         </Button>

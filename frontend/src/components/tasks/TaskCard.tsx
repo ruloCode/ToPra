@@ -90,7 +90,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
   };
 
   return (
-    <div className="group flex items-start gap-3 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-accent/5">
+    <div className="group flex items-start gap-3 rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/5 dark:border-[#28282F]">
       <button
         onClick={handleStatusChange}
         disabled={isLoading}
@@ -99,7 +99,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
         {task.status === TaskStatus.COMPLETED ? (
           <CheckCircle2 className="h-5 w-5 text-accent" />
         ) : (
-          <Circle className="h-5 w-5 text-text-secondary hover:text-accent" />
+          <Circle className="h-5 w-5 text-muted-foreground hover:text-accent" />
         )}
       </button>
 
@@ -109,21 +109,21 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
             <h3
               className={`text-sm font-medium break-words ${
                 task.status === TaskStatus.COMPLETED
-                  ? 'text-text-secondary line-through'
+                  ? 'text-muted-foreground line-through'
                   : 'text-foreground'
               }`}
             >
               {task.title}
             </h3>
             {task.description && (
-              <p className={`text-xs text-text-secondary break-words ${
+              <p className={`text-xs text-muted-foreground break-words ${
                 task.status === TaskStatus.COMPLETED ? 'line-through' : ''
               }`}>
                 {task.description}
               </p>
             )}
             {task.due_date && (
-              <div className="flex items-center gap-1 text-xs text-text-secondary">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
                 <span>
                   {format(parseISO(task.due_date), "d MMM", { locale: es })}
@@ -140,13 +140,13 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onEdit(task)}
-                className="p-1 text-text-secondary/50 hover:text-accent hover:bg-accent/10 rounded-md transition-colors"
+                className="p-1 text-muted-foreground/50 hover:text-accent hover:bg-accent/10 rounded-md transition-colors"
               >
                 <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-1 text-text-secondary/50 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                className="p-1 text-muted-foreground/50 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -159,7 +159,7 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
             {task.tags.map((tag, index) => (
               <span
                 key={index}
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${getTagColor(tag)}`}
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${getTagColor(tag)} dark:bg-opacity-15`}
               >
                 {tag}
               </span>

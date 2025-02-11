@@ -55,9 +55,9 @@ export default function HistoricalStats() {
   if (isLoading) return <AnalyticsSkeleton />;
 
   return (
-    <Card className="p-4 transition-all duration-300 hover:shadow-lg">
+    <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Historical Progress</h3>
+        <h3 className="text-lg font-semibold text-foreground">Historical Progress</h3>
         <Select
           value={timeRange}
           onValueChange={(value: TimeRange) => setTimeRange(value)}
@@ -65,7 +65,7 @@ export default function HistoricalStats() {
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
-          <SelectContent className='bg-white shadow-lg rounded-md'>
+          <SelectContent className="bg-card border-border">
             <SelectItem value="week">Last 7 days</SelectItem>
             <SelectItem value="month">Last 30 days</SelectItem>
             <SelectItem value="year">Last 12 months</SelectItem>
@@ -84,14 +84,15 @@ export default function HistoricalStats() {
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey="date" 
               tickFormatter={formatDate}
               minTickGap={30}
+              className="text-muted-foreground text-xs"
             />
-            <YAxis yAxisId="left" />
-            <YAxis yAxisId="right" orientation="right" />
+            <YAxis yAxisId="left" className="text-muted-foreground text-xs" />
+            <YAxis yAxisId="right" orientation="right" className="text-muted-foreground text-xs" />
             <Tooltip content={<CustomTooltip title="Daily Progress" />} />
             <Legend />
             <Line
@@ -99,9 +100,10 @@ export default function HistoricalStats() {
               type="monotone"
               dataKey="tasksCompleted"
               name="Tasks Completed"
-              stroke="#8884d8"
+              stroke="var(--accent)"
               activeDot={{ r: 8 }}
               strokeWidth={2}
+              className="opacity-80 hover:opacity-100 transition-opacity"
             />
             <Line
               yAxisId="left"
@@ -110,6 +112,7 @@ export default function HistoricalStats() {
               name="Focus Sessions"
               stroke="#82ca9d"
               strokeWidth={2}
+              className="opacity-80 hover:opacity-100 transition-opacity"
             />
             <Line
               yAxisId="right"
@@ -118,6 +121,7 @@ export default function HistoricalStats() {
               name="Productivity Score"
               stroke="#ffc658"
               strokeWidth={2}
+              className="opacity-80 hover:opacity-100 transition-opacity"
             />
           </LineChart>
         </ResponsiveContainer>

@@ -1,4 +1,6 @@
-import { Card } from '../ui/card';
+"use client";
+
+import { Card } from "../ui/card";
 
 interface TooltipPayloadItem {
   color: string;
@@ -10,25 +12,29 @@ interface TooltipProps {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: string;
-  title?: string;
+  title: string;
 }
 
 export function CustomTooltip({ active, payload, label, title }: TooltipProps) {
-  if (!active || !payload) return null;
+  if (!active || !payload?.length) return null;
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm p-3 shadow-lg border-0">
-      <p className="text-sm font-medium mb-1">{title || label}</p>
-      {payload.map((item, index) => (
-        <div key={index} className="flex items-center gap-2 text-sm">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: item.color }}
-          />
-          <span className="text-gray-600">{item.name}:</span>
-          <span className="font-medium">{item.value}</span>
-        </div>
-      ))}
+    <Card className="bg-card border-border p-3 shadow-lg dark:border-[#28282F]">
+      <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="mt-2 space-y-1">
+        {payload.map((item, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-xs text-foreground">
+              {item.name}: {typeof item.value === 'number' ? item.value.toFixed(1) : item.value}
+            </span>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }

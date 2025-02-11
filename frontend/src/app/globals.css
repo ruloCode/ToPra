@@ -2,30 +2,139 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #202020;
-  --accent: #db4c3f;
-  --text-secondary: #808080;
-  --border: #e6e6e6;
-  --sidebar-width: 256px;
-  --sidebar-width-collapsed: 72px;
-  --bottom-nav-height: 4rem;
-}
-
-/* Prevenir scroll cuando el menú está abierto */
-.radix-dropdown-menu-content {
-  position: fixed !important;
-  transform: none !important;
-}
-
-body {
-  overscroll-behavior-y: none;
-}
-
 @layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: #db4c3f;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+
+    --text-secondary: #808080;
+    --border: #e6e6e6;
+    --sidebar-width: 256px;
+    --sidebar-width-collapsed: 72px;
+    --bottom-nav-height: 4rem;
+
+    /* Theme variables */
+    --theme-primary: var(--primary);
+    --theme-secondary: var(--secondary);
+    --theme-background: var(--background);
+    
+    /* Accessibility variables */
+    --text-size-base: 1rem;
+    --text-size-large: 1.125rem;
+    --motion-duration: 200ms;
+    --contrast-ratio: 1;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: #ff6b6b;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+
+  /* High contrast mode */
+  .high-contrast {
+    --contrast-ratio: 1.5;
+    --foreground: 0 0% 0%;
+    --background: 0 0% 100%;
+    --border: 0 0% 0%;
+  }
+
+  /* Dark mode with high contrast */
+  .dark.high-contrast {
+    --foreground: 0 0% 100%;
+    --background: 0 0% 0%;
+    --border: 0 0% 100%;
+  }
+
+  /* Large text mode */
+  .large-text {
+    --text-size-base: 1.125rem;
+    --text-size-large: 1.25rem;
+  }
+
+  .large-text h1 { font-size: 2.5rem; }
+  .large-text h2 { font-size: 2rem; }
+  .large-text h3 { font-size: 1.75rem; }
+  .large-text .text-sm { font-size: 1rem; }
+
+  /* Reduced motion mode */
+  .reduce-motion {
+    --motion-duration: 0ms;
+    * {
+      animation-duration: 0ms !important;
+      transition-duration: 0ms !important;
+    }
+  }
+
   body {
-    @apply bg-[#fafafa] text-foreground antialiased;
+    @apply bg-background text-foreground;
+    font-size: var(--text-size-base);
+  }
+
+  /* Apply transition durations */
+  * {
+    transition-duration: var(--motion-duration);
+  }
+
+  /* Apply contrast adjustments */
+  img, video {
+    filter: contrast(var(--contrast-ratio));
+  }
+
+  /* Enhanced focus indicators for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--theme-primary);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Skip to content link for keyboard users */
+  .skip-to-content {
+    @apply sr-only;
+  }
+
+  .skip-to-content:focus {
+    @apply not-sr-only fixed left-4 top-4 z-50 block rounded bg-white px-4 py-2 text-sm font-medium shadow-lg;
+  }
+
+  /* High contrast focus indicators */
+  .high-contrast :focus-visible {
+    outline-width: 3px;
+    outline-style: dashed;
   }
 }
 
@@ -43,7 +152,7 @@ body {
   }
 
   .bottom-nav .nav-link {
-    @apply flex flex-1 flex-col items-center justify-center gap-0.5 px-2 py-1 text-text-secondary;
+    @apply flex flex-1 flex-col items-center justify-center gap-0.5 px-2 py-1 text-muted-foreground;
   }
 
   .fab {
@@ -51,11 +160,12 @@ body {
   }
 
   .task-item {
-    @apply flex items-center gap-3 rounded-lg border border-border bg-white p-4 transition-all hover:shadow-sm;
+    @apply flex items-center gap-3 rounded-lg border border-border p-4 transition-all hover:shadow-sm;
+    @apply bg-white dark:bg-[#1C1C24] dark:border-[#28282F];
   }
 
   .checkbox {
-    @apply h-5 w-5 rounded-full border-2 border-text-secondary transition-colors hover:border-accent;
+    @apply h-5 w-5 rounded-full border-2 border-muted-foreground transition-colors hover:border-accent;
   }
 
   .checkbox.checked {
@@ -63,7 +173,7 @@ body {
   }
 
   .date-header {
-    @apply mb-6 text-2xl font-bold;
+    @apply mb-6 text-2xl font-bold text-foreground;
   }
 
   .section-header {
@@ -71,11 +181,11 @@ body {
   }
 
   .nav-link {
-    @apply flex items-center gap-2 rounded-lg px-4 py-2 text-text-secondary transition-colors hover:bg-gray-100;
+    @apply flex items-center gap-2 rounded-lg px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary;
   }
 
   .nav-link.active {
-    @apply bg-[#fff3f2] text-accent;
+    @apply bg-secondary text-accent;
   }
 
   /* Sidebar Styles */
@@ -92,7 +202,7 @@ body {
   }
 
   .sidebar-toggle {
-    @apply absolute -right-3 top-4 hidden h-6 w-6 items-center justify-center rounded-full border bg-white text-text-secondary shadow-sm hover:bg-gray-50 md:flex;
+    @apply absolute -right-3 top-4 hidden h-6 w-6 items-center justify-center rounded-full border bg-white text-muted-foreground shadow-sm hover:bg-gray-50 md:flex;
   }
 
   .nav-text {

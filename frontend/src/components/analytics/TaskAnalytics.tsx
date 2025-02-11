@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
@@ -42,12 +42,12 @@ export default function TaskAnalytics() {
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
-      <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-        <h3 className="text-lg font-semibold">Task Overview</h3>
+      <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+        <h3 className="text-lg font-semibold text-foreground">Task Overview</h3>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="animate-in slide-in-from-left duration-500">
-            <p className="text-sm text-gray-500">Completion Rate</p>
-            <p className="text-2xl font-bold">{Math.round(metrics.completionRate * 100)}%</p>
+            <p className="text-sm text-muted-foreground">Completion Rate</p>
+            <p className="text-2xl font-bold text-foreground">{Math.round(metrics.completionRate * 100)}%</p>
             <Progress 
               value={metrics.completionRate * 100} 
               className={`mt-2 transition-all duration-500 ${
@@ -57,15 +57,15 @@ export default function TaskAnalytics() {
             />
           </div>
           <div className="animate-in slide-in-from-right duration-500">
-            <p className="text-sm text-gray-500">Tasks Completed</p>
-            <p className="text-2xl font-bold">{metrics.completedTasks}/{metrics.totalTasks}</p>
+            <p className="text-sm text-muted-foreground">Tasks Completed</p>
+            <p className="text-2xl font-bold text-foreground">{metrics.completedTasks}/{metrics.totalTasks}</p>
           </div>
         </div>
       </Card>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-          <h4 className="font-medium mb-4">Task Distribution</h4>
+        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h4 className="font-medium text-foreground mb-4">Task Distribution</h4>
           <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -93,31 +93,31 @@ export default function TaskAnalytics() {
             </ResponsiveContainer>
           </div>
           <div className="mt-4 space-y-2 animate-in slide-in-from-bottom duration-700">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="h-3 w-3 rounded-full bg-emerald-500"></span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="h-3 w-3 rounded-full bg-[#10B981]"></span>
               <span>Completed: {metrics.completedTasks}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="h-3 w-3 rounded-full bg-red-500"></span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="h-3 w-3 rounded-full bg-[#EF4444]"></span>
               <span>Overdue: {metrics.overdueTasks}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="h-3 w-3 rounded-full bg-blue-500"></span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="h-3 w-3 rounded-full bg-[#3B82F6]"></span>
               <span>Upcoming: {metrics.upcomingTasks}</span>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg">
-          <h4 className="font-medium">Avg. Completion Time</h4>
+        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
+          <h4 className="font-medium text-foreground">Avg. Completion Time</h4>
           <div className="animate-in slide-in-from-right duration-500">
-            <p className="mt-2 text-2xl font-bold">
+            <p className="mt-2 text-2xl font-bold text-foreground">
               {Math.round(metrics.averageCompletionTime / 60)} hrs
             </p>
-            <p className="text-sm text-gray-500">per task</p>
+            <p className="text-sm text-muted-foreground">per task</p>
             <div className="mt-4">
-              <p className="text-sm text-gray-500">Total Active Tasks</p>
-              <p className="text-lg font-semibold">
+              <p className="text-sm text-muted-foreground">Total Active Tasks</p>
+              <p className="text-lg font-semibold text-foreground">
                 {metrics.totalTasks - metrics.completedTasks}
               </p>
             </div>

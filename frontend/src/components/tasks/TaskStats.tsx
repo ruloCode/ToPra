@@ -74,34 +74,34 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {!todayOnly && (
-        <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
-          <div className="rounded-full bg-[#fff3f2] p-2">
+        <div className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-sm dark:border dark:border-[#28282F]">
+          <div className="rounded-full bg-accent/10 p-2 dark:bg-accent/5">
             <CheckCircle2 className="h-5 w-5 text-accent" />
           </div>
           <div>
-            <p className="text-sm text-text-secondary">Completed</p>
-            <p className="text-lg font-semibold">{completedTasks}</p>
+            <p className="text-sm text-muted-foreground">Completed</p>
+            <p className="text-lg font-semibold text-foreground">{completedTasks}</p>
           </div>
         </div>
       )}
 
-      <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
-        <div className="rounded-full bg-[#edf6ff] p-2">
+      <div className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-sm dark:border dark:border-[#28282F]">
+        <div className="rounded-full bg-blue-500/10 p-2 dark:bg-blue-500/5">
           <Target className="h-5 w-5 text-blue-500" />
         </div>
         <div>
-          <p className="text-sm text-text-secondary">Focus Time</p>
-          <p className="text-lg font-semibold">{formatFocusTime(focusTime)}</p>
+          <p className="text-sm text-muted-foreground">Focus Time</p>
+          <p className="text-lg font-semibold text-foreground">{formatFocusTime(focusTime)}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
-        <div className="rounded-full bg-[#fff8e7] p-2">
+      <div className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-sm dark:border dark:border-[#28282F]">
+        <div className="rounded-full bg-yellow-500/10 p-2 dark:bg-yellow-500/5">
           <Calendar className="h-5 w-5 text-yellow-500" />
         </div>
         <div>
-          <p className="text-sm text-text-secondary">Upcoming</p>
-          <p className="text-lg font-semibold">
+          <p className="text-sm text-muted-foreground">Upcoming</p>
+          <p className="text-lg font-semibold text-foreground">
             {upcomingTasks} {upcomingTasks === 1 ? 'task' : 'tasks'}
           </p>
         </div>

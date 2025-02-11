@@ -90,9 +90,9 @@ export default function TaskList({
 
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-text-secondary bg-white p-8 text-center">
-        <p className="text-text-secondary">{emptyMessage}</p>
-        <button className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90">
+      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center dark:border-[#28282F]">
+        <p className="text-muted-foreground">{emptyMessage}</p>
+        <button className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground hover:bg-accent/90">
           Add Task
         </button>
       </div>
@@ -103,13 +103,13 @@ export default function TaskList({
     <div className="w-full max-w-full">
       <div className="mb-4 space-y-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Buscar tareas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-full"
+            className="pl-9 w-full border-border dark:border-[#28282F]"
           />
         </div>
         
@@ -123,7 +123,7 @@ export default function TaskList({
             {availableTags.length > 0 && (
               <div className="relative w-full sm:w-auto" ref={tagDropdownRef}>
                 <div
-                  className="w-full sm:w-48 rounded-md border border-border bg-white px-3 py-2 text-sm text-text-secondary cursor-pointer flex items-center justify-between"
+                  className="w-full sm:w-48 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground cursor-pointer flex items-center justify-between dark:border-[#28282F]"
                   onClick={() => setIsTagDropdownOpen(!isTagDropdownOpen)}
                 >
                   <span className="truncate">
@@ -135,14 +135,14 @@ export default function TaskList({
                         e.stopPropagation();
                         setSelectedTag("");
                       }}
-                      className="p-1 hover:bg-gray-100 rounded-full"
+                      className="p-1 hover:bg-accent/10 rounded-full"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   )}
                 </div>
                 {isTagDropdownOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-border rounded-md shadow-lg">
+                  <div className="absolute z-10 mt-1 w-full bg-background border border-border rounded-md shadow-lg dark:border-[#28282F]">
                     <div className="p-2">
                       <Input
                         type="text"
@@ -155,7 +155,7 @@ export default function TaskList({
                     </div>
                     <div className="max-h-48 overflow-auto">
                       <div
-                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm"
+                        className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground"
                         onClick={() => {
                           setSelectedTag("");
                           setIsTagDropdownOpen(false);
@@ -167,7 +167,7 @@ export default function TaskList({
                       {filteredTags.map(tag => (
                         <div
                           key={tag}
-                          className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm"
+                          className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground"
                           onClick={() => {
                             setSelectedTag(tag);
                             setIsTagDropdownOpen(false);
@@ -185,7 +185,7 @@ export default function TaskList({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "priority" | "dueDate")}
-              className="w-full sm:w-auto rounded-md border border-border bg-white px-3 py-2 text-sm text-text-secondary"
+              className="w-full sm:w-auto rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground dark:border-[#28282F]"
             >
               <option value="priority">Sort by priority</option>
               <option value="dueDate">Sort by due date</option>
@@ -212,7 +212,7 @@ export default function TaskList({
         )}
 
         {sortedTasks.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             No se encontraron tareas que coincidan con tu búsqueda
           </div>
         ) : (
