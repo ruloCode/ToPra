@@ -19,22 +19,22 @@ export function MobileMenu() {
     <div className="fixed top-4 right-4 z-[100] md:hidden">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative bg-white shadow-md">
+          <Button variant="ghost" size="icon" className="relative bg-white dark:bg-zinc-900 dark:text-white shadow-md">
             <Menu className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-48 bg-white shadow-lg rounded-lg"
+          className="w-48 bg-white dark:bg-zinc-900 dark:text-white shadow-lg rounded-lg border border-border dark:border-[#28282F]"
           sideOffset={5}
         >
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="dark:hover:bg-accent/10">
             <Link href="/settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+          <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 dark:hover:bg-accent/10">
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
           </DropdownMenuItem>

@@ -51,17 +51,17 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
+    <aside className={`sidebar px-2 ${expanded ? 'expanded' : 'collapsed'}`}>
       <button
         onClick={toggleSidebar}
-        className="sidebar-toggle"
+        className="sidebar-toggle bg-white dark:bg-zinc-900 dark:text-white dark:border-[#28282F]"
         aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
       >
         {expanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
 
-      <div className="flex h-full flex-col gap-y-5 overflow-y-auto px-4">
-        <div className="flex h-16 shrink-0 items-center">
+      <div className="flex h-full w-full flex-col gap-y-5 overflow-hidden justify-center">
+        <div className="flex h-16 shrink-0 items-center justify-center">
           <h1 className="text-xl font-bold text-accent">
             {expanded ? 'To-Pra' : 'TP'}
           </h1>
@@ -70,7 +70,7 @@ export default function Sidebar() {
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
             <li>
-              <ul role="list" className="-mx-2 space-y-1">
+              <ul role="list"     >  
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -112,7 +112,14 @@ export default function Sidebar() {
                       title={!expanded ? item.name : undefined}
                     >
                       <Icon className="h-5 w-5 flex-shrink-0" />
-                      <span className="nav-text">{item.name}</span>
+                      <span className="nav-text">
+                        {item.name}
+                        {item.name === 'Settings' && !expanded && (
+                          <span className="ml-2 text-xs px-1 rounded-full bg-accent/10">
+                            {isDark ? '🌙' : '☀️'}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                   );
                 })}

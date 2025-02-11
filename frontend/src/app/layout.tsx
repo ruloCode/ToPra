@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { TaskModalProvider } from "@/contexts/TaskModalContext";
@@ -10,7 +10,32 @@ import Sidebar from "@/components/Sidebar";
 import { MobileMenu } from "@/components/MobileMenu";
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = localFont({
+  src: [
+    {
+      path: '../../public/fonts/Inter-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Inter-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Inter-SemiBold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Inter-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "To-Pra",
@@ -23,8 +48,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full overflow-x-hidden" suppressHydrationWarning>
-      <body className={`${inter.className} h-full overflow-x-hidden`}>
+    <html lang="en" className={`h-full overflow-x-hidden ${inter.variable}`} suppressHydrationWarning>
+      <body className="h-full overflow-x-hidden">
         <ThemeProvider>
           <AuthProvider>
             <TaskProvider>

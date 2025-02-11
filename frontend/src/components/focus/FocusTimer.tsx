@@ -277,7 +277,7 @@ export function FocusTimer({
             size="sm"
             disabled={isRunning}
           >
-            Temporizador
+            Timer
           </Button>
           <Button
             variant={mode === 'chronometer' ? 'default' : 'outline'}
@@ -291,7 +291,7 @@ export function FocusTimer({
             size="sm"
             disabled={isRunning}
           >
-            Cronómetro
+            Stopwatch
           </Button>
         </div>
         {onToggleFullscreen && (
@@ -300,6 +300,7 @@ export function FocusTimer({
             size="sm"
             onClick={onToggleFullscreen}
             className="ml-1 sm:ml-2  top-2 right-2 sm:top-3 sm:right-3"
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
             {isFullscreen ? (
               <Minimize2Icon className="h-4 w-4" />
@@ -313,7 +314,7 @@ export function FocusTimer({
       {mode === 'timer' && !isRunning && (
         <div className="mb-3 sm:mb-4">
           <h3 className="text-center text-xs sm:text-sm text-muted-foreground mb-2">
-            Tiempo de concentración
+            Duration
           </h3>
           <div className="relative w-full max-w-md mx-auto">
             <div 
@@ -366,7 +367,7 @@ export function FocusTimer({
                 {countdown}
               </h3>
               <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-                {countdown === 3 ? "En sus marcas..." : countdown === 2 ? "Listos..." : "¡Ya!"}
+                {countdown === 3 ? "Ready..." : countdown === 2 ? "Set..." : "Go!"}
               </p>
             </div>
             <Button
@@ -375,7 +376,7 @@ export function FocusTimer({
               size="sm"
               className="text-xs sm:text-sm"
             >
-              Cancelar ({countdown})
+              Cancel ({countdown})
             </Button>
           </div>
         ) : (
@@ -385,7 +386,7 @@ export function FocusTimer({
             </h3>
             {mode === 'chronometer' && !isRunning && chronometerTime > 0 && (
               <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                Tiempo registrado: {formatTime(chronometerTime)}
+                Total Time: {formatTime(chronometerTime)}
               </p>
             )}
           </>

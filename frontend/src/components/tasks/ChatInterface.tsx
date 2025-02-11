@@ -61,7 +61,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
       const confirmationMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: `✅ ¡He creado la tarea &ldquo;${newTask.title}&rdquo; exitosamente! ¿Necesitas algo más?`,
+        content: `✅ I've successfully created the task "${newTask.title}"! Do you need anything else?`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, confirmationMessage]);
@@ -71,7 +71,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Lo siento, hubo un error al crear la tarea. Por favor, intenta de nuevo.',
+        content: 'Sorry, there was an error creating the task. Please try again.',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -97,7 +97,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
       const thinkingMessage: Message = {
         id: 'thinking',
         role: 'assistant',
-        content: '🤔 Pensando...',
+        content: '🤔 Thinking...',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, thinkingMessage]);
@@ -134,7 +134,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+        content: 'Sorry, there was an error processing your message. Please try again.',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -152,7 +152,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
         <div>
           <h2 className="text-sm font-medium text-foreground">AI Assistant</h2>
           <p className="text-xs text-text-secondary">
-            Pregúntame sobre la gestión de tus tareas
+            Ask me about managing your tasks
           </p>
         </div>
       </div>
@@ -162,10 +162,10 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <Bot className="h-12 w-12 mb-4 text-accent/40" />
-              <h3 className="text-lg font-medium mb-2">¡Bienvenido al Asistente de Tareas!</h3>
+              <h3 className="text-lg font-medium mb-2">Welcome to the Task Assistant!</h3>
               <p className="text-sm max-w-md">
-                Puedo ayudarte a crear tareas de manera natural. Por ejemplo, escribe:
-                &apos;Necesito crear una tarea para estudiar mañana&apos;
+                I can help you create tasks naturally. For example, write:
+                &apos;I need to create a task to study tomorrow&apos;
               </p>
             </div>
           )}
@@ -206,7 +206,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={`Escribe tu mensaje...`}
+            placeholder="Type your message..."
             className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
             disabled={isLoading}
           />
@@ -218,7 +218,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
             {isLoading ? (
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
-              <div>Enviar</div>
+              <div>Send</div>
             )}
           </button>
         </div>

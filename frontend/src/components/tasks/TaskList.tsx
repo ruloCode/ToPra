@@ -92,9 +92,7 @@ export default function TaskList({
     return (
       <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center dark:border-[#28282F]">
         <p className="text-muted-foreground">{emptyMessage}</p>
-        <button className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground hover:bg-accent/90">
-          Add Task
-        </button>
+       
       </div>
     );
   }
@@ -106,7 +104,7 @@ export default function TaskList({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Buscar tareas..."
+            placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 w-full border-border dark:border-[#28282F]"
@@ -127,7 +125,7 @@ export default function TaskList({
                   onClick={() => setIsTagDropdownOpen(!isTagDropdownOpen)}
                 >
                   <span className="truncate">
-                    {selectedTag || "Todas las etiquetas"}
+                    {selectedTag || "All tags"}
                   </span>
                   {selectedTag && (
                     <button
@@ -143,17 +141,17 @@ export default function TaskList({
                 </div>
                 {isTagDropdownOpen && (
                   <div className="absolute z-10 mt-1 w-full bg-background border border-border rounded-md shadow-lg dark:border-[#28282F]">
-                    <div className="p-2">
+                    <div className="p-2 bg-background">
                       <Input
                         type="text"
-                        placeholder="Buscar etiqueta..."
+                        placeholder="Search tag..."
                         value={tagSearchQuery}
                         onChange={(e) => setTagSearchQuery(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         className="w-full"
                       />
                     </div>
-                    <div className="max-h-48 overflow-auto">
+                    <div className="max-h-48 overflow-auto bg-background">
                       <div
                         className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground"
                         onClick={() => {
@@ -162,7 +160,7 @@ export default function TaskList({
                           setTagSearchQuery("");
                         }}
                       >
-                        Todas las etiquetas
+                        All tags
                       </div>
                       {filteredTags.map(tag => (
                         <div
@@ -185,7 +183,7 @@ export default function TaskList({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "priority" | "dueDate")}
-              className="w-full sm:w-auto rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground dark:border-[#28282F]"
+              className="w-full sm:w-auto rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground dark:bg-zinc-900 dark:text-white dark:border-[#28282F] [&>option]:dark:bg-zinc-900 [&>option]:bg-white"
             >
               <option value="priority">Sort by priority</option>
               <option value="dueDate">Sort by due date</option>

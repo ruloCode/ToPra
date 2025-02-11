@@ -27,7 +27,7 @@ export function FocusMode({
   const { user } = useAuth();
   const isCreatingSession = useRef(false);
 
-  // Separar la carga inicial y el manejo de errores
+  // Loading the initial state and handling errors
   useEffect(() => {
     const loadActiveSession = async () => {
       if (!user) return;
@@ -38,7 +38,7 @@ export function FocusMode({
         });
         const activeSession = sessions[0];
         
-        // Solo actualizar el estado si realmente hay una sesión activa
+        // Only update the state if there is actually an active session
         if (activeSession?.id && activeSession.id !== currentSessionId) {
           setCurrentSessionId(activeSession.id);
           setSelectedTask(activeSession.task || null);
@@ -63,14 +63,14 @@ export function FocusMode({
         });
         setSelectedTask(task);
         toast({
-          title: task ? "Tarea actualizada" : "Tarea removida",
-          description: task ? "Se ha vinculado una nueva tarea a la sesión" : "Se ha desvinculado la tarea de la sesión",
+          title: task ? "Task updated" : "Task removed",
+          description: task ? "A new task has been linked to the session" : "The task has been unlinked from the session",
         });
       } catch (error) {
         console.error('Error updating session task:', error);
         toast({
           title: "Error",
-          description: "No se pudo actualizar la tarea de la sesión",
+          description: "Could not update the session task",
           variant: "destructive",
         });
       }
@@ -87,27 +87,27 @@ export function FocusMode({
       await updateFocusSession(currentSessionId, {
         status: FocusSessionStatus.COMPLETED,
         end_time: new Date().toISOString(),
-        duration: elapsedMinutes, // Aquí guardamos los minutos que vienen del cronómetro
+        duration: elapsedMinutes,
       });
 
       setCurrentSessionId(null);
       await historyRef.current?.reloadSessions();
 
       toast({
-        title: "¡Bien hecho!",
-        description: `Has completado una sesión de ${elapsedMinutes} minutos.`,
+        title: "Well done!",
+        description: `You have completed a ${elapsedMinutes}-minute session.`,
       });
     } catch (error) {
-      console.error('Error al finalizar la sesión:', error);
+      console.error('Error finishing session:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar la sesión.",
+        description: "Could not save the session.",
         variant: "destructive",
       });
     }
   }, [user, currentSessionId, toast, historyRef]);
 
-  // Handle timer interruption - solo para el temporizador
+  // Handle timer interruption
   const handleTimerInterrupt = useCallback(async (elapsedTime: number) => {
     if (!currentSessionId || !user || timerMode !== 'timer') return;
 
@@ -120,17 +120,16 @@ export function FocusMode({
       });
 
       setCurrentSessionId(null);
-      // Actualizar el historial
       await historyRef.current?.reloadSessions();
       toast({
-        title: "Sesión interrumpida",
-        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
+        title: "Session interrupted",
+        description: `You completed ${durationInMinutes} minutes of focus.`,
       });
     } catch (error) {
       console.error('Error interrupting session:', error);
       toast({
         title: "Error",
-        description: "No se pudo interrumpir la sesión correctamente.",
+        description: "Could not interrupt the session properly.",
         variant: "destructive",
       });
     }
@@ -149,16 +148,15 @@ export function FocusMode({
       });
 
       setCurrentSessionId(null);
-      // Actualizar el historial
       await historyRef.current?.reloadSessions();
       toast({
-        title: "¡Felicidades!",
-        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
+        title: "Congratulations!",
+        description: `You have completed ${durationInMinutes} minutes of focus.`,
       });
     } catch {
       toast({
         title: "Error",
-        description: "No se pudo completar la sesión correctamente.",
+        description: "Could not complete the session properly.",
         variant: "destructive",
       });
     }
@@ -169,7 +167,7 @@ export function FocusMode({
     if (!user) {
       toast({
         title: "Error",
-        description: "Debes iniciar sesión para registrar tu tiempo de enfoque.",
+        description: "You must be logged in to record your focus time.",
         variant: "destructive",
       });
       return;
@@ -185,7 +183,6 @@ export function FocusMode({
       });
       
       if (sessions[0]?.id) {
-        // Finalizar la sesión activa anterior
         const startTime = new Date(sessions[0].start_time).getTime();
         const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
         
@@ -213,16 +210,16 @@ export function FocusMode({
       await historyRef.current?.reloadSessions();
       
       toast({
-        title: "Sesión iniciada",
+        title: "Session started",
         description: mode === 'timer' 
-          ? "Tu sesión de enfoque programada ha comenzado."
-          : "Tu sesión de enfoque libre ha comenzado.",
+          ? "Your scheduled focus session has started."
+          : "Your free focus session has started.",
       });
     } catch (error) {
       console.error('Error creating session:', error);
       toast({
         title: "Error",
-        description: "No se pudo iniciar la sesión de enfoque.",
+        description: "Could not start the focus session.",
         variant: "destructive",
       });
     } finally {
@@ -248,7 +245,7 @@ export function FocusMode({
     } catch {
       toast({
         title: 'Error',
-        description: 'No se pudo activar el modo pantalla completa',
+        description: 'Could not activate fullscreen mode',
         variant: 'destructive',
       });
     }
@@ -269,7 +266,7 @@ export function FocusMode({
       <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
         <div className="space-y-2 sm:space-y-4">
           <div className="p-2 sm:p-4 border-b">
-            <h2 className="text-sm sm:text-base lg:text-lg font-medium mb-2">Seleccionar Tarea (opcional)</h2>
+            <h2 className="text-sm sm:text-base lg:text-lg font-medium mb-2">Select task (optional)</h2>
             <TaskSearch
               selectedTask={selectedTask}
               onTaskSelect={handleTaskSelect}

@@ -6,7 +6,6 @@ import Auth from "@/components/Auth";
 import TaskList from "@/components/tasks/TaskList";
 import TaskStats from "@/components/tasks/TaskStats";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { Task, TaskStatus } from "@/lib/tasks";
 import { useTaskModal } from "@/contexts/TaskModalContext";
 import { useTasks } from "@/contexts/TaskContext";
@@ -58,11 +57,12 @@ export default function TasksPage() {
 
   return (
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto md:max-w-[60vw]">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">All Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {format(today, "EEEE, d 'de' MMMM", { locale: es })}
+           
+          {format(today, "EEEE, MMMM d")}
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function TasksPage() {
                     className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'all' 
                         ? 'bg-background text-accent shadow-sm ring-1 ring-accent/20 dark:bg-[#1C1C24]' 
-                        : 'text-white hover:bg-background/50 dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
+                        : 'text-muted-foreground hover:bg-background/50 hover:text-accent dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
                     }`}
                   >
                     <ListFilter className="h-3.5 w-3.5" />
@@ -91,7 +91,7 @@ export default function TasksPage() {
                     className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'pending' 
                         ? 'bg-background text-accent shadow-sm ring-1 ring-accent/20 dark:bg-[#1C1C24]' 
-                        : 'text-white hover:bg-background/50 dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
+                        : 'text-muted-foreground hover:bg-background/50 hover:text-accent dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
                     }`}
                   >
                     <ListTodo className="h-3.5 w-3.5" />
@@ -102,7 +102,7 @@ export default function TasksPage() {
                     className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'completed' 
                         ? 'bg-background text-accent shadow-sm ring-1 ring-accent/20 dark:bg-[#1C1C24]' 
-                        : 'text-white hover:bg-background/50 dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
+                        : 'text-muted-foreground hover:bg-background/50 hover:text-accent dark:text-muted-foreground dark:hover:text-accent dark:hover:bg-[#1C1C24]'
                     }`}
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />

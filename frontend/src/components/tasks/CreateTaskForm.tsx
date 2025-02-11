@@ -71,8 +71,8 @@ export default function CreateTaskForm({
     } catch (err) {
       setError(
         initialTask?.id
-          ? 'Error al actualizar la tarea. Por favor, intenta de nuevo.'
-          : 'Error al crear la tarea. Por favor, intenta de nuevo.'
+          ? 'Error updating task. Please try again.'
+          : 'Error creating task. Please try again.'
       );
       console.error('Error saving task:', err);
     } finally {
@@ -94,7 +94,7 @@ export default function CreateTaskForm({
           htmlFor="title"
           className="block text-sm font-medium text-foreground"
         >
-          Título
+          Title
         </label>
         <input
           type="text"
@@ -104,7 +104,7 @@ export default function CreateTaskForm({
           onChange={handleChange}
           required
           className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
-          placeholder="Título de la tarea"
+          placeholder="Task title"
         />
       </div>
 
@@ -113,7 +113,7 @@ export default function CreateTaskForm({
           htmlFor="description"
           className="block text-sm font-medium text-foreground"
         >
-          Descripción
+          Description
         </label>
         <textarea
           name="description"
@@ -122,7 +122,7 @@ export default function CreateTaskForm({
           value={formData.description}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
-          placeholder="Descripción de la tarea"
+          placeholder="Task description"
         />
       </div>
 
@@ -132,7 +132,7 @@ export default function CreateTaskForm({
             htmlFor="priority"
             className="block text-sm font-medium text-foreground"
           >
-            Prioridad
+            Priority
           </label>
           <select
             name="priority"
@@ -142,9 +142,9 @@ export default function CreateTaskForm({
             required
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
           >
-            <option value="1">Baja</option>
-            <option value="2">Media</option>
-            <option value="3">Alta</option>
+            <option value="1">Low</option>
+            <option value="2">Medium</option>
+            <option value="3">High</option>
           </select>
         </div>
 
@@ -153,7 +153,7 @@ export default function CreateTaskForm({
             htmlFor="due_date"
             className="block text-sm font-medium text-foreground"
           >
-            Fecha límite
+            Due Date
           </label>
           <input
             type="date"
@@ -171,7 +171,7 @@ export default function CreateTaskForm({
           htmlFor="tags"
           className="block text-sm font-medium text-foreground"
         >
-          Etiquetas
+          Tags
         </label>
         <div className="space-y-2">
           <div className="flex gap-2">
@@ -193,7 +193,7 @@ export default function CreateTaskForm({
               type="button"
               onClick={() => {
                 const currentTags = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
-                const tag = "trabajo";
+                const tag = "work";
                 if (!currentTags.includes(tag)) {
                   const newTags = [...currentTags, tag];
                   setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
@@ -201,7 +201,7 @@ export default function CreateTaskForm({
               }}
               className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-500/5 px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-500/10"
             >
-              + trabajo
+              + work
             </button>
           </div>
           <input
@@ -211,7 +211,7 @@ export default function CreateTaskForm({
             value={formData.tags}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
-            placeholder="Etiquetas separadas por comas"
+            placeholder="Tags separated by commas"
           />
         </div>
       </div>
@@ -231,11 +231,11 @@ export default function CreateTaskForm({
         >
           {isLoading
             ? initialTask
-              ? 'Actualizando...'
-              : 'Creando...'
+              ? 'Updating...'
+              : 'Creating...'
             : initialTask
-            ? 'Actualizar'
-            : 'Crear'}
+            ? 'Update'
+            : 'Create'}
         </button>
       </div>
     </form>

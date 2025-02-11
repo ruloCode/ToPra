@@ -80,17 +80,21 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
 
   const getTagColor = (tag: string) => {
     switch (tag.toLowerCase()) {
-      case 'trabajo':
-        return 'bg-blue-100 text-blue-600';
       case 'personal':
-        return 'bg-yellow-100 text-yellow-600';
+        return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-400/20 dark:text-yellow-400 dark:hover:bg-yellow-400/30';
+      case 'trabajo':
+        return 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-400/20 dark:text-blue-400 dark:hover:bg-blue-400/30';
+      case 'urgente':
+        return 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-400/20 dark:text-red-400 dark:hover:bg-red-400/30';
+      case 'importante':
+        return 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-400/20 dark:text-purple-400 dark:hover:bg-purple-400/30';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-400/20 dark:text-gray-400 dark:hover:bg-gray-400/30';
     }
   };
 
   return (
-    <div className="group flex items-start gap-3 rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/5 dark:border-[#28282F]">
+    <div className={`flex items-center gap-2 group relative rounded-xl border bg-card p-4 transition-colors hover:bg-accent/5 dark:border-[#28282F] ${task.status === TaskStatus.COMPLETED ? 'opacity-75' : ''}`}>
       <button
         onClick={handleStatusChange}
         disabled={isLoading}
@@ -155,11 +159,11 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
         </div>
 
         {task.tags && task.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="flex flex-wrap gap-2 mt-1">
             {task.tags.map((tag, index) => (
               <span
                 key={index}
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${getTagColor(tag)} dark:bg-opacity-15`}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors cursor-default ${getTagColor(tag)}`}
               >
                 {tag}
               </span>

@@ -20,8 +20,8 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
   const handleTaskCreated = (fromChat: boolean = false) => {
     onSuccess();
     toast({
-      title: "¡Éxito!",
-      description: "La tarea ha sido creada correctamente",
+      title: "Success!",
+      description: "The task has been created successfully",
       duration: 3000,
     });
     
@@ -59,7 +59,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 px-6 bg-white dark:bg-background-paper">
-              <TabsTrigger value="form">Formulario</TabsTrigger>
+              <TabsTrigger value="form">Form</TabsTrigger>
               <TabsTrigger value="chat">Chat</TabsTrigger>
             </TabsList>
 

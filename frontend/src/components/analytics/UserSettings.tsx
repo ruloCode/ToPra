@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card } from '../ui/card';
-import { Switch } from '../ui/switch';
 import {
   Select,
   SelectContent,
@@ -92,8 +91,6 @@ export default function UserSettings() {
       toast({
         title: "Settings saved",
         description: "Your preferences have been updated successfully.",
-        variant: "default",
-        className: "bg-green-50 border-green-200",
       });
 
       // Apply settings
@@ -166,34 +163,12 @@ export default function UserSettings() {
                   profile: { ...prev.profile, displayName: e.target.value }
                 }))
               }
-              className="w-[180px] px-3 py-2 rounded-md border border-input bg-background"
+              className="w-[180px] px-3 py-2 rounded-md border border-input bg-white dark:bg-zinc-900 dark:text-white"
               placeholder="Your name"
             />
           </div>
 
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Time Zone</label>
-            <Select
-              value={settings.profile.timeZone}
-              onValueChange={(value) =>
-                setSettings(prev => ({
-                  ...prev,
-                  profile: { ...prev.profile, timeZone: value }
-                }))
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select timezone" />
-              </SelectTrigger>
-              <SelectContent className='bg-background border-border'>
-                {Intl.supportedValuesOf('timeZone').map((tz) => (
-                  <SelectItem key={tz} value={tz}>
-                    {tz.replace(/_/g, ' ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+         
         </div>
       </Card>
 
@@ -201,7 +176,12 @@ export default function UserSettings() {
         <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Appearance Settings</h3>
         <div className="space-y-4" role="group" aria-label="Appearance settings">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Theme</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Theme</label>
+              <span className="text-xs px-2 py-1 rounded-full bg-accent/10">
+                {isDark ? 'Dark' : 'Light'} mode active
+              </span>
+            </div>
             <Select
               value={settings.theme}
               onValueChange={handleThemeChange}
@@ -209,7 +189,7 @@ export default function UserSettings() {
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
-              <SelectContent className='bg-background border-border'>
+              <SelectContent className='bg-white border-border'>
                 <SelectItem value="light">Light</SelectItem>
                 <SelectItem value="dark">Dark</SelectItem>
                 <SelectItem value="system">System</SelectItem>
@@ -217,7 +197,7 @@ export default function UserSettings() {
             </Select>
           </div>
 
-          <div className="flex justify-between items-center">
+          {/* <div className="flex justify-between items-center">
             <label className="text-sm font-medium">Language</label>
             <Select
               value={settings.language}
@@ -228,16 +208,16 @@ export default function UserSettings() {
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
-              <SelectContent className='bg-background border-border'>
+              <SelectContent className='bg-white border-border'>
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="es">Español</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
         </div>
       </Card>
 
-      <Card className="p-6" id="accessibility-section">
+      {/* <Card className="p-6" id="accessibility-section">
         <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Accessibility Options</h3>
         <div className="space-y-4" role="group" aria-label="Accessibility settings">
           <div className="flex justify-between items-center">
@@ -279,7 +259,7 @@ export default function UserSettings() {
             />
           </div>
         </div>
-      </Card>
+      </Card> */}
 
       <div className="flex justify-end items-center">
         <Button
@@ -287,6 +267,7 @@ export default function UserSettings() {
           disabled={isSaving}
           className="min-w-[120px]"
           aria-live="polite"
+          
         >
           {isSaving ? "Saving..." : "Save Settings"}
         </Button>

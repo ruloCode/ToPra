@@ -3,12 +3,12 @@
 import { useAuth } from '@/components/AuthProvider';
 import Auth from '@/components/Auth';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { Task, TaskStatus, getTasks } from '@/lib/tasks';
 import { useCallback, useEffect, useState } from 'react';
 import TaskList from '@/components/tasks/TaskList';
 import TaskStats from '@/components/tasks/TaskStats';
 import { useTaskModal } from '@/contexts/TaskModalContext';
+import { loadUserSettings } from '@/lib/settings';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
@@ -16,6 +16,9 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
   const today = new Date();
+  
+  const userSettings = user ? loadUserSettings(user.id) : null;
+  const displayName = userSettings?.profile.displayName;
 
   const fetchTasks = useCallback(async () => {
     if (!user) return;
@@ -76,11 +79,19 @@ export default function Home() {
 
   return (
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto md:max-w-[60vw]">
         <div className="mb-8">
-          <h1 className="date-header">Today</h1>
+          {displayName ? (
+            <h1 className="date-header text-xl text-primary mb-2">
+              Hi, {displayName}!
+              Let&apos;s make things happen!
+            </h1>
+          ) : (
+            <h1 className="date-header">Today</h1>
+          )}
+        
           <p className="text-sm text-muted-foreground">
-            {format(today, "EEEE, d 'de' MMMM", { locale: es })}
+            {format(today, "EEEE, MMMM d")}
           </p>
         </div>
 

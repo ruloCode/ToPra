@@ -8,7 +8,7 @@ import { Suspense } from 'react';
 export default function AnalyticsPage() {
   return (
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto md:max-w-[60vw]">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
           <p className="mt-2 text-sm text-muted-foreground">Track your progress and productivity metrics</p>
