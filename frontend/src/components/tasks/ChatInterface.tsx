@@ -59,7 +59,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
       const confirmationMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: `✅ ¡He creado la tarea "${newTask.title}" exitosamente! ¿Necesitas algo más?`,
+        content: `✅ ¡He creado la tarea &ldquo;${newTask.title}&rdquo; exitosamente! ¿Necesitas algo más?`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, confirmationMessage]);
@@ -162,8 +162,8 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
               <Bot className="h-12 w-12 mb-4 text-accent/40" />
               <h3 className="text-lg font-medium mb-2">¡Bienvenido al Asistente de Tareas!</h3>
               <p className="text-sm max-w-md">
-                Puedo ayudarte a crear tareas de manera natural. Por ejemplo, prueba diciendo:
-                "Necesito crear una tarea para estudiar mañana"
+                Puedo ayudarte a crear tareas de manera natural. Por ejemplo, escribe:
+                &apos;Necesito crear una tarea para estudiar mañana&apos;
               </p>
             </div>
           )}
@@ -204,7 +204,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Escribe tu mensaje..."
+            placeholder={`Escribe tu mensaje...`}
             className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             disabled={isLoading}
           />
@@ -216,7 +216,7 @@ export default function ChatInterface({ onTaskExtracted, isActive = false }: Cha
             {isLoading ? (
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
-              'Enviar'
+              <div>Enviar</div>
             )}
           </button>
         </div>

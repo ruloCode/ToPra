@@ -17,7 +17,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
   const [activeTab, setActiveTab] = useState<string>("form");
   const { toast } = useToast();
 
-  const handleTaskCreated = (fromChat: boolean = false, task?: Task) => {
+  const handleTaskCreated = (fromChat: boolean = false) => {
     // Actualizar la lista de tareas
     onSuccess();
 
@@ -75,8 +75,8 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
 
               <TabsContent value="chat" className="p-0 m-0 h-[500px]">
                 <ChatInterface 
-                  onTaskExtracted={(task) => {
-                    handleTaskCreated(true, task as Task);
+                  onTaskExtracted={() => {
+                    handleTaskCreated(true);
                   }}
                   isActive={activeTab === "chat"}
                 />
