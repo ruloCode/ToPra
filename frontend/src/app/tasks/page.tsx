@@ -10,6 +10,7 @@ import { es } from "date-fns/locale";
 import { Task, TaskStatus } from "@/lib/tasks";
 import { useTaskModal } from "@/contexts/TaskModalContext";
 import { useTasks } from "@/contexts/TaskContext";
+import { ListTodo, CheckCircle2, ListFilter } from 'lucide-react';
 
 export default function TasksPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -73,36 +74,39 @@ export default function TasksPage() {
           <section>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <h2 className="section-header">Your Tasks</h2>
-                <div className="flex gap-2">
+                
+                <div className="inline-flex items-center bg-gray-100/50 p-0.5 rounded-lg gap-0.5">
                   <button
                     onClick={() => setFilter('all')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'all' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted hover:bg-muted/80'
+                        ? 'bg-white text-accent shadow-sm ring-1 ring-accent/20' 
+                        : 'text-text-secondary hover:text-accent/90 hover:bg-white/50'
                     }`}
                   >
+                    <ListFilter className="h-3.5 w-3.5" />
                     All
                   </button>
                   <button
                     onClick={() => setFilter('pending')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'pending' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted hover:bg-muted/80'
+                        ? 'bg-white text-accent shadow-sm ring-1 ring-accent/20' 
+                        : 'text-text-secondary hover:text-accent/90 hover:bg-white/50'
                     }`}
                   >
+                    <ListTodo className="h-3.5 w-3.5" />
                     Pending
                   </button>
                   <button
                     onClick={() => setFilter('completed')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`min-w-[90px] px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-1.5 ${
                       filter === 'completed' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted hover:bg-muted/80'
+                        ? 'bg-white text-accent shadow-sm ring-1 ring-accent/20' 
+                        : 'text-text-secondary hover:text-accent/90 hover:bg-white/50'
                     }`}
                   >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
                     Completed
                   </button>
                 </div>

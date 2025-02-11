@@ -8,7 +8,7 @@ export default function AnalyticsPage() {
     <div className="container mx-auto p-4 lg:p-8 space-y-8 max-w-7xl">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Productivity Analytics</h1>
+          <h1 className="text-3xl font-bold">Analytics</h1>
           <p className="text-gray-500 mt-2">Track your progress and productivity metrics</p>
         </div>
         {/* <div className="w-full sm:w-auto">
