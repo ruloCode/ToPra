@@ -14,7 +14,6 @@ interface CreateTaskFormProps {
 export default function CreateTaskForm({
   initialTask,
   onSuccess,
-  onCancel,
 }: CreateTaskFormProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);

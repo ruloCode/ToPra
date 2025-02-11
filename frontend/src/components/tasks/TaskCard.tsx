@@ -4,13 +4,8 @@ import { Task, TaskStatus, updateTask, deleteTask } from '@/lib/tasks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState } from 'react';
-import { Circle, CheckCircle2, Calendar, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Circle, CheckCircle2, Calendar, Flag,Pencil, Trash2 } from 'lucide-react';
+
 import { useToast } from "@/components/ui/use-toast";
 
 interface TaskCardProps {
