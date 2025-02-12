@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { FocusSession, FocusSessionStatus } from './focus';
+import { FocusSessionStatus } from './focus';
 
 export type TimeRange = 'day' | 'week' | 'month' | 'year' | 'all';
 
@@ -56,19 +56,34 @@ export interface Achievement {
   target: number;
 }
 
-// Calculate productivity score based on multiple factors
+// Calculate productivity score based on task priority and focus sessions
 function calculateProductivityScore(
-  focusMinutes: number,
-  tasksCompleted: number,
-  sessionCompletionRate: number,
-  streakDays: number
+  completedTasks: Array<{ priority?: string | null }>,
+  focusSessions: Array<{ duration: number; status: string }>
 ): number {
-  const focusScore = Math.min(focusMinutes / 240, 1) * 40; // Max 4 hours = 40 points
-  const taskScore = Math.min(tasksCompleted / 5, 1) * 30; // Max 5 tasks = 30 points
-  const sessionScore = sessionCompletionRate * 20; // Max 20 points
-  const streakScore = Math.min(streakDays / 7, 1) * 10; // Max 7 days = 10 points
-  
-  return Math.round(focusScore + taskScore + sessionScore + streakScore);
+  // Calculate points from completed tasks based on priority
+  const taskPoints = completedTasks.reduce((total, task) => {
+    const priority = typeof task.priority === 'string' ? task.priority.toLowerCase() : 'low';
+    switch (priority) {
+      case 'high':
+        return total + 3;
+      case 'medium':
+        return total + 2;
+      case 'low':
+      default:
+        return total + 1;
+    }
+  }, 0);
+
+  // Calculate points from completed focus sessions
+  const focusPoints = focusSessions
+    .filter(session => session.status === 'COMPLETED') // Only count completed sessions
+    .reduce((total, session) => {
+      const minutes = (session.duration || 0) / 60; // Convert seconds to minutes
+      return total + (minutes * 0.25);
+    }, 0);
+
+  return Math.round(taskPoints + focusPoints);
 }
 
 // Get all productivity metrics for a user
@@ -76,74 +91,84 @@ export async function getProductivityMetrics(
   userId: string,
   range: TimeRange = 'week'
 ): Promise<ProductivityMetrics> {
+  // Get current date at start of day in local timezone
   const now = new Date();
-  let startDate: Date;
-
-  // Calculate start date based on range
+  now.setHours(23, 59, 59, 999); // End of current day
+  const startDate = new Date();
+  
+  // Calculate start date based on range, keeping timezone
   switch (range) {
     case 'day':
-      startDate = new Date(now.setHours(0, 0, 0, 0));
+      startDate.setHours(0, 0, 0, 0); // Start of current day
       break;
     case 'week':
-      startDate = new Date(now.setDate(now.getDate() - 7));
+      startDate.setDate(startDate.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
       break;
     case 'month':
-      startDate = new Date(now.setMonth(now.getMonth() - 1));
+      startDate.setMonth(startDate.getMonth() - 1);
+      startDate.setHours(0, 0, 0, 0);
       break;
     case 'year':
-      startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      startDate.setHours(0, 0, 0, 0);
       break;
     default:
-      startDate = new Date(0); // Beginning of time
+      startDate.setDate(startDate.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
   }
 
   try {
-    // Get focus sessions
+    // Get focus sessions within date range with precise timestamps
     const { data: sessions, error: sessionsError } = await supabase
       .from('focus_sessions')
       .select('*')
       .eq('user_id', userId)
-      .gte('start_time', startDate.toISOString());
+      .gte('start_time', startDate.toISOString())
+      .lte('start_time', now.toISOString());
 
     if (sessionsError) throw new Error(`Error fetching sessions: ${sessionsError.message}`);
 
-    // Get tasks
-    const { data: tasks, error: tasksError } = await supabase
+    // Get completed tasks within date range with precise timestamps
+    const { data: completedTasks, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', startDate.toISOString());
+      .or('status.eq.completed,status.eq.COMPLETED')
+      .gte('completed_at', startDate.toISOString())
+      .lte('completed_at', now.toISOString());
 
-    if (tasksError) throw new Error(`Error fetching tasks: ${tasksError.message}`);
+    // Get all tasks for completion rate calculation
+    const { data: allTasks, error: allTasksError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', userId)
+      .lte('created_at', now.toISOString());
 
+    if (tasksError || allTasksError) throw new Error(`Error fetching tasks: ${tasksError?.message || allTasksError?.message}`);
+
+    // Calculate time differences in milliseconds
+    const rangeDuration = now.getTime() - startDate.getTime();
+    const daysInRange = Math.ceil(rangeDuration / (1000 * 60 * 60 * 24));
+
+    // Calculate metrics based on filtered data and actual time range
     const completedSessions = sessions?.filter(s => s.status === FocusSessionStatus.COMPLETED) || [];
     const totalFocusTime = completedSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
     const averageSessionLength = completedSessions.length > 0 ? totalFocusTime / completedSessions.length : 0;
-    const sessionCompletionRate = sessions?.length ? completedSessions.length / sessions.length : 0;
-    
-    const completedTasks = tasks?.filter(t => t.completed) || [];
-    const streakData = await calculateStreak(userId);
-    
-    const productivityScore = calculateProductivityScore(
-      totalFocusTime / 60, // Convert to minutes
-      completedTasks.length,
-      sessionCompletionRate,
-      streakData.current
-    );
 
     const metrics = {
       focusTime: {
         total: totalFocusTime,
-        daily: totalFocusTime / 7, // Average daily focus time
-        weekly: totalFocusTime,
-        monthly: totalFocusTime * 4, // Estimated monthly based on current week
+        daily: totalFocusTime / daysInRange,
+        weekly: range === 'week' ? totalFocusTime : (totalFocusTime / daysInRange) * 7,
+        monthly: range === 'month' ? totalFocusTime : (totalFocusTime / daysInRange) * 30,
       },
       tasks: {
-        completed: completedTasks.length,
-        total: tasks?.length || 0,
-        completionRate: tasks?.length ? completedTasks.length / tasks.length : 0,
+        completed: completedTasks?.length || 0,
+        total: allTasks?.length || 0,
+        completionRate: allTasks?.length ? (completedTasks?.length || 0) / allTasks.length : 0,
       },
-      streaks: streakData,
+      streaks: await calculateStreak(userId),
       sessions: {
         total: sessions?.length || 0,
         completed: completedSessions.length,
@@ -151,28 +176,35 @@ export async function getProductivityMetrics(
         averageLength: averageSessionLength,
         averageRating: completedSessions.reduce((acc, s) => acc + (s.rating || 0), 0) / completedSessions.length || 0,
       },
-      productivityScore,
+      productivityScore: calculateProductivityScore(
+        completedTasks || [],
+        sessions || []
+      ),
     };
 
     // After calculating metrics, check and update achievements
     const achievements = [
       {
         id: 'focus-master',
-        target: 10,
-        progress: metrics.sessions.completed,
-        shouldUnlock: metrics.sessions.completed >= 10
-      },
-      {
-        id: 'productivity-streak',
-        target: 5,
-        progress: metrics.streaks.current,
-        shouldUnlock: metrics.streaks.current >= 5
+        target: 750, // 50 hours of focus time = 3000 minutes * 0.25 points = 750 points
+        progress: completedSessions.reduce((acc, s) => acc + ((s.duration || 0) / 60 * 0.25), 0),
+        shouldUnlock: completedSessions.reduce((acc, s) => acc + ((s.duration || 0) / 60 * 0.25), 0) >= 750
       },
       {
         id: 'task-champion',
-        target: 20,
-        progress: metrics.tasks.completed,
-        shouldUnlock: metrics.tasks.completed >= 20
+        target: 50, // Equivalent to ~17 high priority tasks or combination of priorities
+        progress: completedTasks.reduce((acc, task) => {
+          const priority = typeof task.priority === 'string' ? task.priority.toLowerCase() : 'low';
+          const priorityPoints = priority === 'high' ? 3 :
+                               priority === 'medium' ? 2 : 1;
+          return acc + priorityPoints;
+        }, 0),
+        shouldUnlock: completedTasks.reduce((acc, task) => {
+          const priority = typeof task.priority === 'string' ? task.priority.toLowerCase() : 'low';
+          const priorityPoints = priority === 'high' ? 3 :
+                               priority === 'medium' ? 2 : 1;
+          return acc + priorityPoints;
+        }, 0) >= 50
       },
       {
         id: 'consistency-king',
@@ -182,9 +214,9 @@ export async function getProductivityMetrics(
       },
       {
         id: 'productivity-expert',
-        target: 90,
+        target: 1000, // Challenging combination of focus time and completed tasks
         progress: metrics.productivityScore,
-        shouldUnlock: metrics.productivityScore >= 90
+        shouldUnlock: metrics.productivityScore >= 1000
       }
     ];
 
@@ -210,46 +242,38 @@ export async function getProductivityMetrics(
 // Calculate user's current and longest streaks
 async function calculateStreak(userId: string): Promise<{ current: number; longest: number; dailyGoalMet: boolean }> {
   const now = new Date();
-  const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
-
-  const { data: sessions } = await supabase
-    .from('focus_sessions')
-    .select('*')
+  const { data: tasks } = await supabase
+    .from('tasks')
+    .select('completed_at, status')
     .eq('user_id', userId)
-    .eq('status', FocusSessionStatus.COMPLETED)
-    .gte('start_time', thirtyDaysAgo.toISOString())
-    .order('start_time', { ascending: false });
+    .or('status.eq.completed,status.eq.COMPLETED')
+    .order('completed_at', { ascending: false });
 
-  if (!sessions?.length) {
-    return { current: 0, longest: 0, dailyGoalMet: false };
-  }
+  if (!tasks) return { current: 0, longest: 0, dailyGoalMet: false };
 
-  // Group sessions by date
-  const sessionsByDate = sessions.reduce((acc: Record<string, FocusSession[]>, session: FocusSession) => {
-    const date = new Date(session.start_time).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
+  // Group completed tasks by date
+  const tasksByDate = tasks.reduce((acc: { [key: string]: number }, task) => {
+    if (task.completed_at) {
+      const date = new Date(task.completed_at).toDateString();
+      acc[date] = (acc[date] || 0) + 1;
     }
-    acc[date].push(session);
     return acc;
   }, {});
 
-  // Calculate streaks
+  // Calculate current streak
   let currentStreak = 0;
   let longestStreak = 0;
   let tempStreak = 0;
   const today = new Date().toDateString();
-  const dailyGoalMet = (sessionsByDate[today]?.reduce((acc: number, s: FocusSession) => acc + (s.duration || 0), 0) || 0) >= 25 * 60; // 25 minutes minimum
+  const dailyGoalMet = Boolean(tasksByDate[today]); // True if at least one task was completed today
 
   // Calculate current streak
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(now.setDate(now.getDate() - i)).toDateString();
-    const daySessions = sessionsByDate[date];
-    
-    if (daySessions && daySessions.reduce((acc: number, s: FocusSession) => acc + (s.duration || 0), 0) >= 25 * 60) {
+  for (let i = 0; i < 30; i++) { // Check last 30 days
+    const date = new Date(new Date().setDate(now.getDate() - i)).toDateString();
+    if (tasksByDate[date]) {
       currentStreak++;
     } else if (i === 0 && !dailyGoalMet) {
-      // If today's goal isn't met, check if yesterday's was
+      // If no tasks completed today, check if yesterday had any
       continue;
     } else {
       break;
@@ -257,9 +281,8 @@ async function calculateStreak(userId: string): Promise<{ current: number; longe
   }
 
   // Calculate longest streak
-  (Object.values(sessionsByDate) as FocusSession[][]).forEach((daySessions: FocusSession[]) => {
-    const totalDuration = daySessions.reduce((acc: number, s: FocusSession) => acc + (s.duration || 0), 0);
-    if (totalDuration >= 25 * 60) {
+  Object.values(tasksByDate).forEach((tasksCompleted) => {
+    if (tasksCompleted > 0) {
       tempStreak++;
       longestStreak = Math.max(longestStreak, tempStreak);
     } else {
@@ -279,33 +302,52 @@ export async function getHistoricalData(
   userId: string,
   range: TimeRange = 'month'
 ): Promise<HistoricalData[]> {
+  // Get current date at end of day in local timezone
   const now = new Date();
-  const startDate = getStartDateForRange(range);
+  now.setHours(23, 59, 59, 999);
+  
+  // Calculate start date based on range, keeping timezone
+  const startDate = new Date();
+  switch (range) {
+    case 'week':
+      startDate.setDate(startDate.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case 'month':
+      startDate.setMonth(startDate.getMonth() - 1);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case 'year':
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    default:
+      startDate.setMonth(startDate.getMonth() - 1);
+      startDate.setHours(0, 0, 0, 0);
+  }
 
-  // Get focus sessions in date range
+  // Get focus sessions in date range with precise timestamps
   const { data: sessions } = await supabase
     .from('focus_sessions')
     .select('*')
     .eq('user_id', userId)
     .gte('start_time', startDate.toISOString())
-    .lte('end_time', now.toISOString());
+    .lte('start_time', now.toISOString());
 
-  // Get completed tasks in date range - corregido para incluir todos los estados posibles de completado
+  // Get completed tasks in date range with precise timestamps
   const { data: tasks } = await supabase
     .from('tasks')
     .select('*')
     .eq('user_id', userId)
     .gte('completed_at', startDate.toISOString())
     .lte('completed_at', now.toISOString())
-    .or('status.eq.completed,status.eq.COMPLETED'); // Incluir ambas variantes de estado completado
-
-  console.log('Tasks found:', tasks?.length || 0); // Debugging
+    .or('status.eq.completed,status.eq.COMPLETED');
 
   // Group data by date
   const dailyData = new Map<string, HistoricalData>();
   const dateArray = getDatesInRange(startDate, now);
 
-  // Initialize all dates
+  // Initialize all dates in range
   dateArray.forEach(date => {
     const dateStr = date.toISOString().split('T')[0];
     dailyData.set(dateStr, {
@@ -317,31 +359,34 @@ export async function getHistoricalData(
     });
   });
 
-  // Aggregate session data
+  // Aggregate focus session data (only completed sessions)
   sessions?.forEach(session => {
-    const dateStr = new Date(session.start_time).toISOString().split('T')[0];
-    const data = dailyData.get(dateStr);
-    if (data) {
-      data.focusMinutes += (session.duration || 0) / 60;
-      data.sessionsCompleted += session.status === 'completed' ? 1 : 0;
+    if (session.status === 'COMPLETED') {
+      const sessionDate = new Date(session.start_time);
+      const dateStr = sessionDate.toISOString().split('T')[0];
+      const data = dailyData.get(dateStr);
+      if (data) {
+        const minutes = (session.duration || 0) / 60;
+        data.focusMinutes += minutes;
+        data.sessionsCompleted += 1;
+        data.productivityScore += minutes * 0.25;
+      }
     }
   });
 
-  // Aggregate task data - mejorado para manejar diferentes formatos de fecha
+  // Aggregate task data with priority points
   tasks?.forEach(task => {
     if (task.completed_at) {
       try {
-        const dateStr = new Date(task.completed_at).toISOString().split('T')[0];
+        const completionDate = new Date(task.completed_at);
+        const dateStr = completionDate.toISOString().split('T')[0];
         const data = dailyData.get(dateStr);
         if (data) {
           data.tasksCompleted += 1;
-          console.log('Added completed task for date:', dateStr); // Debugging
-          data.productivityScore = calculateProductivityScore(
-            data.focusMinutes,
-            data.tasksCompleted,
-            data.sessionsCompleted > 0 ? 1 : 0,
-            1
-          );
+          const priority = typeof task.priority === 'string' ? task.priority.toLowerCase() : 'low';
+          const priorityPoints = priority === 'high' ? 3 :
+                               priority === 'medium' ? 2 : 1;
+          data.productivityScore += priorityPoints;
         }
       } catch (error) {
         console.error('Error processing task completion date:', error);
@@ -352,27 +397,20 @@ export async function getHistoricalData(
   return Array.from(dailyData.values());
 }
 
-function getStartDateForRange(range: TimeRange): Date {
-  const now = new Date();
-  switch (range) {
-    case 'week':
-      return new Date(now.setDate(now.getDate() - 7));
-    case 'month':
-      return new Date(now.setMonth(now.getMonth() - 1));
-    case 'year':
-      return new Date(now.setFullYear(now.getFullYear() - 1));
-    default:
-      return new Date(now.setDate(now.getDate() - 7));
-  }
-}
-
 function getDatesInRange(start: Date, end: Date): Date[] {
   const dates = [];
-  const current = new Date(start);
-  while (current <= end) {
-    dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
+  const currentDate = new Date(start);
+  
+  // Ensure we're working with dates at the start of their respective days
+  currentDate.setHours(0, 0, 0, 0);
+  const endDate = new Date(end);
+  endDate.setHours(23, 59, 59, 999);
+
+  while (currentDate <= endDate) {
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
   }
+  
   return dates;
 }
 

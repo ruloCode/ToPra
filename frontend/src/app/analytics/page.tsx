@@ -1,7 +1,6 @@
 'use client';
 
 import ProductivityDashboard from '@/components/analytics/ProductivityDashboard';
-import HistoricalStats from '@/components/analytics/HistoricalStats';
 import TaskAnalytics from '@/components/analytics/TaskAnalytics';
 import { Suspense } from 'react';
 
@@ -15,6 +14,14 @@ export default function AnalyticsPage() {
         </header>
         
         <div className="grid gap-8">
+           {/* Task completion analytics */}
+           <section>
+            <Suspense fallback={
+              <div className="h-[500px] animate-pulse rounded-lg bg-secondary/50"></div>
+            }>
+              <TaskAnalytics />
+            </Suspense>
+          </section>
           {/* Main productivity metrics */}
           <section>
             <Suspense fallback={
@@ -24,23 +31,9 @@ export default function AnalyticsPage() {
             </Suspense>
           </section>
          
-          {/* Historical data visualization */}
-          <section>
-            <Suspense fallback={
-              <div className="h-[400px] animate-pulse rounded-lg bg-secondary/50"></div>
-            }>
-              <HistoricalStats />
-            </Suspense>
-          </section>
+      
 
-          {/* Task completion analytics */}
-          <section>
-            <Suspense fallback={
-              <div className="h-[500px] animate-pulse rounded-lg bg-secondary/50"></div>
-            }>
-              <TaskAnalytics />
-            </Suspense>
-          </section>
+         
         </div>
 
         <footer className="mt-12 text-center text-sm text-muted-foreground">

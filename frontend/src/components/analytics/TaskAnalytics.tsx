@@ -4,11 +4,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
 import { calculateTaskMetrics, type TaskMetrics } from '@/lib/statistics';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { AnalyticsSkeleton } from './AnalyticsSkeleton';
-import { CustomTooltip } from './CustomTooltip';
 
-const COLORS = ['#10B981', '#EF4444', '#3B82F6'];
 
 export default function TaskAnalytics() {
   const [metrics, setMetrics] = useState<TaskMetrics | null>(null);
@@ -34,11 +31,7 @@ export default function TaskAnalytics() {
   if (isLoading) return <AnalyticsSkeleton />;
   if (!metrics) return null;
 
-  const pieData = [
-    { name: 'Completed', value: metrics.completedTasks },
-    { name: 'Overdue', value: metrics.overdueTasks },
-    { name: 'Upcoming', value: metrics.upcomingTasks },
-  ];
+
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
@@ -63,67 +56,7 @@ export default function TaskAnalytics() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
-          <h4 className="font-medium text-foreground mb-4">Task Distribution</h4>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  animationDuration={1000}
-                  animationEasing="ease-out"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[index % COLORS.length]}
-                      className="transition-all duration-300 hover:opacity-80"
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip title="Task Distribution" />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 space-y-2 animate-in slide-in-from-bottom duration-700">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="h-3 w-3 rounded-full bg-[#10B981]"></span>
-              <span>Completed: {metrics.completedTasks}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="h-3 w-3 rounded-full bg-[#EF4444]"></span>
-              <span>Overdue: {metrics.overdueTasks}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="h-3 w-3 rounded-full bg-[#3B82F6]"></span>
-              <span>Upcoming: {metrics.upcomingTasks}</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
-          <h4 className="font-medium text-foreground">Avg. Completion Time</h4>
-          <div className="animate-in slide-in-from-right duration-500">
-            <p className="mt-2 text-2xl font-bold text-foreground">
-              {Math.round(metrics.averageCompletionTime / 60)} hrs
-            </p>
-            <p className="text-sm text-muted-foreground">per task</p>
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground">Total Active Tasks</p>
-              <p className="text-lg font-semibold text-foreground">
-                {metrics.totalTasks - metrics.completedTasks}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
+   
     </div>
   );
 }
