@@ -45,6 +45,7 @@ export interface TaskMetrics {
   overdueTasks: number;
   upcomingTasks: number;
   averageCompletionTime: number;
+  labelDistribution: { [key: string]: number };
 }
 
 export interface Achievement {
@@ -220,18 +221,7 @@ export async function getProductivityMetrics(
       }
     ];
 
-    // Update achievements in parallel
-    await Promise.all(achievements.map(async (achievement) => {
-      try {
-        if (achievement.shouldUnlock) {
-          await unlockAchievement(userId, achievement.id, achievement.progress);
-        } else {
-          await updateAchievementProgress(userId, achievement.id, achievement.progress);
-        }
-      } catch (error) {
-        console.error(`Error updating achievement ${achievement.id}:`, error);
-      }
-    }));
+    
 
     return metrics;
   } catch (error) {
@@ -442,6 +432,17 @@ export async function calculateTaskMetrics(userId: string): Promise<TaskMetrics>
     new Date(t.due_date) >= now
   ).length;
 
+  // Calculate label distribution
+  const labelDistribution = tasks.reduce((acc, task) => {
+    const tags = Array.isArray(task.tags) ? task.tags : [];
+    tags.forEach((tag: string) => {
+      if (tag && typeof tag === 'string') {
+        acc[tag] = (acc[tag] || 0) + 1;
+      }
+    });
+    return acc;
+  }, {} as { [key: string]: number });
+
   // Calculate average completion time for completed tasks
   const completedTasksWithDates = tasks.filter(t => 
     (t.status === 'completed' || t.status === 'COMPLETED') && 
@@ -454,22 +455,14 @@ export async function calculateTaskMetrics(userId: string): Promise<TaskMetrics>
     return acc + (completionTime / (1000 * 60)); // Convert to minutes
   }, 0) / (completedTasksWithDates.length || 1);
 
-  console.log('Task Metrics:', { // Debugging
-    totalTasks,
-    completedTasks,
-    completionRate: totalTasks ? completedTasks / totalTasks : 0,
-    overdueTasks,
-    upcomingTasks,
-    avgCompletionTime
-  });
-
   return {
     totalTasks,
     completedTasks,
     completionRate: totalTasks ? completedTasks / totalTasks : 0,
     overdueTasks,
     upcomingTasks,
-    averageCompletionTime: avgCompletionTime
+    averageCompletionTime: avgCompletionTime,
+    labelDistribution
   };
 }
 
