@@ -5,7 +5,7 @@ import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
 import { calculateTaskMetrics, type TaskMetrics } from '@/lib/statistics';
 import { AnalyticsSkeleton } from './AnalyticsSkeleton';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer,  Tooltip } from 'recharts';
 
 const COLORS = [
   '#0088FE', '#00C49F', '#FFBB28', '#FF8042', 
@@ -45,7 +45,9 @@ export default function TaskAnalytics() {
       name,
       value,
       percentage: ((value / metrics.totalTasks) * 100).toFixed(1)
-    }));
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
@@ -73,7 +75,7 @@ export default function TaskAnalytics() {
       {labelData.length > 0 && (
         <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
           <h3 className="text-lg font-semibold text-foreground mb-4">Task Labels Distribution</h3>
-          <div className="w-full h-[300px]">
+          <div className="w-full h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -102,7 +104,10 @@ export default function TaskAnalytics() {
                     borderRadius: '4px',
                   }}
                 />
-                <Legend verticalAlign="bottom" height={36} />
+
+
+            
+                
               </PieChart>
             </ResponsiveContainer>
           </div>
