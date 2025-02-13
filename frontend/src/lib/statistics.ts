@@ -48,15 +48,6 @@ export interface TaskMetrics {
   labelDistribution: { [key: string]: number };
 }
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  unlockedAt?: string;
-  progress: number;
-  target: number;
-}
-
 // Calculate productivity score based on task priority and focus sessions
 function calculateProductivityScore(
   completedTasks: Array<{ priority?: string | null }>,
@@ -182,46 +173,6 @@ export async function getProductivityMetrics(
         sessions || []
       ),
     };
-
-    // After calculating metrics, check and update achievements
-    const achievements = [
-      {
-        id: 'focus-master',
-        target: 750, // 50 hours of focus time = 3000 minutes * 0.25 points = 750 points
-        progress: completedSessions.reduce((acc, s) => acc + ((s.duration || 0) / 60 * 0.25), 0),
-        shouldUnlock: completedSessions.reduce((acc, s) => acc + ((s.duration || 0) / 60 * 0.25), 0) >= 750
-      },
-      {
-        id: 'task-champion',
-        target: 50, // Equivalent to ~17 high priority tasks or combination of priorities
-        progress: completedTasks.reduce((acc, task) => {
-          const priority = typeof task.priority === 'string' ? task.priority.toLowerCase() : 'low';
-          const priorityPoints = priority === 'high' ? 3 :
-                               priority === 'medium' ? 2 : 1;
-          return acc + priorityPoints;
-        }, 0),
-        shouldUnlock: completedTasks.reduce((acc, task) => {
-          const priority = typeof task.priority === 'string' ? task.priority.toLowerCase() : 'low';
-          const priorityPoints = priority === 'high' ? 3 :
-                               priority === 'medium' ? 2 : 1;
-          return acc + priorityPoints;
-        }, 0) >= 50
-      },
-      {
-        id: 'consistency-king',
-        target: 80,
-        progress: Math.round(metrics.tasks.completionRate * 100),
-        shouldUnlock: metrics.tasks.completionRate >= 0.8
-      },
-      {
-        id: 'productivity-expert',
-        target: 1000, // Challenging combination of focus time and completed tasks
-        progress: metrics.productivityScore,
-        shouldUnlock: metrics.productivityScore >= 1000
-      }
-    ];
-
-    
 
     return metrics;
   } catch (error) {
@@ -464,37 +415,4 @@ export async function calculateTaskMetrics(userId: string): Promise<TaskMetrics>
     averageCompletionTime: avgCompletionTime,
     labelDistribution
   };
-}
-
-export async function getUnlockedAchievements(userId: string): Promise<Achievement[]> {
-  const { data, error } = await supabase
-    .from('achievements')
-    .select('*')
-    .eq('user_id', userId);
-
-  if (error) throw error;
-  return data || [];
-}
-
-export async function unlockAchievement(userId: string, achievementId: string, progress: number) {
-  const { error } = await supabase
-    .from('achievements')
-    .upsert({
-      user_id: userId,
-      achievement_id: achievementId,
-      unlocked_at: new Date().toISOString(),
-      progress
-    });
-
-  if (error) throw error;
-}
-
-export async function updateAchievementProgress(userId: string, achievementId: string, progress: number) {
-  const { error } = await supabase
-    .from('achievements')
-    .update({ progress })
-    .eq('user_id', userId)
-    .eq('achievement_id', achievementId);
-
-  if (error) throw error;
 }
