@@ -174,7 +174,22 @@ export default function CreateTaskForm({
           Tags
         </label>
         <div className="space-y-2">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean).map((tag) => (
+              <div key={tag} className="inline-flex items-center rounded-full bg-background-paper px-2 py-0.5 text-xs border border-border">
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentTags = formData.tags.split(',').map(t => t.trim()).filter(t => t !== tag);
+                    setFormData(prev => ({ ...prev, tags: currentTags.join(', ') }));
+                  }}
+                  className="ml-1 text-text-secondary hover:text-destructive"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
             <button
               type="button"
               onClick={() => {
@@ -210,6 +225,16 @@ export default function CreateTaskForm({
             id="tags"
             value={formData.tags}
             onChange={handleChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Backspace' && e.currentTarget.selectionStart === 0 && formData.tags) {
+                e.preventDefault();
+                const currentTags = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+                if (currentTags.length > 0) {
+                  currentTags.pop();
+                  setFormData(prev => ({ ...prev, tags: currentTags.join(', ') }));
+                }
+              }
+            }}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
             placeholder="Tags separated by commas"
           />

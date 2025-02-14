@@ -154,7 +154,7 @@ export default function TaskList({
                   )}
                 </div>
                 {isTagDropdownOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-background border border-border rounded-md shadow-lg dark:border-[#28282F]">
+                  <div className="absolute z-10 mt-1 w-full bg-white dark:bg-background-paper border border-border rounded-md shadow-lg dark:border-[#28282F]">
                     <div className="p-2 bg-background">
                       <Input
                         type="text"
@@ -165,9 +165,9 @@ export default function TaskList({
                         className="w-full"
                       />
                     </div>
-                    <div className="max-h-48 overflow-auto bg-background">
+                    <div className="max-h-48 overflow-auto bg-white dark:bg-background-paper">
                       <div
-                        className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground"
+                        className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground bg-background dark:bg-background-paper"
                         onClick={() => {
                           setSelectedTag("");
                           setIsTagDropdownOpen(false);
@@ -176,10 +176,11 @@ export default function TaskList({
                       >
                         All tags
                       </div>
+
                       {filteredTags.map(tag => (
                         <div
                           key={tag}
-                          className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground"
+                          className="px-2 py-1 hover:bg-accent/10 cursor-pointer text-sm text-foreground bg-background dark:bg-background-paper"
                           onClick={() => {
                             setSelectedTag(tag);
                             setIsTagDropdownOpen(false);
@@ -189,6 +190,7 @@ export default function TaskList({
                           {tag}
                         </div>
                       ))}
+                      
                     </div>
                   </div>
                 )}
