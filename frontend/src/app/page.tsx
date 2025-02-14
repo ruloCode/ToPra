@@ -26,26 +26,22 @@ export default function Home() {
     setIsLoadingTasks(true);
     try {
       const allTasks = await getTasks({ userId: user.id });
-      // Filter tasks: only pending tasks due today or overdue
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
 
-      const todayTasks = allTasks.filter(task => {
-        // Only include pending tasks
-        if (task.status === TaskStatus.COMPLETED) return false;
-        if (!task.due_date) return false;
-        const dueDate = new Date(task.due_date);
-        return dueDate <= todayEnd;
+      // Incluir todas las tareas pendientes y las completadas de hoy
+      const filteredTasks = allTasks.filter(task => {
+        if (task.status === TaskStatus.COMPLETED) {
+          const completedDate = new Date(task.updated_at);
+          return completedDate >= todayStart && completedDate <= todayEnd;
+        }
+        // Incluir todas las tareas pendientes
+        return task.status === TaskStatus.PENDING;
       });
 
-      // Sort tasks by priority
-      todayTasks.sort((a, b) => {
-        return (b.priority || 0) - (a.priority || 0);
-      });
-
-      setTasks(todayTasks);
+      setTasks(filteredTasks);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
@@ -122,6 +118,7 @@ export default function Home() {
                 onDelete={fetchTasks}
                 onEdit={handleEditTask}
                 emptyMessage="No tasks for today"
+                todayOnly={true}
               />
             )}
           </section>

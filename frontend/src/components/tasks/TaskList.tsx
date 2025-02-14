@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Task } from "@/lib/tasks";
+import { Task, TaskStatus } from "@/lib/tasks";
 import TaskCard from "./TaskCard";
 import CreateTaskForm from "./CreateTaskForm";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ interface TaskListProps {
   onDelete: () => void;
   onEdit: (task: Task) => void;
   emptyMessage?: string;
+  todayOnly?: boolean;
 }
 
 export default function TaskList({
@@ -21,6 +22,7 @@ export default function TaskList({
   onDelete,
   onEdit,
   emptyMessage = "No tasks found",
+  todayOnly = false,
 }: TaskListProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [sortBy, setSortBy] = useState<"priority" | "dueDate">("priority");
@@ -69,13 +71,25 @@ export default function TaskList({
     tag.toLowerCase().includes(tagSearchQuery.toLowerCase())
   );
 
-  const filteredTasks = tasks.filter(task => {
-    const matchesTag = !selectedTag || task.tags?.includes(selectedTag);
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = !searchQuery || 
-      task.title.toLowerCase().includes(searchLower) ||
-      (task.description?.toLowerCase() || "").includes(searchLower);
-    return matchesTag && matchesSearch;
+  const filteredTasks = tasks.filter((task) => {
+    // Si hay búsqueda de texto, filtrar por ella
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return task.title.toLowerCase().includes(query) ||
+             task.description?.toLowerCase().includes(query);
+    }
+    // Si hay tag seleccionado, filtrar por él
+    if (selectedTag) {
+      return task.tags?.includes(selectedTag);
+    }
+    return true;
+  }).sort((a, b) => {
+    // Ordenar primero por estado (pendientes arriba)
+    if (a.status !== b.status) {
+      return a.status === TaskStatus.COMPLETED ? 1 : -1;
+    }
+    // Si tienen el mismo estado, ordenar por fecha
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
   });
 
   const sortedTasks = filteredTasks.sort((a, b) => {

@@ -27,6 +27,14 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
     return true;
   }).length;
 
+  const totalTodayTasks = todayOnly ? tasks.filter((task) => {
+    const taskDate = new Date(task.updated_at);
+    const today = new Date();
+    return taskDate.getDate() === today.getDate() &&
+           taskDate.getMonth() === today.getMonth() &&
+           taskDate.getFullYear() === today.getFullYear();
+  }).length : tasks.length;
+
   const upcomingTasks = tasks.filter(
     (task) => task.status === TaskStatus.PENDING && task.due_date
   ).length;
@@ -73,17 +81,15 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {!todayOnly && (
-        <div className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-sm dark:border dark:border-[#28282F]">
-          <div className="rounded-full bg-accent/10 p-2 dark:bg-accent/5">
-            <CheckCircle2 className="h-5 w-5 text-accent" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Completed tasks</p>
-            <p className="text-lg font-semibold text-foreground">{completedTasks}/{tasks.length}</p>
-          </div>
+      <div className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-sm dark:border dark:border-[#28282F]">
+        <div className="rounded-full bg-accent/10 p-2 dark:bg-accent/5">
+          <CheckCircle2 className="h-5 w-5 text-accent" />
         </div>
-      )}
+        <div>
+          <p className="text-sm text-muted-foreground">Completed tasks today</p>
+          <p className="text-lg font-semibold text-foreground">{completedTasks}</p>
+        </div>
+      </div>
 
       <div className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-sm dark:border dark:border-[#28282F]">
         <div className="rounded-full bg-blue-500/10 p-2 dark:bg-blue-500/5">
