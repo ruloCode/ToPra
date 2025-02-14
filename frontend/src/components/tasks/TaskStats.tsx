@@ -79,8 +79,8 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
             <CheckCircle2 className="h-5 w-5 text-accent" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Completed</p>
-            <p className="text-lg font-semibold text-foreground">{completedTasks}</p>
+            <p className="text-sm text-muted-foreground">Completed tasks</p>
+            <p className="text-lg font-semibold text-foreground">{completedTasks}/{tasks.length}</p>
           </div>
         </div>
       )}
