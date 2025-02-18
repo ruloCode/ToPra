@@ -6,7 +6,7 @@ import { TaskSearch } from './TaskSearch';
 import { useAuth } from '@/components/AuthProvider';
 import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
 import { FocusTimer } from './FocusTimer';
-import type { FocusHistoryRef } from './FocusHistory';
+import { FocusHistoryRef } from '@/types/focus';
 
 interface FocusModeProps {
   task?: Task;
@@ -262,7 +262,7 @@ export function FocusMode({
   }, []);
 
   return (
-    <div className="w-full max-w-xl mx-auto px-2 sm:px-4 py-2 sm:py-6">
+    <div className="w-full  mx-auto px-2 sm:px-4 py-2 sm:py-6">
       <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
         <div className="space-y-2 sm:space-y-4">
           <div className="p-2 sm:p-4 border-b">

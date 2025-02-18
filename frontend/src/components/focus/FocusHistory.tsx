@@ -5,31 +5,27 @@ import { Card } from '@/components/ui/card';
 import { 
   getFocusSessions, 
   deleteFocusSession,
-  type FocusSession 
 } from '@/lib/focus';
 import { format } from 'date-fns';
 import { useAuth } from '@/components/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import type { FocusSessionWithTask, FocusHistoryRef } from '@/types/focus';
 
-// Extend FocusSession type to include task details
-type FocusSessionWithTask = FocusSession & {
-  task: {
-    id: string;
-    title: string;
-    description: string | null;
-  } | null;
-};
+interface FocusHistoryProps {
+  onSessionsChange?: (sessions: FocusSessionWithTask[]) => void;
+}
 
-export type FocusHistoryRef = {
-  reloadSessions: () => Promise<void>;
-};
-
-export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
+export const FocusHistory = forwardRef<FocusHistoryRef, FocusHistoryProps>(({ onSessionsChange }, ref) => {
   const [sessions, setSessions] = useState<FocusSessionWithTask[]>([]);
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [activeDurations, setActiveDurations] = useState<Record<string, number>>({});
+
+  const updateSessions = useCallback((newSessions: FocusSessionWithTask[]) => {
+    setSessions(newSessions);
+    onSessionsChange?.(newSessions);
+  }, [onSessionsChange]);
 
   const loadSessions = useCallback(async () => {
     if (!user) return;
@@ -37,7 +33,7 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
     try {
       setIsLoading(true);
       const initialSessions = await getFocusSessions({ userId: user.id });
-      setSessions(initialSessions);
+      updateSessions(initialSessions);
     } catch (error) {
       console.error('Error loading sessions:', error);
       toast({
@@ -48,12 +44,15 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, updateSessions]);
 
   // Exponiendo la función de recarga a través del ref
   useImperativeHandle(ref, () => ({
-    reloadSessions: loadSessions
-  }), [loadSessions]);
+    reloadSessions: loadSessions,
+    addSession: (session: FocusSessionWithTask) => {
+      updateSessions([...sessions, session]);
+    }
+  }), [loadSessions, sessions, updateSessions]);
 
   useEffect(() => {
     loadSessions();
@@ -82,7 +81,8 @@ export const FocusHistory = forwardRef<FocusHistoryRef>((props, ref) => {
 
     try {
       await deleteFocusSession(sessionId);
-      await loadSessions();
+      const updatedSessions = sessions.filter(s => s.id !== sessionId);
+      updateSessions(updatedSessions);
       toast({
         title: "Sesión eliminada",
         description: "La sesión ha sido eliminada correctamente.",

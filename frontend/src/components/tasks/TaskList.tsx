@@ -22,7 +22,6 @@ export default function TaskList({
   onDelete,
   onEdit,
   emptyMessage = "No tasks found",
-  todayOnly = false,
 }: TaskListProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [sortBy, setSortBy] = useState<"priority" | "dueDate">("priority");

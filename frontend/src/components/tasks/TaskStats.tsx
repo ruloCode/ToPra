@@ -27,13 +27,7 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
     return true;
   }).length;
 
-  const totalTodayTasks = todayOnly ? tasks.filter((task) => {
-    const taskDate = new Date(task.updated_at);
-    const today = new Date();
-    return taskDate.getDate() === today.getDate() &&
-           taskDate.getMonth() === today.getMonth() &&
-           taskDate.getFullYear() === today.getFullYear();
-  }).length : tasks.length;
+ 
 
   const upcomingTasks = tasks.filter(
     (task) => task.status === TaskStatus.PENDING && task.due_date
