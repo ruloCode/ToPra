@@ -27,7 +27,7 @@ function FocusPageContent() {
   }, [taskId]);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8 min-h-[calc(100vh-4rem)] mx-auto max-w-4xl">
+    <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8 min-h-[calc(100vh-4rem)]  max-w-4xl">
       <div className="grid gap-4 sm:gap-6 lg:gap-8 min-[1080px]:grid-cols-[1fr,2fr]">
         <div className="order-3 min-[1080px]:order-1">
           <FocusHistory 

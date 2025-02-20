@@ -27,8 +27,7 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
     return true;
   }).length;
 
- 
-
+  const totalTasks = tasks.length;
   const upcomingTasks = tasks.filter(
     (task) => task.status === TaskStatus.PENDING && task.due_date
   ).length;
@@ -80,8 +79,12 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
           <CheckCircle2 className="h-5 w-5 text-accent" />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Completed tasks today</p>
-          <p className="text-lg font-semibold text-foreground">{completedTasks}</p>
+          <p className="text-sm text-muted-foreground">
+            {todayOnly ? 'Completed tasks today' : 'Total vs Completed'}
+          </p>
+          <p className="text-lg font-semibold text-foreground">
+            {todayOnly ? completedTasks : `${completedTasks}/${totalTasks}`}
+          </p>
         </div>
       </div>
 
