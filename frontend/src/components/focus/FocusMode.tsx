@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
 import { FocusTimer } from './FocusTimer';
 import { FocusHistoryRef } from '@/types/focus';
+import { useTimerStore } from '@/lib/stores/timerStore';
 
 interface FocusModeProps {
   task?: Task;
@@ -22,10 +23,10 @@ export function FocusMode({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(initialTask || null);
-  const [timerMode, setTimerMode] = useState<'timer' | 'chronometer'>('timer');
   const { toast } = useToast();
   const { user } = useAuth();
   const isCreatingSession = useRef(false);
+  const { mode: timerMode, setMode } = useTimerStore();
 
   // Loading the initial state and handling errors
   useEffect(() => {
@@ -38,11 +39,10 @@ export function FocusMode({
         });
         const activeSession = sessions[0];
         
-        // Only update the state if there is actually an active session
         if (activeSession?.id && activeSession.id !== currentSessionId) {
           setCurrentSessionId(activeSession.id);
           setSelectedTask(activeSession.task || null);
-          setTimerMode(activeSession.duration ? 'timer' : 'chronometer');
+          setMode(activeSession.duration ? 'timer' : 'chronometer');
         }
       } catch (error) {
         console.error('Error loading active session:', error);
@@ -50,7 +50,7 @@ export function FocusMode({
     };
     
     loadActiveSession();
-  }, [user, currentSessionId]);
+  }, [user, currentSessionId, setMode]);
 
   // Handle task selection
   const handleTaskSelect = useCallback(async (task: Task | null) => {
@@ -206,7 +206,7 @@ export function FocusMode({
       if (!session?.id) return;
 
       setCurrentSessionId(session.id);
-      setTimerMode(mode);
+      setMode(mode);
       await historyRef.current?.reloadSessions();
       
       toast({
@@ -225,7 +225,7 @@ export function FocusMode({
     } finally {
       isCreatingSession.current = false;
     }
-  }, [user, selectedTask, toast, historyRef]);
+  }, [user, selectedTask, toast, historyRef, setMode]);
 
   // Update selected task when initial task changes
   useEffect(() => {
@@ -251,7 +251,6 @@ export function FocusMode({
     }
   }, [toast]);
 
-  // Handle fullscreen change events
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
