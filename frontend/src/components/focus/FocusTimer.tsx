@@ -28,6 +28,7 @@ export function FocusTimer({
   onChronometerStop
 }: FocusTimerProps) {
   const [isClient, setIsClient] = useState(false);
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -89,29 +90,42 @@ export function FocusTimer({
     e.currentTarget.scrollLeft = scrollLeft - walk;
   };
 
-  // Timer mode effect
+  // Timer mode effect with improved accuracy
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isRunning && mode === 'timer' && timeInSeconds > 0) {
+    if (isRunning) {
+      // Initialize start time if not set
+      if (!timerStartTime) {
+        setTimerStartTime(Date.now());
+      }
+
       interval = setInterval(() => {
-        setTimeInSeconds((prev) => {
-          if (prev <= 1) {
-            setIsRunning(false);
-            onComplete?.(selectedDuration * 60);
-            return 0;
+        const now = Date.now();
+        if (timerStartTime) {
+          const elapsedSeconds = Math.floor((now - timerStartTime) / 1000);
+
+          if (mode === 'timer') {
+            const initialSeconds = selectedDuration * 60;
+            const remainingSeconds = Math.max(0, initialSeconds - elapsedSeconds);
+            setTimeInSeconds(remainingSeconds);
+
+            if (remainingSeconds === 0) {
+              setIsRunning(false);
+              setTimerStartTime(null);
+              onComplete?.(selectedDuration * 60);
+            }
+          } else {
+            setChronometerTime(elapsedSeconds);
           }
-          return prev - 1;
-        });
-      }, 1000);
-    } else if (isRunning && mode === 'chronometer') {
-      interval = setInterval(() => {
-        setChronometerTime((prev) => prev + 1);
-      }, 1000);
+        }
+      }, 100); // Run more frequently to ensure smooth updates
+    } else {
+      setTimerStartTime(null);
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, mode, timeInSeconds, onComplete, selectedDuration]);
+  }, [isRunning, mode, selectedDuration, timerStartTime, onComplete]);
 
   const startCountdown = useCallback(() => {
     setIsStarting(true);
@@ -178,6 +192,7 @@ export function FocusTimer({
       onInterrupt?.(selectedDuration * 60 - timeInSeconds);
     }
     setIsRunning(false);
+    setTimerStartTime(null);
     if (mode === 'timer') {
       setTimeInSeconds(selectedDuration * 60);
     } else {
@@ -197,12 +212,12 @@ export function FocusTimer({
         timeInSeconds,
         selectedDuration,
         chronometerTime,
-        startTime: Date.now()
+        startTime: timerStartTime || Date.now()
       });
     } else {
       clearTimerState();
     }
-  }, [mode, isRunning, timeInSeconds, selectedDuration, chronometerTime, defaultDuration, isClient]);
+  }, [mode, isRunning, timeInSeconds, selectedDuration, chronometerTime, defaultDuration, isClient, timerStartTime]);
 
   useEffect(() => {
     if (timeInSeconds === 0 && isRunning && mode === 'timer') {
