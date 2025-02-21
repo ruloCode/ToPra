@@ -7,7 +7,7 @@
 ¡Hola! 👋 To-Pra es una aplicación integral que combina gestión de tareas, técnicas de concentración y gamificación para potenciar tu productividad. ¡Conquista tus metas diarias mientras acumulas logros!
 
 ##
-[![Ver en Producción](https://img.shields.io/badge/🚀%20Ver%20en%20Producción-6c5ce7?style=for-the-badge&logo=rocket)](https://to-pra.vercel.app/)
+[![Ver en Producción](https://img.shields.io/badge/%20Ver%20en%20Producción-6c5ce7?style=for-the-badge&logo=rocket)](https://to-pra.vercel.app/)
 
 
 ## ✨ Características Principales
