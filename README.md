@@ -2,7 +2,7 @@
 
 # To-Pra 🚀
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/782479ed-0972-43a7-aa06-d59d15243b83" alt="To-Pra Logo" >
+  <img src="https://github.com/user-attachments/assets/782479ed-0972-43a7-aa06-d59d15243b83" alt="To-Pra Logo" width="200">
 </p>
 ¡Hola! 👋 **To-Pra** es una aplicación integral que combina gestión de tareas, técnicas de concentración y gamificación para potenciar tu productividad. ¡Conquista tus metas diarias mientras acumulas logros!
 
