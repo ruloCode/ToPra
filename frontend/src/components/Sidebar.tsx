@@ -68,7 +68,7 @@ export default function Sidebar() {
             alt="To-Pra Logo"
             width={expanded ? 128 : 32}
             height={32}
-            className={`h-8 ${expanded ? 'w-auto' : 'w-8'}`}
+            className={`h-10 ${expanded ? 'w-auto' : 'w-10'}`}
           />
         </div>
         
