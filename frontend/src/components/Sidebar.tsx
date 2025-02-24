@@ -4,6 +4,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useTaskModal } from '@/contexts/TaskModalContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Home,
@@ -62,9 +63,13 @@ export default function Sidebar() {
 
       <div className="flex h-full w-full flex-col gap-y-5 overflow-hidden justify-center">
         <div className="flex h-16 shrink-0 items-center justify-center">
-          <h1 className="text-xl font-bold text-accent">
-            {expanded ? 'To-Pra' : 'TP'}
-          </h1>
+          <Image
+            src={isDark ? '/logos/logo_topra_dark.png' : '/logos/logo_topa_ light.png'}
+            alt="To-Pra Logo"
+            width={expanded ? 128 : 32}
+            height={32}
+            className={`h-8 ${expanded ? 'w-auto' : 'w-8'}`}
+          />
         </div>
         
         <nav className="flex flex-1 flex-col">
