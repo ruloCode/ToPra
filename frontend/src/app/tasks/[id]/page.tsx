@@ -7,7 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import Auth from '@/components/Auth';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Circle, CheckCircle2, Calendar, Flag, Pencil, Trash2, ArrowLeft, Clock } from 'lucide-react';
+import { Circle, CheckCircle2, Pencil, Trash2, ArrowLeft, Clock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useTaskModal } from '@/contexts/TaskModalContext';
 import Link from 'next/link';
@@ -19,12 +19,23 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [previousPath, setPreviousPath] = useState('/tasks');
   const { toast } = useToast();
   const { openCreateTaskModal } = useTaskModal();
 
   useEffect(() => {
     if (user && id) {
       fetchTask();
+      
+      // Determinar la ruta previa para el botón "volver"
+      if (typeof window !== 'undefined') {
+        const referrer = document.referrer;
+        if (referrer.includes('/tasks')) {
+          setPreviousPath('/tasks');
+        } else if (referrer.endsWith('/') || referrer.endsWith('/home') || referrer.includes('localhost') || referrer.includes(window.location.host)) {
+          setPreviousPath('/');
+        }
+      }
     }
   }, [user, id]);
 
@@ -93,7 +104,7 @@ export default function TaskDetailPage() {
         title: 'Tarea eliminada',
         description: 'La tarea ha sido eliminada correctamente',
       });
-      router.push('/tasks');
+      router.push(previousPath);
     } catch (error) {
       console.error('Error deleting task:', error);
       toast({
@@ -159,15 +170,17 @@ export default function TaskDetailPage() {
     return <Auth />;
   }
 
+  const backLinkText = previousPath === '/' ? 'Volver a la página principal' : 'Volver a la lista de tareas';
+
   return (
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto md:max-w-[60vw]">
         <Link
-          href="/tasks"
+          href={previousPath}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="mr-1 h-4 w-4" />
-          Volver a la lista de tareas
+          {backLinkText}
         </Link>
 
         {isLoading ? (
@@ -178,10 +191,10 @@ export default function TaskDetailPage() {
           <div className="flex flex-col items-center justify-center h-64">
             <div className="text-lg text-muted-foreground mb-4">La tarea no existe o fue eliminada</div>
             <Link
-              href="/tasks"
+              href={previousPath}
               className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
             >
-              Ver todas las tareas
+              {previousPath === '/' ? 'Ir a la página principal' : 'Ver todas las tareas'}
             </Link>
           </div>
         ) : (
