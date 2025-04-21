@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import typography from '@tailwindcss/typography';
 
 const config: Config = {
   darkMode: 'class',
@@ -49,9 +50,50 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            color: 'var(--text-primary)',
+            a: {
+              color: 'var(--accent)',
+              '&:hover': {
+                color: 'var(--accent-foreground)',
+              },
+            },
+            strong: {
+              color: 'var(--text-primary)',
+            },
+            h1: {
+              color: 'var(--text-primary)',
+            },
+            h2: {
+              color: 'var(--text-primary)',
+            },
+            h3: {
+              color: 'var(--text-primary)',
+            },
+            h4: {
+              color: 'var(--text-primary)',
+            },
+            code: {
+              color: 'var(--text-primary)',
+              backgroundColor: 'var(--muted)',
+              borderRadius: '0.25rem',
+              padding: '0.15rem 0.3rem',
+            },
+            blockquote: {
+              borderLeftColor: 'var(--muted)',
+              color: 'var(--text-secondary)',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    typography,
+  ],
 }
 
 export default config;

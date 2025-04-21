@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { createTask, updateTask, TaskStatus, Task } from '@/lib/tasks';
 import { useAuth } from '@/components/AuthProvider';
 import { format, parseISO, startOfDay, addHours } from 'date-fns';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 
 interface CreateTaskFormProps {
   initialTask?: Partial<Task>;
   onSuccess: () => void;
-  onCancel: () => void;
 }
 
 export default function CreateTaskForm({
@@ -25,6 +27,7 @@ export default function CreateTaskForm({
     due_date: format(new Date(), 'yyyy-MM-dd'),
     tags: '',
   });
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (initialTask) {
@@ -109,21 +112,50 @@ export default function CreateTaskForm({
       </div>
 
       <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-foreground"
-        >
-          Description
-        </label>
-        <textarea
-          name="description"
-          id="description"
-          rows={3}
-          value={formData.description}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
-          placeholder="Task description"
-        />
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium text-foreground"
+          >
+            Description
+          </label>
+          <div className="flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-xs text-muted-foreground hover:text-accent underline"
+            >
+              {showPreview ? "Edit text" : "Preview"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Markdown supported
+            </span>
+          </div>
+        </div>
+        
+        {showPreview ? (
+          <div className="mt-1 p-3 border border-border rounded-md min-h-[100px] bg-background prose prose-sm dark:prose-invert max-w-none">
+            {formData.description ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {formData.description}
+              </ReactMarkdown>
+            ) : (
+              <p className="text-muted-foreground">No description yet</p>
+            )}
+          </div>
+        ) : (
+          <textarea
+            name="description"
+            id="description"
+            rows={3}
+            value={formData.description}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:bg-background-paper dark:border-[#28282F]"
+            placeholder="Task description - You can use **Markdown** formatting"
+          />
+        )}
+        
+       
       </div>
 
       <div className="grid grid-cols-2 gap-4">

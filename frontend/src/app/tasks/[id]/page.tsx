@@ -7,12 +7,14 @@ import { useAuth } from '@/components/AuthProvider';
 import Auth from '@/components/Auth';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Circle, CheckCircle2, Pencil, Trash2, ArrowLeft, Clock, TimerIcon, XIcon, CheckCircleIcon, AlertCircleIcon, PlayIcon } from 'lucide-react';
+import { Circle, CheckCircle2, Trash2, ArrowLeft, Clock, TimerIcon, XIcon, CheckCircleIcon, AlertCircleIcon, PlayIcon, Edit2Icon, CheckIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useTaskModal } from '@/contexts/TaskModalContext';
 import { FocusTimer } from '@/components/focus/FocusTimer';
 import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 
 // Definir el tipo para las sesiones de enfoque con información de tarea
 type FocusSessionWithTask = {
@@ -48,7 +50,15 @@ export default function TaskDetailPage() {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const isCreatingSession = useRef(false);
   const { toast } = useToast();
-  const { openCreateTaskModal } = useTaskModal();
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [isSavingDescription, setIsSavingDescription] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState('');
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [tagsInput, setTagsInput] = useState('');
+  const [isSavingTags, setIsSavingTags] = useState(false);
 
   useEffect(() => {
     if (user && id) {
@@ -67,6 +77,14 @@ export default function TaskDetailPage() {
       }
     }
   }, [user, id]);
+
+  useEffect(() => {
+    if (task) {
+      setDescriptionInput(task.description || '');
+      setTitleInput(task.title || '');
+      setTagsInput(task.tags?.join(', ') || '');
+    }
+  }, [task]);
 
   const fetchTask = async () => {
     setIsLoading(true);
@@ -188,14 +206,6 @@ export default function TaskDetailPage() {
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const handleEdit = () => {
-    if (!task) return;
-    
-    openCreateTaskModal(() => {
-      fetchTask();
-    }, task);
   };
 
   const toggleFocusTimer = () => {
@@ -416,6 +426,96 @@ export default function TaskDetailPage() {
     return `${hours} h ${remainingMinutes} min`;
   };
 
+  const handleSaveDescription = async () => {
+    if (!task) return;
+    
+    setIsSavingDescription(true);
+    try {
+      const updates = {
+        description: descriptionInput
+      };
+      
+      await updateTask(task.id, updates);
+      setTask({ ...task, ...updates });
+      setIsEditingDescription(false);
+      
+      toast({
+        title: 'Descripción actualizada',
+        description: 'La descripción de la tarea ha sido actualizada',
+      });
+    } catch (error) {
+      console.error('Error updating task description:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la descripción',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingDescription(false);
+    }
+  };
+
+  const handleSaveTitle = async () => {
+    if (!task || !titleInput.trim()) return;
+    
+    setIsSavingTitle(true);
+    try {
+      const updates = {
+        title: titleInput.trim()
+      };
+      
+      await updateTask(task.id, updates);
+      setTask({ ...task, ...updates });
+      setIsEditingTitle(false);
+      
+      toast({
+        title: 'Título actualizado',
+        description: 'El título de la tarea ha sido actualizado',
+      });
+    } catch (error) {
+      console.error('Error updating task title:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el título',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingTitle(false);
+    }
+  };
+
+  const handleSaveTags = async () => {
+    if (!task) return;
+    
+    setIsSavingTags(true);
+    try {
+      const tags = tagsInput
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean);
+      
+      const updates = { tags };
+      
+      await updateTask(task.id, updates);
+      setTask({ ...task, ...updates });
+      setIsEditingTags(false);
+      
+      toast({
+        title: 'Etiquetas actualizadas',
+        description: 'Las etiquetas de la tarea han sido actualizadas',
+      });
+    } catch (error) {
+      console.error('Error updating task tags:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudieron actualizar las etiquetas',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingTags(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -467,8 +567,57 @@ export default function TaskDetailPage() {
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-foreground">{task.title}</h1>
+              <div className="space-y-1 flex-1">
+                {isEditingTitle ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        value={titleInput}
+                        onChange={(e) => setTitleInput(e.target.value)}
+                        className="text-2xl font-bold w-full border-b border-border bg-transparent focus:border-accent outline-none p-1"
+                        placeholder="Título de la tarea"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingTitle(false);
+                          setTitleInput(task?.title || '');
+                        }}
+                        className="px-3 py-1 text-xs rounded-md border border-border bg-background hover:bg-secondary/50"
+                        disabled={isSavingTitle}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveTitle}
+                        className="px-3 py-1 text-xs rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
+                        disabled={isSavingTitle || !titleInput.trim()}
+                      >
+                        {isSavingTitle ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    className="group relative" 
+                    onClick={() => !isEditingTitle && setIsEditingTitle(true)}
+                  >
+                    <h1 className="text-2xl font-bold text-foreground group-hover:pr-7">{task.title}</h1>
+                    <button
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-secondary/30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsEditingTitle(true);
+                      }}
+                    >
+                      <Edit2Icon className="h-4 w-4 text-muted-foreground/70" />
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
                   <span>
@@ -545,26 +694,196 @@ export default function TaskDetailPage() {
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-6">
-                {task.description && (
-                  <div className="space-y-2">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
                     <h2 className="text-lg font-medium text-foreground">Descripción</h2>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{task.description}</p>
+                    <button
+                      onClick={() => setIsEditingDescription(!isEditingDescription)}
+                      className="p-1 text-muted-foreground/70 hover:text-accent hover:bg-accent/10 rounded-full transition-colors"
+                    >
+                      <Edit2Icon className="h-4 w-4" />
+                    </button>
                   </div>
-                )}
+                  
+                  {isEditingDescription ? (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <textarea
+                          value={descriptionInput}
+                          onChange={(e) => setDescriptionInput(e.target.value)}
+                          rows={5}
+                          className="w-full p-3 border border-border rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none"
+                          placeholder="Añade una descripción utilizando Markdown"
+                        />
+                    
+                      </div>
+                      
+                      {/* Vista previa */}
+                      
+                      
+                      <div className="flex justify-between items-center">
+                       
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingDescription(false);
+                              setDescriptionInput(task?.description || '');
+                            }}
+                            className="px-3 py-1 text-sm rounded-md border border-border bg-background hover:bg-secondary/50"
+                            disabled={isSavingDescription}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveDescription}
+                            className="px-3 py-1 text-sm rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
+                            disabled={isSavingDescription}
+                          >
+                            {isSavingDescription ? 'Guardando...' : (
+                              <>
+                                <CheckIcon className="h-3 w-3" />
+                                Guardar
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    task?.description ? (
+                      <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert border border-transparent p-3 rounded-md hover:border-border/30 transition-colors">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {task.description}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div 
+                        className="border border-dashed border-border rounded-md p-3 text-muted-foreground text-center hover:bg-card/50 transition-colors cursor-pointer"
+                        onClick={() => setIsEditingDescription(true)}
+                      >
+                        Haz clic para añadir una descripción
+                      </div>
+                    )
+                  )}
+                </div>
 
                 {task.tags && task.tags.length > 0 && (
                   <div className="space-y-2">
-                    <h2 className="text-lg font-medium text-foreground">Etiquetas</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {task.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors cursor-default ${getTagColor(tag)}`}
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-lg font-medium text-foreground">Etiquetas</h2>
+                      <button
+                        onClick={() => setIsEditingTags(!isEditingTags)}
+                        className="p-1 text-muted-foreground/70 hover:text-accent hover:bg-accent/10 rounded-full transition-colors"
+                      >
+                        <Edit2Icon className="h-4 w-4" />
+                      </button>
                     </div>
+                    
+                    {isEditingTags ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={tagsInput}
+                          onChange={(e) => setTagsInput(e.target.value)}
+                          className="w-full p-2 border border-border rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                          placeholder="Etiquetas separadas por comas (ej: personal, trabajo, urgente)"
+                        />
+                        
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingTags(false);
+                              setTagsInput(task.tags?.join(', ') || '');
+                            }}
+                            className="px-3 py-1 text-sm rounded-md border border-border bg-background hover:bg-secondary/50"
+                            disabled={isSavingTags}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveTags}
+                            className="px-3 py-1 text-sm rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
+                            disabled={isSavingTags}
+                          >
+                            {isSavingTags ? 'Guardando...' : (
+                              <>
+                                <CheckIcon className="h-3 w-3" />
+                                Guardar
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {task.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors cursor-default ${getTagColor(tag)}`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {(!task.tags || task.tags.length === 0) && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-lg font-medium text-foreground">Etiquetas</h2>
+                    </div>
+                    
+                    {isEditingTags ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={tagsInput}
+                          onChange={(e) => setTagsInput(e.target.value)}
+                          className="w-full p-2 border border-border rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                          placeholder="Etiquetas separadas por comas (ej: personal, trabajo, urgente)"
+                        />
+                        
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingTags(false);
+                              setTagsInput('');
+                            }}
+                            className="px-3 py-1 text-sm rounded-md border border-border bg-background hover:bg-secondary/50"
+                            disabled={isSavingTags}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveTags}
+                            className="px-3 py-1 text-sm rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
+                            disabled={isSavingTags}
+                          >
+                            {isSavingTags ? 'Guardando...' : (
+                              <>
+                                <CheckIcon className="h-3 w-3" />
+                                Guardar
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className="border border-dashed border-border rounded-md p-3 text-muted-foreground text-center hover:bg-card/50 transition-colors cursor-pointer"
+                        onClick={() => setIsEditingTags(true)}
+                      >
+                        Haz clic para añadir etiquetas
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -690,13 +1009,6 @@ export default function TaskDetailPage() {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <button
-                    onClick={handleEdit}
-                    className="flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-secondary hover:bg-secondary/80 transition-colors"
-                  >
-                    <Pencil className="mr-1 h-4 w-4" />
-                    Editar
-                  </button>
                   <button
                     onClick={handleDelete}
                     className="flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-400/20 dark:text-red-400 dark:hover:bg-red-400/30"
