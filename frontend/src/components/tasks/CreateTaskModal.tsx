@@ -53,7 +53,6 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
             <CreateTaskForm
               initialTask={taskToEdit}
               onSuccess={() => handleTaskCreated(false)}
-              onCancel={onClose}
             />
           </div>
         ) : (
@@ -68,7 +67,6 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
                 <CreateTaskForm
                   initialTask={taskToEdit}
                   onSuccess={() => handleTaskCreated(false)}
-                  onCancel={onClose}
                 />
               </TabsContent>
 

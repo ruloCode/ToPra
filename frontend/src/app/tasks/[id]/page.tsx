@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Task, TaskStatus, getTaskById, updateTask, deleteTask } from '@/lib/tasks';
 import { useAuth } from '@/components/AuthProvider';
@@ -60,33 +60,7 @@ export default function TaskDetailPage() {
   const [tagsInput, setTagsInput] = useState('');
   const [isSavingTags, setIsSavingTags] = useState(false);
 
-  useEffect(() => {
-    if (user && id) {
-      fetchTask();
-      checkActiveSession();
-      fetchFocusSessions();
-      
-      // Determinar la ruta previa para el botón "volver"
-      if (typeof window !== 'undefined') {
-        const referrer = document.referrer;
-        if (referrer.includes('/tasks')) {
-          setPreviousPath('/tasks');
-        } else if (referrer.endsWith('/') || referrer.endsWith('/home') || referrer.includes('localhost') || referrer.includes(window.location.host)) {
-          setPreviousPath('/');
-        }
-      }
-    }
-  }, [user, id]);
-
-  useEffect(() => {
-    if (task) {
-      setDescriptionInput(task.description || '');
-      setTitleInput(task.title || '');
-      setTagsInput(task.tags?.join(', ') || '');
-    }
-  }, [task]);
-
-  const fetchTask = async () => {
+  const fetchTask = useCallback(async () => {
     setIsLoading(true);
     try {
       const taskData = await getTaskById(id as string);
@@ -101,41 +75,41 @@ export default function TaskDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, toast]);
 
-  const fetchFocusSessions = async () => {
+  const fetchFocusSessions = useCallback(async () => {
     if (!user || !id) return;
-    
+
     setIsLoadingSessions(true);
     try {
-      const sessions = await getFocusSessions({ 
-        userId: user.id 
+      const sessions = await getFocusSessions({
+        userId: user.id
       });
-      
+
       // Filtrar las sesiones para esta tarea específica
-      const taskSessions = sessions.filter(session => 
+      const taskSessions = sessions.filter(session =>
         session.task_id === id
       );
-      
+
       setFocusSessions(taskSessions);
     } catch (error) {
       console.error('Error fetching focus sessions:', error);
     } finally {
       setIsLoadingSessions(false);
     }
-  };
+  }, [user, id]);
 
-  const checkActiveSession = async () => {
+  const checkActiveSession = useCallback(async () => {
     if (!user) return;
-    
+
     try {
-      const sessions = await getFocusSessions({ 
+      const sessions = await getFocusSessions({
         userId: user.id,
-        status: FocusSessionStatus.ACTIVE 
+        status: FocusSessionStatus.ACTIVE
       });
-      
+
       const activeSession = sessions[0];
-      
+
       if (activeSession) {
         setCurrentSessionId(activeSession.id);
         if (activeSession.task_id === id) {
@@ -145,7 +119,33 @@ export default function TaskDetailPage() {
     } catch (error) {
       console.error('Error checking active session:', error);
     }
-  };
+  }, [user, id]);
+
+  useEffect(() => {
+    if (user && id) {
+      fetchTask();
+      checkActiveSession();
+      fetchFocusSessions();
+
+      // Determinar la ruta previa para el botón "volver"
+      if (typeof window !== 'undefined') {
+        const referrer = document.referrer;
+        if (referrer.includes('/tasks')) {
+          setPreviousPath('/tasks');
+        } else if (referrer.endsWith('/') || referrer.endsWith('/home') || referrer.includes('localhost') || referrer.includes(window.location.host)) {
+          setPreviousPath('/');
+        }
+      }
+    }
+  }, [user, id, fetchTask, checkActiveSession, fetchFocusSessions]);
+
+  useEffect(() => {
+    if (task) {
+      setDescriptionInput(task.description || '');
+      setTitleInput(task.title || '');
+      setTagsInput(task.tags?.join(', ') || '');
+    }
+  }, [task]);
 
   const handleStatusChange = async () => {
     if (!task) return;

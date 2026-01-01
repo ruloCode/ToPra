@@ -11,11 +11,13 @@ import remarkGfm from 'remark-gfm';
 interface CreateTaskFormProps {
   initialTask?: Partial<Task>;
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
 export default function CreateTaskForm({
   initialTask,
   onSuccess,
+  onCancel,
 }: CreateTaskFormProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -280,11 +282,19 @@ export default function CreateTaskForm({
       )}
 
       <div className="flex justify-end space-x-3">
-       
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex py-2 mb-2 justify-center rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex w-full py-2 mb-2 justify-center rounded-md border border-transparent bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:bg-accent/70"
+          className={`inline-flex ${onCancel ? '' : 'w-full'} py-2 mb-2 justify-center rounded-md border border-transparent bg-accent px-4 text-sm font-medium text-white shadow-sm hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:bg-accent/70`}
         >
           {isLoading
             ? initialTask

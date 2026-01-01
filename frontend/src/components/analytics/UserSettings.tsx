@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card } from '../ui/card';
 import {
@@ -35,12 +35,63 @@ export default function UserSettings() {
     if (themeValue !== settings.theme) {
       setSettings(prev => ({ ...prev, theme: themeValue }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDark]);
 
   const handleFocusSection = (sectionId: string) => {
     const section = document.getElementById(sectionId);
     section?.querySelector<HTMLElement>('input, button')?.focus();
   };
+
+  const applySettings = useCallback((settingsToApply: UserSettings) => {
+    // Apply theme
+    document.documentElement.className = settingsToApply.theme === 'dark' ? 'dark' : '';
+
+    // Apply accessibility settings
+    if (settingsToApply.accessibility.highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+
+    if (settingsToApply.accessibility.reducedMotion) {
+      document.documentElement.classList.add('reduce-motion');
+    } else {
+      document.documentElement.classList.remove('reduce-motion');
+    }
+
+    if (settingsToApply.accessibility.largeText) {
+      document.documentElement.classList.add('large-text');
+    } else {
+      document.documentElement.classList.remove('large-text');
+    }
+  }, []);
+
+  const saveSettings = useCallback(async () => {
+    if (!user) return;
+    setIsSaving(true);
+
+    try {
+      saveUserSettings(user.id, settings);
+
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated successfully.",
+      });
+
+      // Apply settings
+      applySettings(settings);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error saving settings",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, settings, toast, applySettings]);
 
   useEffect(() => {
     function handleKeyboardShortcuts(e: KeyboardEvent) {
@@ -80,57 +131,7 @@ export default function UserSettings() {
 
     window.addEventListener('keydown', handleKeyboardShortcuts);
     return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
-  }, []);
-
-  const saveSettings = async () => {
-    if (!user) return;
-    setIsSaving(true);
-
-    try {
-      saveUserSettings(user.id, settings);
-      
-      toast({
-        title: "Settings saved",
-        description: "Your preferences have been updated successfully.",
-      });
-
-      // Apply settings
-      applySettings(settings);
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: "Error saving settings",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const applySettings = (settings: UserSettings) => {
-    // Apply theme
-    document.documentElement.className = settings.theme === 'dark' ? 'dark' : '';
-    
-    // Apply accessibility settings
-    if (settings.accessibility.highContrast) {
-      document.documentElement.classList.add('high-contrast');
-    } else {
-      document.documentElement.classList.remove('high-contrast');
-    }
-
-    if (settings.accessibility.reducedMotion) {
-      document.documentElement.classList.add('reduce-motion');
-    } else {
-      document.documentElement.classList.remove('reduce-motion');
-    }
-
-    if (settings.accessibility.largeText) {
-      document.documentElement.classList.add('large-text');
-    } else {
-      document.documentElement.classList.remove('large-text');
-    }
-  };
+  }, [saveSettings]);
 
   const handleThemeChange = (value: 'light' | 'dark' | 'system') => {
     setSettings(prev => ({ ...prev, theme: value }));
