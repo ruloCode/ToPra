@@ -1,16 +1,40 @@
 'use client';
 
-import { signIn } from "next-auth/react";
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface GoogleSignInButtonProps {
   className?: string;
 }
 
 export default function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <button
-      onClick={() => signIn('google', { callbackUrl: '/' })}
-      className={`flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:bg-gray-100 ${className}`}
+      onClick={handleGoogleSignIn}
+      disabled={isLoading}
+      className={`flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${className}`}
     >
       <svg className="h-5 w-5" viewBox="0 0 24 24">
         <path
@@ -30,7 +54,7 @@ export default function GoogleSignInButton({ className }: GoogleSignInButtonProp
           fill="#EA4335"
         />
       </svg>
-      Continuar con Google
+      {isLoading ? 'Conectando...' : 'Continuar con Google'}
     </button>
   );
-} 
+}

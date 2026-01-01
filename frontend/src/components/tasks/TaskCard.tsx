@@ -32,7 +32,6 @@ export default function TaskCard({ task, onUpdate, onDelete, onEdit }: TaskCardP
       
       const updates = {
         status: newStatus,
-        completed_at: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : null
       };
       
       await updateTask(task.id, updates);

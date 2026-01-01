@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
+import { translateAuthError } from '@/lib/auth-errors';
+import GoogleSignInButton from './GoogleSignInButton';
+import Link from 'next/link';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -34,7 +37,8 @@ export default function Auth() {
         if (error) throw error;
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(translateAuthError(errorMessage));
     } finally {
       setLoading(false);
     }
@@ -46,33 +50,50 @@ export default function Auth() {
         <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center">
           <div className="mb-8">
             <h2 className="text-4xl font-semibold text-text-primary mb-2">
-              {isSignUp ? 'Create your account' : 'Sign in to your account'}
+              {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
             </h2>
             <p className="text-text-secondary">
               {isSignUp ? (
                 <>
-                  Already have an account?{' '}
+                  ¿Ya tienes una cuenta?{' '}
                   <button
                     type="button"
                     onClick={() => setIsSignUp(false)}
                     className="text-accent hover:text-accent/80"
                   >
-                    Sign in
+                    Iniciar sesión
                   </button>
                 </>
               ) : (
                 <>
-                  Don&apos;t have an account?{' '}
+                  ¿No tienes una cuenta?{' '}
                   <button
                     type="button"
                     onClick={() => setIsSignUp(true)}
                     className="text-accent hover:text-accent/80"
                   >
-                    Sign up
+                    Crear cuenta
                   </button>
                 </>
               )}
             </p>
+          </div>
+
+          {/* Google Sign In */}
+          <div className="mb-6">
+            <GoogleSignInButton className="w-full" />
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-accent/20" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background-default px-2 text-text-secondary">
+                o continúa con email
+              </span>
+            </div>
           </div>
 
           <form className="space-y-4" onSubmit={handleAuth}>
@@ -88,20 +109,32 @@ export default function Auth() {
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder="Contraseña"
                 className="bg-background-paper border-accent/20 text-text-primary placeholder:text-text-secondary pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
               >
-                <Eye className="h-5 w-5" />
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+
+            {!isSignUp && (
+              <div className="text-right">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-accent hover:text-accent/80"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-500/10 text-red-500 text-sm p-3 rounded">
@@ -115,11 +148,11 @@ export default function Auth() {
               disabled={loading}
             >
               {loading ? (
-                'Loading...'
+                'Cargando...'
               ) : isSignUp ? (
-                'Create account'
+                'Crear cuenta'
               ) : (
-                'Sign in'
+                'Iniciar sesión'
               )}
             </Button>
           </form>

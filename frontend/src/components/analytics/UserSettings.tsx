@@ -14,6 +14,7 @@ import { useToast } from '../ui/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { defaultSettings, loadUserSettings, saveUserSettings } from '@/lib/settings';
 import type { UserSettings } from '@/lib/settings';
+import ChangePassword from '@/components/settings/ChangePassword';
 
 export default function UserSettings() {
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
@@ -216,6 +217,9 @@ export default function UserSettings() {
           </div> */}
         </div>
       </Card>
+
+      {/* Security Section - Change Password */}
+      <ChangePassword />
 
       {/* <Card className="p-6" id="accessibility-section">
         <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Accessibility Options</h3>
