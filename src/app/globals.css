@@ -30,6 +30,26 @@
     --sidebar-width-collapsed: 72px;
     --bottom-nav-height: 4rem;
     --radius: 0.5rem;
+
+    /* Semantic Colors - Light Theme */
+    --success: #10B981;
+    --success-light: #D1FAE5;
+    --success-foreground: #065F46;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    --warning-foreground: #92400E;
+    --error: #EF4444;
+    --error-light: #FEE2E2;
+    --error-foreground: #991B1B;
+    --info: #3B82F6;
+    --info-light: #DBEAFE;
+    --info-foreground: #1E40AF;
+
+    /* Priority Colors */
+    --priority-low: #6B7280;
+    --priority-medium: #3B82F6;
+    --priority-high: #F97316;
+    --priority-urgent: #EF4444;
   }
 
   .dark {
@@ -48,6 +68,26 @@
     --accent-foreground: #FFFFFF;
     --secondary: #1E293B;
     --secondary-foreground: #F8FAFC;
+
+    /* Semantic Colors - Dark Theme */
+    --success: #34D399;
+    --success-light: #064E3B;
+    --success-foreground: #A7F3D0;
+    --warning: #FBBF24;
+    --warning-light: #78350F;
+    --warning-foreground: #FDE68A;
+    --error: #F87171;
+    --error-light: #7F1D1D;
+    --error-foreground: #FECACA;
+    --info: #60A5FA;
+    --info-light: #1E3A5F;
+    --info-foreground: #BFDBFE;
+
+    /* Priority Colors - Dark Theme */
+    --priority-low: #9CA3AF;
+    --priority-medium: #60A5FA;
+    --priority-high: #FB923C;
+    --priority-urgent: #F87171;
   }
 
   body {
@@ -165,6 +205,7 @@
   }
 }
 
+/* Base Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -176,7 +217,83 @@
   }
 }
 
+@keyframes taskComplete {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes timerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(108, 92, 231, 0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Animation Classes */
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-task-complete {
+  animation: taskComplete 0.4s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-timer-pulse {
+  animation: timerPulse 2s infinite;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-task-complete,
+  .animate-shimmer,
+  .animate-timer-pulse,
+  .animate-slide-in,
+  .animate-slide-in-right,
+  .animate-scale-in {
+    animation: none;
+  }
 }
 

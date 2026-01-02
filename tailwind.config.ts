@@ -43,6 +43,34 @@ const config: Config = {
         secondary: {
           DEFAULT: 'var(--secondary)',
           foreground: 'var(--secondary-foreground)',
+        },
+        // Semantic Colors
+        success: {
+          DEFAULT: 'var(--success)',
+          light: 'var(--success-light)',
+          foreground: 'var(--success-foreground)',
+        },
+        warning: {
+          DEFAULT: 'var(--warning)',
+          light: 'var(--warning-light)',
+          foreground: 'var(--warning-foreground)',
+        },
+        error: {
+          DEFAULT: 'var(--error)',
+          light: 'var(--error-light)',
+          foreground: 'var(--error-foreground)',
+        },
+        info: {
+          DEFAULT: 'var(--info)',
+          light: 'var(--info-light)',
+          foreground: 'var(--info-foreground)',
+        },
+        // Priority Colors
+        priority: {
+          low: 'var(--priority-low)',
+          medium: 'var(--priority-medium)',
+          high: 'var(--priority-high)',
+          urgent: 'var(--priority-urgent)',
         }
       },
       borderRadius: {
