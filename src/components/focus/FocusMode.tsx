@@ -21,36 +21,115 @@ export function FocusMode({
   historyRef,
 }: FocusModeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(initialTask || null);
   const { toast } = useToast();
   const { user } = useAuth();
   const isCreatingSession = useRef(false);
-  const { mode: timerMode, setMode } = useTimerStore();
+  const {
+    mode: timerMode,
+    setMode,
+    isRunning,
+    timerStartTime,
+    currentSessionId,
+    setCurrentSessionId,
+    setIsRunning,
+    setTimeInSeconds,
+    setChronometerTime,
+    setTimerStartTime,
+    selectedDuration,
+  } = useTimerStore();
 
   // Loading the initial state and handling errors
   useEffect(() => {
     const loadActiveSession = async () => {
       if (!user) return;
       try {
-        const sessions = await getFocusSessions({ 
+        const sessions = await getFocusSessions({
           userId: user.id,
-          status: FocusSessionStatus.ACTIVE 
+          status: FocusSessionStatus.ACTIVE
         });
         const activeSession = sessions[0];
-        
-        if (activeSession?.id && activeSession.id !== currentSessionId) {
+
+        if (activeSession?.id) {
+          const startTime = new Date(activeSession.start_time).getTime();
+          const hoursElapsed = (Date.now() - startTime) / (1000 * 60 * 60);
+
+          // Si la sesión tiene más de 24 horas, es huérfana - marcarla como interrumpida
+          if (hoursElapsed > 24) {
+            await updateFocusSession(activeSession.id, {
+              status: FocusSessionStatus.INTERRUPTED,
+              end_time: activeSession.start_time, // end = start para sesiones huérfanas
+              duration: 0
+            });
+            await historyRef.current?.reloadSessions();
+            return;
+          }
+
+          // Restaurar sesión activa
           setCurrentSessionId(activeSession.id);
           setSelectedTask(activeSession.task || null);
-          setMode(activeSession.duration ? 'timer' : 'chronometer');
+
+          const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+
+          if (activeSession.duration) {
+            // Timer mode - calcular tiempo restante
+            const remainingSeconds = Math.max(0, activeSession.duration * 60 - elapsedSeconds);
+            setMode('timer');
+            setTimeInSeconds(remainingSeconds);
+            setTimerStartTime(startTime);
+
+            if (remainingSeconds > 0) {
+              setIsRunning(true);
+            } else {
+              // El timer ya terminó mientras estaba fuera
+              await updateFocusSession(activeSession.id, {
+                status: FocusSessionStatus.COMPLETED,
+                end_time: new Date(startTime + activeSession.duration * 60 * 1000).toISOString(),
+                duration: activeSession.duration
+              });
+              setCurrentSessionId(null);
+              await historyRef.current?.reloadSessions();
+            }
+          } else {
+            // Chronometer mode - calcular tiempo transcurrido
+            setMode('chronometer');
+            setChronometerTime(elapsedSeconds);
+            setTimerStartTime(startTime);
+            setIsRunning(true);
+          }
         }
       } catch (error) {
         console.error('Error loading active session:', error);
       }
     };
-    
+
     loadActiveSession();
-  }, [user, currentSessionId, setMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Handler para finalizar sesión cuando el usuario cierra el navegador/tab
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (currentSessionId && isRunning && timerStartTime) {
+        const elapsedMinutes = Math.max(1, Math.ceil((Date.now() - timerStartTime) / (1000 * 60)));
+
+        // Usar sendBeacon para enviar request aunque se cierre la página
+        const payload = JSON.stringify({
+          status: 'interrupted',
+          end_time: new Date().toISOString(),
+          duration: elapsedMinutes
+        });
+
+        navigator.sendBeacon(
+          `/api/focus-sessions/${currentSessionId}/finalize`,
+          new Blob([payload], { type: 'application/json' })
+        );
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [currentSessionId, isRunning, timerStartTime]);
 
   // Handle task selection
   const handleTaskSelect = useCallback(async (task: Task | null) => {
@@ -105,7 +184,7 @@ export function FocusMode({
         variant: "destructive",
       });
     }
-  }, [user, currentSessionId, toast, historyRef]);
+  }, [user, currentSessionId, toast, historyRef, setCurrentSessionId]);
 
   // Handle timer interruption
   const handleTimerInterrupt = useCallback(async (elapsedTime: number) => {
@@ -133,7 +212,7 @@ export function FocusMode({
         variant: "destructive",
       });
     }
-  }, [currentSessionId, user, timerMode, toast, historyRef]);
+  }, [currentSessionId, user, timerMode, toast, historyRef, setCurrentSessionId]);
 
   // Handle timer completion
   const handleTimerComplete = useCallback(async (elapsedTime: number) => {
@@ -160,7 +239,7 @@ export function FocusMode({
         variant: "destructive",
       });
     }
-  }, [currentSessionId, user, timerMode, toast, historyRef]);
+  }, [currentSessionId, user, timerMode, toast, historyRef, setCurrentSessionId]);
 
   // Handle timer start
   const handleTimerStart = useCallback(async (_duration: number) => {
@@ -225,7 +304,7 @@ export function FocusMode({
     } finally {
       isCreatingSession.current = false;
     }
-  }, [user, selectedTask, toast, historyRef, setMode]);
+  }, [user, selectedTask, toast, historyRef, setMode, setCurrentSessionId]);
 
   // Update selected task when initial task changes
   useEffect(() => {

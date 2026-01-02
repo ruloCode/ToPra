@@ -7,7 +7,17 @@ import { useAuth } from '@/components/AuthProvider';
 import Auth from '@/components/Auth';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Circle, CheckCircle2, Trash2, ArrowLeft, Clock, TimerIcon, XIcon, CheckCircleIcon, AlertCircleIcon, PlayIcon, Edit2Icon, CheckIcon } from 'lucide-react';
+import { Circle, CheckCircle2, Trash2, Clock, TimerIcon, XIcon, CheckCircleIcon, AlertCircleIcon, PlayIcon, Edit2Icon, CheckIcon, Calendar, Flag, ChevronDown, ChevronRight, MoreHorizontal, ChevronUp } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { useTags } from '@/contexts/TagContext';
+import { getTagColorClasses } from '@/lib/tags';
+import TagsDropdown from '@/components/tags/TagsDropdown';
 import { useToast } from '@/components/ui/use-toast';
 import { FocusTimer } from '@/components/focus/FocusTimer';
 import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
@@ -36,10 +46,58 @@ type FocusSessionWithTask = {
   } | null;
 };
 
+// Status configuration
+const statusConfig = {
+  pending: {
+    label: 'Pendiente',
+    icon: Circle,
+    color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    dotColor: 'bg-gray-400',
+  },
+  in_progress: {
+    label: 'En progreso',
+    icon: Clock,
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    dotColor: 'bg-blue-500',
+  },
+  completed: {
+    label: 'Completada',
+    icon: CheckCircle2,
+    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    dotColor: 'bg-green-500',
+  },
+} as const;
+
+// Priority configuration
+const priorityConfig = {
+  1: {
+    label: 'Baja',
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-100 dark:bg-gray-800',
+  },
+  2: {
+    label: 'Media',
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+  },
+  3: {
+    label: 'Alta',
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+  },
+  4: {
+    label: 'Urgente',
+    color: 'text-red-500',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+  },
+} as const;
+
+
 export default function TaskDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const { tags: userTags } = useTags();
   const [task, setTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -56,9 +114,8 @@ export default function TaskDetailPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [isSavingTitle, setIsSavingTitle] = useState(false);
-  const [isEditingTags, setIsEditingTags] = useState(false);
-  const [tagsInput, setTagsInput] = useState('');
-  const [isSavingTags, setIsSavingTags] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const fetchTask = useCallback(async () => {
     setIsLoading(true);
@@ -143,7 +200,6 @@ export default function TaskDetailPage() {
     if (task) {
       setDescriptionInput(task.description || '');
       setTitleInput(task.title || '');
-      setTagsInput(task.tags?.join(', ') || '');
     }
   }, [task]);
 
@@ -347,39 +403,6 @@ export default function TaskDetailPage() {
     }
   };
 
-  const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 4: return 'text-red-600';
-      case 3: return 'text-orange-500';
-      case 2: return 'text-blue-500';
-      default: return 'text-gray-400';
-    }
-  };
-
-  const getPriorityText = (priority: number) => {
-    switch (priority) {
-      case 4: return 'Alta';
-      case 3: return 'Media-Alta';
-      case 2: return 'Media';
-      default: return 'Baja';
-    }
-  };
-
-  const getTagColor = (tag: string) => {
-    switch (tag.toLowerCase()) {
-      case 'personal':
-        return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-400/20 dark:text-yellow-400 dark:hover:bg-yellow-400/30';
-      case 'trabajo':
-        return 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-400/20 dark:text-blue-400 dark:hover:bg-blue-400/30';
-      case 'urgente':
-        return 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-400/20 dark:text-red-400 dark:hover:bg-red-400/30';
-      case 'importante':
-        return 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-400/20 dark:text-purple-400 dark:hover:bg-purple-400/30';
-      default:
-        return 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-400/20 dark:text-gray-400 dark:hover:bg-gray-400/30';
-    }
-  };
-
   const getSessionStatusInfo = (status: string) => {
     switch (status) {
       case FocusSessionStatus.COMPLETED:
@@ -484,26 +507,96 @@ export default function TaskDetailPage() {
     }
   };
 
-  const handleSaveTags = async () => {
+  // Inline status change handler
+  const handleInlineStatusChange = async (newStatus: string) => {
     if (!task) return;
-    
-    setIsSavingTags(true);
+
+    setIsUpdating(true);
     try {
-      const tags = tagsInput
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(Boolean);
-      
-      const updates = { tags };
-      
+      const updates = {
+        status: newStatus,
+        completed_at: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : null
+      };
+
       await updateTask(task.id, updates);
       setTask({ ...task, ...updates });
-      setIsEditingTags(false);
-      
+
       toast({
-        title: 'Etiquetas actualizadas',
-        description: 'Las etiquetas de la tarea han sido actualizadas',
+        title: 'Estado actualizado',
+        description: `La tarea ahora está ${statusConfig[newStatus as keyof typeof statusConfig]?.label || newStatus}`,
       });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el estado',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Inline priority change handler
+  const handleInlinePriorityChange = async (newPriority: number) => {
+    if (!task) return;
+
+    setIsUpdating(true);
+    try {
+      await updateTask(task.id, { priority: newPriority });
+      setTask({ ...task, priority: newPriority });
+
+      toast({
+        title: 'Prioridad actualizada',
+        description: `Prioridad cambiada a ${priorityConfig[newPriority as keyof typeof priorityConfig]?.label || 'desconocida'}`,
+      });
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la prioridad',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Inline due date change handler
+  const handleInlineDueDateChange = async (newDate: string | null) => {
+    if (!task) return;
+
+    setIsUpdating(true);
+    try {
+      await updateTask(task.id, { due_date: newDate });
+      setTask({ ...task, due_date: newDate });
+
+      toast({
+        title: newDate ? 'Fecha actualizada' : 'Fecha eliminada',
+        description: newDate
+          ? `Fecha límite: ${format(parseISO(newDate), "d MMM yyyy", { locale: es })}`
+          : 'Se ha eliminado la fecha límite',
+      });
+    } catch (error) {
+      console.error('Error updating task due date:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la fecha',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Inline tags change handler
+  const handleTagsChange = async (newTags: string[]) => {
+    if (!task) return;
+
+    setIsUpdating(true);
+    try {
+      await updateTask(task.id, { tags: newTags });
+      setTask({ ...task, tags: newTags });
     } catch (error) {
       console.error('Error updating task tags:', error);
       toast({
@@ -512,7 +605,7 @@ export default function TaskDetailPage() {
         variant: 'destructive',
       });
     } finally {
-      setIsSavingTags(false);
+      setIsUpdating(false);
     }
   };
 
@@ -528,8 +621,6 @@ export default function TaskDetailPage() {
     return <Auth />;
   }
 
-  const backLinkText = previousPath === '/' ? 'Volver a la página principal' : 'Volver a la lista de tareas';
-
   // Calcular el tiempo total invertido en esta tarea
   const totalFocusTime = focusSessions.reduce((total, session) => {
     return total + (session.duration || 0);
@@ -542,14 +633,6 @@ export default function TaskDetailPage() {
   return (
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto md:max-w-[60vw]">
-        <Link
-          href={previousPath}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {backLinkText}
-        </Link>
-
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-lg text-muted-foreground">Cargando tarea...</div>
@@ -566,114 +649,287 @@ export default function TaskDetailPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1 flex-1">
-                {isEditingTitle ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <input
-                        type="text"
-                        value={titleInput}
-                        onChange={(e) => setTitleInput(e.target.value)}
-                        className="text-2xl font-bold w-full border-b border-border bg-transparent focus:border-accent outline-none p-1"
-                        placeholder="Título de la tarea"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsEditingTitle(false);
-                          setTitleInput(task?.title || '');
-                        }}
-                        className="px-3 py-1 text-xs rounded-md border border-border bg-background hover:bg-secondary/50"
-                        disabled={isSavingTitle}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSaveTitle}
-                        className="px-3 py-1 text-xs rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
-                        disabled={isSavingTitle || !titleInput.trim()}
-                      >
-                        {isSavingTitle ? 'Guardando...' : 'Guardar'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="group relative" 
-                    onClick={() => !isEditingTitle && setIsEditingTitle(true)}
-                  >
-                    <h1 className="text-2xl font-bold text-foreground group-hover:pr-7">{task.title}</h1>
-                    <button
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-secondary/30"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsEditingTitle(true);
-                      }}
-                    >
-                      <Edit2Icon className="h-4 w-4 text-muted-foreground/70" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    Creada el {format(parseISO(task.created_at), "d MMM yyyy", { locale: es })}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleStatusChange}
-                  disabled={isUpdating}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    task.status === TaskStatus.COMPLETED
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-400/20 dark:text-green-400 dark:hover:bg-green-400/30'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-400/20 dark:text-blue-400 dark:hover:bg-blue-400/30'
-                  }`}
+            {/* Breadcrumb + Actions Header */}
+            <div className="flex items-center justify-between">
+              <nav className="flex items-center gap-2 text-sm">
+                <Link
+                  href="/tasks"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {task.status === TaskStatus.COMPLETED ? (
-                    <span className="flex items-center">
-                      <Circle className="mr-1 h-4 w-4" />
-                      Marcar como pendiente
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      <CheckCircle2 className="mr-1 h-4 w-4" />
-                      Marcar como completada
-                    </span>
-                  )}
-                </button>
+                  Tareas
+                </Link>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span className="text-foreground font-medium truncate max-w-[200px]">
+                  {task.title}
+                </span>
+              </nav>
 
+              {/* Compact Action Buttons */}
+              <div className="flex items-center gap-1">
                 <button
                   onClick={toggleFocusTimer}
                   disabled={isUpdating || task.status === TaskStatus.COMPLETED}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:bg-accent/90 transition-colors ${
-                    task.status === TaskStatus.COMPLETED ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    showFocusTimer
+                      ? "bg-accent text-white"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    task.status === TaskStatus.COMPLETED && "opacity-50 cursor-not-allowed"
+                  )}
+                  title={showFocusTimer ? "Ocultar timer" : "Iniciar sesión de enfoque"}
                 >
-                  <span className="flex items-center">
-                    {showFocusTimer ? (
-                      <>
-                        <XIcon className="mr-1 h-4 w-4" />
-                        Ocultar timer
-                      </>
-                    ) : (
-                      <>
-                        <TimerIcon className="mr-1 h-4 w-4" />
-                        Iniciar sesión de enfoque
-                      </>
-                    )}
-                  </span>
+                  <TimerIcon className="h-5 w-5" />
                 </button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={handleStatusChange}
+                      disabled={isUpdating}
+                    >
+                      {task.status === TaskStatus.COMPLETED ? (
+                        <>
+                          <Circle className="mr-2 h-4 w-4" />
+                          Marcar como pendiente
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Marcar como completada
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar tarea
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
+            {/* Editable Title */}
+            <div className="space-y-1">
+              {isEditingTitle ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={titleInput}
+                    onChange={(e) => setTitleInput(e.target.value)}
+                    className="text-2xl font-bold w-full border-b-2 border-accent bg-transparent outline-none p-1"
+                    placeholder="Título de la tarea"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveTitle();
+                      if (e.key === 'Escape') {
+                        setIsEditingTitle(false);
+                        setTitleInput(task?.title || '');
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditingTitle(false);
+                        setTitleInput(task?.title || '');
+                      }}
+                      className="px-3 py-1 text-xs rounded-md border border-border bg-background hover:bg-secondary/50"
+                      disabled={isSavingTitle}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveTitle}
+                      className="px-3 py-1 text-xs rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
+                      disabled={isSavingTitle || !titleInput.trim()}
+                    >
+                      {isSavingTitle ? 'Guardando...' : 'Guardar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <h1
+                  className="text-2xl font-bold text-foreground cursor-pointer hover:text-accent/80 transition-colors"
+                  onClick={() => setIsEditingTitle(true)}
+                  title="Click para editar"
+                >
+                  {task.title}
+                </h1>
+              )}
+            </div>
+
+            {/* Metadata Grid */}
+            <div className="flex flex-wrap gap-3 py-3 border-y border-border">
+              {/* Status Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                      statusConfig[task.status as keyof typeof statusConfig]?.color || 'bg-gray-100 text-gray-700'
+                    )}
+                    disabled={isUpdating}
+                  >
+                    <span className={cn("h-2 w-2 rounded-full", statusConfig[task.status as keyof typeof statusConfig]?.dotColor || 'bg-gray-400')} />
+                    {statusConfig[task.status as keyof typeof statusConfig]?.label || task.status}
+                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {Object.entries(statusConfig).map(([status, config]) => {
+                    const IconComponent = config.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={status}
+                        onClick={() => handleInlineStatusChange(status)}
+                        className={cn(
+                          "flex items-center gap-2",
+                          task.status === status && "bg-accent/10"
+                        )}
+                      >
+                        <IconComponent className={cn("h-4 w-4", config.color.split(' ')[1])} />
+                        {config.label}
+                        {task.status === status && <CheckIcon className="ml-auto h-4 w-4 text-accent" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Priority Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                      task.priority
+                        ? priorityConfig[task.priority as keyof typeof priorityConfig]?.bgColor
+                        : 'bg-muted',
+                      task.priority
+                        ? priorityConfig[task.priority as keyof typeof priorityConfig]?.color
+                        : 'text-muted-foreground'
+                    )}
+                    disabled={isUpdating}
+                  >
+                    <Flag className="h-3.5 w-3.5" />
+                    {task.priority
+                      ? priorityConfig[task.priority as keyof typeof priorityConfig]?.label
+                      : 'Prioridad'}
+                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {Object.entries(priorityConfig).map(([priority, config]) => (
+                    <DropdownMenuItem
+                      key={priority}
+                      onClick={() => handleInlinePriorityChange(Number(priority))}
+                      className={cn(
+                        "flex items-center gap-2",
+                        task.priority === Number(priority) && "bg-accent/10"
+                      )}
+                    >
+                      <Flag className={cn("h-4 w-4", config.color)} />
+                      <span className={config.color}>{config.label}</span>
+                      {task.priority === Number(priority) && <CheckIcon className="ml-auto h-4 w-4 text-accent" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Due Date Picker */}
+              <div className="relative">
+                <div
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                    task.due_date
+                      ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                      : 'bg-muted text-muted-foreground hover:bg-secondary'
+                  )}
+                  onClick={() => dateInputRef.current?.showPicker?.()}
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  {task.due_date
+                    ? format(parseISO(task.due_date), 'd MMM yyyy', { locale: es })
+                    : 'Fecha límite'}
+                  {task.due_date && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleInlineDueDateChange(null);
+                      }}
+                      className="hover:text-purple-900 dark:hover:text-purple-200 z-10"
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={task.due_date || ''}
+                  onChange={(e) => handleInlineDueDateChange(e.target.value || null)}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+              </div>
+
+              {/* Tags Dropdown */}
+              <TagsDropdown
+                selectedTags={task.tags || []}
+                onTagsChange={handleTagsChange}
+                showSelectedChips={false}
+              />
+
+              {/* Display selected tags as chips */}
+              {task.tags && task.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  {task.tags.map((tagName, index) => {
+                    const tag = userTags.find((t) => t.name === tagName);
+                    const colorClasses = tag
+                      ? getTagColorClasses(tag.color)
+                      : getTagColorClasses('blue');
+                    return (
+                      <span
+                        key={index}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                          colorClasses.bg,
+                          colorClasses.text
+                        )}
+                      >
+                        {tagName}
+                        <button
+                          onClick={() => handleTagsChange(task.tags?.filter(t => t !== tagName) || [])}
+                          className="hover:opacity-70"
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Created date - subtle */}
+              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                Creada {format(parseISO(task.created_at), "d MMM yyyy", { locale: es })}
+              </div>
+            </div>
+
+            {/* Focus Timer */}
             {showFocusTimer && (
-              <div className="bg-card p-6 rounded-lg border dark:border-[#28282F] mb-6">
+              <div className="bg-card p-6 rounded-lg border dark:border-[#28282F]">
                 <div className="mb-4 flex justify-between items-center">
                   <h2 className="text-lg font-medium text-foreground">Sesión de enfoque</h2>
                   <button
@@ -692,332 +948,189 @@ export default function TaskDetailPage() {
               </div>
             )}
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-medium text-foreground">Descripción</h2>
+            {/* Description Section with Show More/Less */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-medium text-foreground">Descripción</h2>
+                {!isEditingDescription && (
+                  <button
+                    onClick={() => setIsEditingDescription(true)}
+                    className="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-md transition-colors"
+                    title="Editar descripción"
+                  >
+                    <Edit2Icon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {isEditingDescription ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={descriptionInput}
+                    onChange={(e) => setDescriptionInput(e.target.value)}
+                    rows={8}
+                    className="w-full p-3 border border-border rounded-lg bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-y min-h-[120px]"
+                    placeholder="Añade una descripción utilizando Markdown..."
+                    autoFocus
+                  />
+                  <div className="flex justify-end gap-2">
                     <button
-                      onClick={() => setIsEditingDescription(!isEditingDescription)}
-                      className="p-1 text-muted-foreground/70 hover:text-accent hover:bg-accent/10 rounded-full transition-colors"
+                      type="button"
+                      onClick={() => {
+                        setIsEditingDescription(false);
+                        setDescriptionInput(task?.description || '');
+                      }}
+                      className="px-4 py-2 text-sm rounded-lg border border-border bg-background hover:bg-secondary/50 transition-colors"
+                      disabled={isSavingDescription}
                     >
-                      <Edit2Icon className="h-4 w-4" />
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveDescription}
+                      className="px-4 py-2 text-sm rounded-lg bg-accent text-white hover:bg-accent/90 flex items-center gap-1.5 transition-colors"
+                      disabled={isSavingDescription}
+                    >
+                      {isSavingDescription ? (
+                        'Guardando...'
+                      ) : (
+                        <>
+                          <CheckIcon className="h-4 w-4" />
+                          Guardar
+                        </>
+                      )}
                     </button>
                   </div>
-                  
-                  {isEditingDescription ? (
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <textarea
-                          value={descriptionInput}
-                          onChange={(e) => setDescriptionInput(e.target.value)}
-                          rows={5}
-                          className="w-full p-3 border border-border rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none"
-                          placeholder="Añade una descripción utilizando Markdown"
-                        />
-                    
-                      </div>
-                      
-                      {/* Vista previa */}
-                      
-                      
-                      <div className="flex justify-between items-center">
-                       
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsEditingDescription(false);
-                              setDescriptionInput(task?.description || '');
-                            }}
-                            className="px-3 py-1 text-sm rounded-md border border-border bg-background hover:bg-secondary/50"
-                            disabled={isSavingDescription}
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSaveDescription}
-                            className="px-3 py-1 text-sm rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
-                            disabled={isSavingDescription}
-                          >
-                            {isSavingDescription ? 'Guardando...' : (
-                              <>
-                                <CheckIcon className="h-3 w-3" />
-                                Guardar
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    task?.description ? (
-                      <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert border border-transparent p-3 rounded-md hover:border-border/30 transition-colors">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {task.description}
-                        </ReactMarkdown>
-                      </div>
-                    ) : (
-                      <div 
-                        className="border border-dashed border-border rounded-md p-3 text-muted-foreground text-center hover:bg-card/50 transition-colors cursor-pointer"
-                        onClick={() => setIsEditingDescription(true)}
-                      >
-                        Haz clic para añadir una descripción
-                      </div>
-                    )
-                  )}
                 </div>
-
-                {task.tags && task.tags.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-lg font-medium text-foreground">Etiquetas</h2>
-                      <button
-                        onClick={() => setIsEditingTags(!isEditingTags)}
-                        className="p-1 text-muted-foreground/70 hover:text-accent hover:bg-accent/10 rounded-full transition-colors"
-                      >
-                        <Edit2Icon className="h-4 w-4" />
-                      </button>
-                    </div>
-                    
-                    {isEditingTags ? (
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          value={tagsInput}
-                          onChange={(e) => setTagsInput(e.target.value)}
-                          className="w-full p-2 border border-border rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                          placeholder="Etiquetas separadas por comas (ej: personal, trabajo, urgente)"
-                        />
-                        
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsEditingTags(false);
-                              setTagsInput(task.tags?.join(', ') || '');
-                            }}
-                            className="px-3 py-1 text-sm rounded-md border border-border bg-background hover:bg-secondary/50"
-                            disabled={isSavingTags}
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSaveTags}
-                            className="px-3 py-1 text-sm rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
-                            disabled={isSavingTags}
-                          >
-                            {isSavingTags ? 'Guardando...' : (
-                              <>
-                                <CheckIcon className="h-3 w-3" />
-                                Guardar
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {task.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors cursor-default ${getTagColor(tag)}`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+              ) : task?.description ? (
+                <div className="relative">
+                  <div
+                    className={cn(
+                      "prose prose-sm max-w-none text-text-secondary dark:prose-invert p-3 rounded-lg bg-background-paper/50 border border-transparent hover:border-border/50 transition-colors cursor-pointer overflow-hidden",
+                      !showFullDescription && task.description.split('\n').length > 5 && "max-h-[180px]"
                     )}
-                  </div>
-                )}
-
-                {(!task.tags || task.tags.length === 0) && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-lg font-medium text-foreground">Etiquetas</h2>
-                    </div>
-                    
-                    {isEditingTags ? (
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          value={tagsInput}
-                          onChange={(e) => setTagsInput(e.target.value)}
-                          className="w-full p-2 border border-border rounded-md bg-background focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                          placeholder="Etiquetas separadas por comas (ej: personal, trabajo, urgente)"
-                        />
-                        
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsEditingTags(false);
-                              setTagsInput('');
-                            }}
-                            className="px-3 py-1 text-sm rounded-md border border-border bg-background hover:bg-secondary/50"
-                            disabled={isSavingTags}
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSaveTags}
-                            className="px-3 py-1 text-sm rounded-md bg-accent text-white hover:bg-accent/90 flex items-center gap-1"
-                            disabled={isSavingTags}
-                          >
-                            {isSavingTags ? 'Guardando...' : (
-                              <>
-                                <CheckIcon className="h-3 w-3" />
-                                Guardar
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className="border border-dashed border-border rounded-md p-3 text-muted-foreground text-center hover:bg-card/50 transition-colors cursor-pointer"
-                        onClick={() => setIsEditingTags(true)}
-                      >
-                        Haz clic para añadir etiquetas
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Historial de sesiones de enfoque */}
-                <div className="space-y-4 bg-card rounded-lg border p-4 dark:border-[#28282F]">
-                  <h2 className="text-lg font-medium text-foreground">Historial de enfoque</h2>
-                  
-                  {isLoadingSessions ? (
-                    <div className="py-4 text-center text-muted-foreground">
-                      Cargando sesiones...
-                    </div>
-                  ) : focusSessions.length === 0 ? (
-                    <div className="py-4 text-center text-muted-foreground">
-                      No hay sesiones de enfoque para esta tarea
-                    </div>
-                  ) : (
-                    <>
-                      {/* Resumen de tiempo */}
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 mb-4">
-                        <div className="bg-background/50 p-2 rounded-md">
-                          <div className="text-xs text-muted-foreground">Tiempo total</div>
-                          <div className="text-foreground font-semibold">{formatSessionDuration(totalFocusTime)}</div>
-                        </div>
-                        <div className="bg-background/50 p-2 rounded-md">
-                          <div className="text-xs text-muted-foreground">Sesiones</div>
-                          <div className="text-foreground font-semibold">{focusSessions.length}</div>
-                        </div>
-                        <div className="bg-background/50 p-2 rounded-md">
-                          <div className="text-xs text-muted-foreground">Completadas</div>
-                          <div className="text-foreground font-semibold">{completedSessions}</div>
-                        </div>
-                        <div className="bg-background/50 p-2 rounded-md">
-                          <div className="text-xs text-muted-foreground">Interrumpidas</div>
-                          <div className="text-foreground font-semibold">{interruptedSessions}</div>
-                        </div>
-                      </div>
-
-                      {/* Lista de sesiones */}
-                      <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                        {focusSessions.map(session => {
-                          const statusInfo = getSessionStatusInfo(session.status);
-                          const startTime = new Date(session.start_time);
-                          const formattedDate = format(startTime, "d MMM yyyy, HH:mm", { locale: es });
-                          
-                          return (
-                            <div 
-                              key={session.id} 
-                              className="p-3 bg-background/75 rounded-md border border-border/50 hover:border-border transition-colors"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <div className="flex items-center gap-1">
-                                    {statusInfo.icon}
-                                    <span className={`text-sm font-medium ${statusInfo.className}`}>
-                                      {statusInfo.label}
-                                    </span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {formattedDate}
-                                  </div>
-                                </div>
-                                <div className="text-sm font-medium">
-                                  {formatSessionDuration(session.duration)}
-                                </div>
-                              </div>
-                              
-                              {session.notes && (
-                                <div className="mt-2 text-xs text-muted-foreground border-t border-border/50 pt-2">
-                                  {session.notes}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-card rounded-lg border p-4 dark:border-[#28282F]">
-                  <h2 className="text-lg font-medium text-foreground mb-4">Detalles</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Estado</span>
-                      <span className={`font-medium ${
-                        task.status === TaskStatus.COMPLETED
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-blue-600 dark:text-blue-400'
-                      }`}>
-                        {task.status === TaskStatus.COMPLETED ? 'Completada' : 'Pendiente'}
-                      </span>
-                    </div>
-
-                    {task.priority && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Prioridad</span>
-                        <span className={`font-medium ${getPriorityColor(task.priority)}`}>
-                          {getPriorityText(task.priority)}
-                        </span>
-                      </div>
-                    )}
-
-                    {task.due_date && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Fecha límite</span>
-                        <span className="font-medium">
-                          {format(parseISO(task.due_date), "d MMM yyyy", { locale: es })}
-                        </span>
-                      </div>
-                    )}
-
-                    {task.updated_at && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Última actualización</span>
-                        <span className="font-medium">
-                          {format(parseISO(task.updated_at), "d MMM yyyy", { locale: es })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={handleDelete}
-                    className="flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-400/20 dark:text-red-400 dark:hover:bg-red-400/30"
+                    onClick={() => setIsEditingDescription(true)}
                   >
-                    <Trash2 className="mr-1 h-4 w-4" />
-                    Eliminar
-                  </button>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {task.description}
+                    </ReactMarkdown>
+                  </div>
+                  {task.description.split('\n').length > 5 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowFullDescription(!showFullDescription);
+                      }}
+                      className="mt-2 flex items-center gap-1 text-sm text-accent hover:text-accent/80 transition-colors"
+                    >
+                      {showFullDescription ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          Mostrar menos
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
+                          Mostrar más
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div
+                  className="border border-dashed border-border rounded-lg p-6 text-muted-foreground text-center hover:bg-card/50 hover:border-accent/30 transition-colors cursor-pointer"
+                  onClick={() => setIsEditingDescription(true)}
+                >
+                  <Edit2Icon className="h-5 w-5 mx-auto mb-2 opacity-50" />
+                  <span>Haz clic para añadir una descripción</span>
+                </div>
+              )}
+            </div>
+
+            {/* Focus History */}
+            <div className="space-y-4 bg-card rounded-lg border p-5 dark:border-[#28282F]">
+              <h2 className="text-lg font-medium text-foreground">Historial de enfoque</h2>
+
+              {isLoadingSessions ? (
+                <div className="py-6 text-center text-muted-foreground">
+                  Cargando sesiones...
+                </div>
+              ) : focusSessions.length === 0 ? (
+                <div className="py-6 text-center text-muted-foreground">
+                  <TimerIcon className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p>No hay sesiones de enfoque para esta tarea</p>
+                  {task.status !== TaskStatus.COMPLETED && (
+                    <button
+                      onClick={toggleFocusTimer}
+                      className="mt-3 text-sm text-accent hover:text-accent/80"
+                    >
+                      Iniciar primera sesión
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="bg-background/50 p-3 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Tiempo total</div>
+                      <div className="text-lg font-semibold text-foreground">{formatSessionDuration(totalFocusTime)}</div>
+                    </div>
+                    <div className="bg-background/50 p-3 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Sesiones</div>
+                      <div className="text-lg font-semibold text-foreground">{focusSessions.length}</div>
+                    </div>
+                    <div className="bg-background/50 p-3 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Completadas</div>
+                      <div className="text-lg font-semibold text-green-600 dark:text-green-400">{completedSessions}</div>
+                    </div>
+                    <div className="bg-background/50 p-3 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Interrumpidas</div>
+                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">{interruptedSessions}</div>
+                    </div>
+                  </div>
+
+                  {/* Sessions List */}
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {focusSessions.map(session => {
+                      const statusInfo = getSessionStatusInfo(session.status);
+                      const startTime = new Date(session.start_time);
+                      const formattedDate = format(startTime, "d MMM yyyy, HH:mm", { locale: es });
+
+                      return (
+                        <div
+                          key={session.id}
+                          className="p-3 bg-background/75 rounded-lg border border-border/50 hover:border-border transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                {statusInfo.icon}
+                                <span className={cn("text-sm font-medium", statusInfo.className)}>
+                                  {statusInfo.label}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {formattedDate}
+                              </div>
+                            </div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {formatSessionDuration(session.duration)}
+                            </div>
+                          </div>
+
+                          {session.notes && (
+                            <div className="mt-2 text-xs text-muted-foreground border-t border-border/50 pt-2">
+                              {session.notes}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

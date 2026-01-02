@@ -42,7 +42,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
             e.preventDefault();
           }
         }}
-        className="fixed left-0 right-0 bottom-0 sm:left-[50%] sm:top-[50%] sm:-translate-x-[50%] sm:-translate-y-[50%] sm:bottom-auto sm:max-w-[600px] sm:h-auto rounded-t-lg sm:rounded-lg p-0 overflow-hidden bg-white dark:bg-background-paper border border-border dark:border-[#28282F]"
+        className="fixed left-0 right-0 bottom-0 sm:left-[50%] sm:top-[50%] sm:-translate-x-[50%] sm:-translate-y-[50%] sm:bottom-auto sm:max-w-[600px] sm:h-auto rounded-t-lg sm:rounded-lg p-0 bg-white dark:bg-background-paper border border-border dark:border-[#28282F]"
       >
         <DialogHeader className="px-6 py-4 border-b border-border dark:border-[#28282F]">
           <DialogTitle>{taskToEdit ? 'Edit Task' : 'Create New Task'}</DialogTitle>

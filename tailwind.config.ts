@@ -71,6 +71,13 @@ const config: Config = {
           medium: 'var(--priority-medium)',
           high: 'var(--priority-high)',
           urgent: 'var(--priority-urgent)',
+        },
+        // UI Components
+        border: 'var(--border)',
+        foreground: 'var(--text-primary)',
+        popover: {
+          DEFAULT: 'var(--background-default)',
+          foreground: 'var(--text-primary)',
         }
       },
       borderRadius: {

@@ -1,6 +1,7 @@
 'use client'
 
 import UserSettings from '@/components/analytics/UserSettings';
+import TagManager from '@/components/tags/TagManager';
 import { Suspense } from 'react';
 
 export default function SettingsPage() {
@@ -8,8 +9,11 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto md:max-w-[60vw] p-4 text-text-secondary">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
-      
-    
+
+      {/* Tags Management Section */}
+      <div className="mb-8 p-4 bg-card rounded-lg border border-border">
+        <TagManager />
+      </div>
 
       <Suspense fallback={
         <div className="space-y-4">

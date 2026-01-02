@@ -14,7 +14,8 @@ interface TimerState {
   countdown: number;
   timerStartTime: number | null;
   lastSyncTime: number | null;
-  
+  currentSessionId: string | null; // ID de la sesión activa en Supabase
+
   // Actions
   setMode: (mode: TimerMode) => void;
   setIsRunning: (isRunning: boolean) => void;
@@ -26,6 +27,7 @@ interface TimerState {
   setCountdown: (countdown: number) => void;
   setTimerStartTime: (time: number | null) => void;
   setLastSyncTime: (time: number | null) => void;
+  setCurrentSessionId: (id: string | null) => void;
   resetTimer: () => void;
   syncTimerState: () => void;
 }
@@ -43,6 +45,7 @@ export const useTimerStore = create<TimerState>()(
       countdown: 0,
       timerStartTime: null,
       lastSyncTime: null,
+      currentSessionId: null,
 
       setMode: (mode) => set({ mode }),
       setIsRunning: (isRunning) => {
@@ -82,6 +85,7 @@ export const useTimerStore = create<TimerState>()(
       setCountdown: (countdown) => set({ countdown }),
       setTimerStartTime: (timerStartTime) => set({ timerStartTime }),
       setLastSyncTime: (lastSyncTime) => set({ lastSyncTime }),
+      setCurrentSessionId: (currentSessionId) => set({ currentSessionId }),
       resetTimer: () => {
         const state = get();
         set({
@@ -93,25 +97,28 @@ export const useTimerStore = create<TimerState>()(
           isStarting: false,
           countdown: 0,
           lastSyncTime: null,
+          currentSessionId: null,
         });
       },
       syncTimerState: () => {
         const state = get();
-        if (!state.isRunning || !state.timerStartTime) return;
+        // Solo necesitamos timerStartTime para calcular el tiempo transcurrido
+        if (!state.timerStartTime) return;
 
         const now = Date.now();
         const elapsedSinceStart = Math.floor((now - state.timerStartTime) / 1000);
-        
+
         if (state.mode === 'timer') {
           const initialSeconds = state.selectedDuration * 60;
           const remainingSeconds = Math.max(0, initialSeconds - elapsedSinceStart);
-          set({ 
+          set({
             timeInSeconds: remainingSeconds,
             isRunning: remainingSeconds > 0,
           });
         } else {
-          set({ 
-            chronometerTime: state.chronometerTime + elapsedSinceStart,
+          // Para cronómetro, calculamos desde el inicio (no acumulamos)
+          set({
+            chronometerTime: elapsedSinceStart,
           });
         }
       },
@@ -124,6 +131,10 @@ export const useTimerStore = create<TimerState>()(
         selectedDuration: state.selectedDuration,
         timeInSeconds: state.timeInSeconds,
         chronometerTime: state.chronometerTime,
+        // Persistir estado de sesión activa para recuperar después de refresh
+        isRunning: state.isRunning,
+        timerStartTime: state.timerStartTime,
+        currentSessionId: state.currentSessionId,
       }),
     }
   )

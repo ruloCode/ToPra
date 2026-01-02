@@ -37,6 +37,7 @@ export function FocusTimer({
     chronometerTime,
     isStarting,
     countdown,
+    timerStartTime,
     setMode,
     setIsRunning,
     setTimeInSeconds,
@@ -46,7 +47,8 @@ export function FocusTimer({
     setCountdown,
     resetTimer,
     syncTimerState,
-    setLastSyncTime
+    setLastSyncTime,
+    setTimerStartTime
   } = useTimerStore();
 
   const formatTime = useCallback((totalSeconds: number) => {
@@ -141,21 +143,25 @@ export function FocusTimer({
     return () => clearInterval(interval);
   }, [isStarting, countdown, mode, selectedDuration, setIsStarting, setIsRunning, setCountdown, onStart]);
 
-  // Efecto principal del timer
+  // Efecto principal del timer - usa timerStartTime del store para consistencia
   useEffect(() => {
     if (!isRunning) return;
 
-    const startTime = Date.now();
-    setLastSyncTime(startTime);
+    // Si no hay timerStartTime, establecerlo ahora (nuevo timer)
+    const effectiveStartTime = timerStartTime || Date.now();
+    if (!timerStartTime) {
+      setTimerStartTime(effectiveStartTime);
+    }
+    setLastSyncTime(Date.now());
 
     const interval = setInterval(() => {
       const now = Date.now();
-      const elapsed = Math.floor((now - startTime) / 1000);
+      const elapsed = Math.floor((now - effectiveStartTime) / 1000);
 
       if (mode === 'timer') {
         const remaining = Math.max(0, selectedDuration * 60 - elapsed);
         setTimeInSeconds(remaining);
-        
+
         if (remaining === 0) {
           setIsRunning(false);
           onComplete?.(selectedDuration * 60);
@@ -170,9 +176,11 @@ export function FocusTimer({
     isRunning,
     mode,
     selectedDuration,
+    timerStartTime,
     setTimeInSeconds,
     setChronometerTime,
     setLastSyncTime,
+    setTimerStartTime,
     setIsRunning,
     onComplete
   ]);

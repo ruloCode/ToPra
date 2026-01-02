@@ -95,25 +95,24 @@ export async function deleteTask(taskId: string) {
 // Subscribe to task changes for a user
 export function subscribeToTasks(
   userId: string,
-  callback: (payload: { 
-    event: string;
-    schema: string;
-    table: string;
-    old: Task | null;
+  callback: (payload: {
+    eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+    old: Partial<Task>;
     new: Task;
    }) => void
 ) {
   return supabase
-    .channel('tasks_channel')
+    .channel(`tasks_${userId}`)
     .on(
-      'system',
+      'postgres_changes' as 'system',
       {
         event: '*',
         schema: 'public',
         table: 'tasks',
         filter: `user_id=eq.${userId}`,
       },
-      callback
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      callback as any
     )
     .subscribe();
 }

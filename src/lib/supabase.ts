@@ -68,6 +68,15 @@ export type Database = {
           tags: string[];
         };
       };
+      tags: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          color: string;
+          created_at: string;
+        };
+      };
       focus_sessions: {
         Row: {
           id: string;

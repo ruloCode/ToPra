@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Task, getTasks } from '@/lib/tasks';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { Task, getTasks, subscribeToTasks } from '@/lib/tasks';
 import { useAuth } from '@/components/AuthProvider';
 
 interface TaskContextType {
@@ -19,7 +19,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const refreshTasks = useCallback(async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const allTasks = await getTasks({ userId: user.id });
@@ -29,6 +29,25 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
+  }, [user]);
+
+  // Real-time subscription for task changes
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = subscribeToTasks(user.id, (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setTasks(prev => [payload.new, ...prev]);
+      } else if (payload.eventType === 'UPDATE') {
+        setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new : t));
+      } else if (payload.eventType === 'DELETE') {
+        setTasks(prev => prev.filter(t => t.id !== payload.old.id));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [user]);
 
   return (

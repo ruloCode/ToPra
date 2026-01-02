@@ -50,6 +50,9 @@
     --priority-medium: #3B82F6;
     --priority-high: #F97316;
     --priority-urgent: #EF4444;
+
+    /* Border */
+    --border: #E5E7EB;
   }
 
   .dark {
@@ -88,6 +91,9 @@
     --priority-medium: #60A5FA;
     --priority-high: #FB923C;
     --priority-urgent: #F87171;
+
+    /* Border - Dark Theme */
+    --border: #374151;
   }
 
   body {
