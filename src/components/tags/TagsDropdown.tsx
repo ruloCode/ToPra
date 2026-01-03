@@ -127,7 +127,7 @@ export default function TagsDropdown({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Buscar o crear tag..."
-                  className="w-full px-2 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full px-2 py-1.5 text-sm rounded-md border-2 border-border/50 dark:border-white/20 bg-white dark:bg-white/10 text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
                 />
               </div>
 
