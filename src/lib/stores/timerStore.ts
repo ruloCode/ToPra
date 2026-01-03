@@ -30,6 +30,8 @@ interface TimerState {
   setCurrentSessionId: (id: string | null) => void;
   resetTimer: () => void;
   syncTimerState: () => void;
+  getFormattedTime: () => string;
+  getElapsedSeconds: () => number;
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -121,6 +123,42 @@ export const useTimerStore = create<TimerState>()(
             chronometerTime: elapsedSinceStart,
           });
         }
+      },
+      getElapsedSeconds: () => {
+        const state = get();
+        if (!state.isRunning || !state.timerStartTime) {
+          return state.mode === 'timer'
+            ? state.selectedDuration * 60 - state.timeInSeconds
+            : state.chronometerTime;
+        }
+        const now = Date.now();
+        return Math.floor((now - state.timerStartTime) / 1000);
+      },
+      getFormattedTime: () => {
+        const state = get();
+        let seconds: number;
+
+        if (state.mode === 'timer') {
+          if (state.isRunning && state.timerStartTime) {
+            const now = Date.now();
+            const elapsedSinceStart = Math.floor((now - state.timerStartTime) / 1000);
+            const initialSeconds = state.selectedDuration * 60;
+            seconds = Math.max(0, initialSeconds - elapsedSinceStart);
+          } else {
+            seconds = state.timeInSeconds;
+          }
+        } else {
+          if (state.isRunning && state.timerStartTime) {
+            const now = Date.now();
+            seconds = Math.floor((now - state.timerStartTime) / 1000);
+          } else {
+            seconds = state.chronometerTime;
+          }
+        }
+
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
       },
     }),
     {

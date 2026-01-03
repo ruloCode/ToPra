@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { TaskModalProvider } from "@/contexts/TaskModalContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { TagProvider } from "@/contexts/TagContext";
+import { FocusSessionProvider } from "@/contexts/FocusSessionContext";
 import { Toaster } from "@/components/ui/toaster";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
@@ -89,9 +90,10 @@ export default function RootLayout({
       <body className="h-full overflow-x-hidden">
         <ThemeProvider>
           <AuthProvider>
-            <TagProvider>
-              <TaskProvider>
-                <TaskModalProvider>
+            <FocusSessionProvider>
+              <TagProvider>
+                <TaskProvider>
+                  <TaskModalProvider>
                 <div className="flex min-h-screen pb-[64px] md:pb-0 relative overflow-x-hidden">
                   <Sidebar />
                   <div className="flex-1 overflow-auto">
@@ -103,9 +105,10 @@ export default function RootLayout({
                   <BottomNav />
                 </div>
                 <Toaster />
-              </TaskModalProvider>
-              </TaskProvider>
-            </TagProvider>
+                </TaskModalProvider>
+                </TaskProvider>
+              </TagProvider>
+            </FocusSessionProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

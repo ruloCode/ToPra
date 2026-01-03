@@ -12,12 +12,14 @@ import {
 import { useTaskModal } from '@/contexts/TaskModalContext';
 import { useTasks } from '@/contexts/TaskContext';
 import { useAuth } from '@/components/AuthProvider';
+import { useTimerStore } from '@/lib/stores/timerStore';
 
 export const BottomNav = () => {
   const pathname = usePathname();
   const { openCreateTaskModal } = useTaskModal();
   const { refreshTasks } = useTasks();
   const { user } = useAuth();
+  const isTimerRunning = useTimerStore((state) => state.isRunning);
 
   if (!user) return null;
 
@@ -72,13 +74,19 @@ export const BottomNav = () => {
       <div className="nav-group">
         {rightNav.map((item) => {
           const Icon = item.icon;
+          const isFocus = item.name === 'Focus';
           return (
             <Link
               key={item.name}
               href={item.href}
               className={`nav-link ${isActive(item.href) ? '!active' : ''}`}
             >
-              <Icon className="h-5 w-5" />
+              <div className="relative">
+                <Icon className="h-5 w-5" />
+                {isFocus && isTimerRunning && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-green-500 rounded-full animate-pulse border-2 border-background-default" />
+                )}
+              </div>
               <span className="text-xs">{item.name}</span>
             </Link>
           );

@@ -18,6 +18,7 @@ import {
   BarChart,
 } from 'lucide-react';
 import { useState } from 'react';
+import GlobalFocusTimer from '@/components/GlobalFocusTimer';
 
 export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -71,7 +72,10 @@ export default function Sidebar() {
             className={`h-10 ${expanded ? 'w-auto' : 'w-10'}`}
           />
         </div>
-        
+
+        {/* Global Focus Timer */}
+        <GlobalFocusTimer expanded={expanded} />
+
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
             <li>
