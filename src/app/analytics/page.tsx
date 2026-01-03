@@ -2,9 +2,15 @@
 
 import ProductivityDashboard from '@/components/analytics/ProductivityDashboard';
 import TaskAnalytics from '@/components/analytics/TaskAnalytics';
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 
 export default function AnalyticsPage() {
+  const [lastRefreshed, setLastRefreshed] = useState<string>('');
+
+  useEffect(() => {
+    setLastRefreshed(new Date().toLocaleString());
+  }, []);
+
   return (
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto md:max-w-[60vw]">
@@ -37,7 +43,7 @@ export default function AnalyticsPage() {
         </div>
 
         <footer className="mt-12 text-center text-sm text-muted-foreground">
-          <p>Data is updated in real-time. Last refreshed: {new Date().toLocaleString()}</p>
+          <p>Data is updated in real-time. Last refreshed: {lastRefreshed || '...'}</p>
         </footer>
       </div>
     </main>
