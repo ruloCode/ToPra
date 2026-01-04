@@ -77,9 +77,9 @@ export function ActivityTimeline({
       })),
     ];
 
-    // Sort by timestamp descending (most recent first)
+    // Sort by timestamp ascending (oldest first, most recent at bottom near input)
     return items.sort((a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
   }, [focusSessions, comments]);
 

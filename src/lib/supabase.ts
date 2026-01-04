@@ -100,6 +100,21 @@ export type Database = {
           updated_at: string;
         };
       };
+      subtasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          task_id: string;
+          title: string;
+          status: string;
+          priority: number;
+          position: number;
+          created_at: string;
+          updated_at: string;
+          completed_at: string | null;
+          ai_generated: boolean;
+        };
+      };
     };
   };
 }; 

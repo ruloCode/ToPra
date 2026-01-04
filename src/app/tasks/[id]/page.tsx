@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Fragment } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Task, TaskStatus, getTaskById, updateTask, deleteTask } from '@/lib/tasks';
 import { useAuth } from '@/components/AuthProvider';
@@ -12,6 +12,7 @@ import { useTags } from '@/contexts/TagContext';
 import { useToast } from '@/components/ui/use-toast';
 import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
 import { useComments } from '@/hooks/useComments';
+import { useSubtasks } from '@/hooks/useSubtasks';
 
 // Import new components
 import {
@@ -20,9 +21,11 @@ import {
   TaskTitle,
   TaskPropertiesGrid,
   TaskDescription,
+  SubtasksSection,
   TaskFocusSection,
   ActivitySidebar,
 } from '@/components/tasks/detail';
+import { AIAssistantPanel } from '@/components/ai';
 
 // Type for focus sessions with task info
 type FocusSessionWithTask = {
@@ -63,6 +66,9 @@ export default function TaskDetailPage() {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const isCreatingSession = useRef(false);
 
+  // AI state
+  const [showAI, setShowAI] = useState(false);
+
   // Comments hook
   const {
     comments,
@@ -70,6 +76,19 @@ export default function TaskDetailPage() {
     addComment,
     removeComment,
   } = useComments(id as string, user?.id);
+
+  // Subtasks hook
+  const {
+    subtasks,
+    isLoading: isLoadingSubtasks,
+    addSubtask,
+    addSubtasksFromAI,
+    updateSubtaskItem,
+    removeSubtask,
+    toggleStatus: toggleSubtaskStatus,
+    completedCount,
+    totalCount,
+  } = useSubtasks(id as string, user?.id);
 
   // Fetch task
   const fetchTask = useCallback(async () => {
@@ -516,6 +535,7 @@ export default function TaskDetailPage() {
   }
 
   return (
+    <>
     <TaskDetailLayout
       mainContent={
         <div className="space-y-6">
@@ -524,8 +544,10 @@ export default function TaskDetailPage() {
             taskTitle={task.title}
             taskStatus={task.status}
             showFocusTimer={showFocusTimer}
+            showAI={showAI}
             isUpdating={isUpdating}
             onToggleTimer={() => setShowFocusTimer(!showFocusTimer)}
+            onToggleAI={() => setShowAI(!showAI)}
             onStatusToggle={handleStatusToggle}
             onDelete={handleDelete}
           />
@@ -557,6 +579,19 @@ export default function TaskDetailPage() {
             isLoading={isUpdating}
           />
 
+          <SubtasksSection
+            task={task}
+            subtasks={subtasks}
+            isLoading={isLoadingSubtasks}
+            completedCount={completedCount}
+            totalCount={totalCount}
+            onAddSubtask={addSubtask}
+            onAddFromAI={addSubtasksFromAI}
+            onToggleStatus={toggleSubtaskStatus}
+            onUpdateSubtask={updateSubtaskItem}
+            onDeleteSubtask={removeSubtask}
+          />
+
           <TaskFocusSection
             isOpen={showFocusTimer}
             onToggle={() => setShowFocusTimer(!showFocusTimer)}
@@ -579,5 +614,22 @@ export default function TaskDetailPage() {
         />
       }
     />
+
+    {/* AI Assistant Panel */}
+    <AIAssistantPanel
+      task={task}
+      isOpen={showAI}
+      onClose={() => setShowAI(false)}
+      onApplySuggestions={async (suggestions) => {
+        if (suggestions.priority) {
+          await handlePriorityChange(suggestions.priority);
+        }
+        if (suggestions.tags && suggestions.tags.length > 0) {
+          const newTags = [...new Set([...(task.tags || []), ...suggestions.tags])];
+          await handleTagsChange(newTags);
+        }
+      }}
+    />
+  </>
   );
 }

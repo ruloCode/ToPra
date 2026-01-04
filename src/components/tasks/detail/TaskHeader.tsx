@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, TimerIcon, MoreHorizontal, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { ChevronLeft, TimerIcon, MoreHorizontal, CheckCircle2, Circle, Trash2, Sparkles } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +15,10 @@ interface TaskHeaderProps {
   taskTitle: string;
   taskStatus: string;
   showFocusTimer: boolean;
+  showAI?: boolean;
   isUpdating: boolean;
   onToggleTimer: () => void;
+  onToggleAI?: () => void;
   onStatusToggle: () => void;
   onDelete: () => void;
 }
@@ -26,8 +28,10 @@ export function TaskHeader({
   taskTitle,
   taskStatus,
   showFocusTimer,
+  showAI,
   isUpdating,
   onToggleTimer,
+  onToggleAI,
   onStatusToggle,
   onDelete,
 }: TaskHeaderProps) {
@@ -61,6 +65,24 @@ export function TaskHeader({
         >
           <span className="font-mono">{taskId.slice(0, 8)}</span>
         </button>
+
+        {/* AI Assistant Toggle */}
+        {onToggleAI && (
+          <button
+            type="button"
+            onClick={onToggleAI}
+            className={cn(
+              "p-2 rounded-md transition-colors flex items-center gap-1.5",
+              showAI
+                ? "bg-purple-500 text-white"
+                : "hover:bg-secondary text-muted-foreground hover:text-foreground"
+            )}
+            title={showAI ? 'Cerrar AI' : 'Ask AI'}
+          >
+            <Sparkles className="h-5 w-5" />
+            <span className="text-sm font-medium hidden sm:inline">Ask AI</span>
+          </button>
+        )}
 
         {/* Timer Toggle */}
         <button

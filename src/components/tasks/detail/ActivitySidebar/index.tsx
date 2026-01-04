@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Clock } from 'lucide-react';
 import { ActivityTimeline } from './ActivityTimeline';
 import { CommentForm } from './CommentForm';
@@ -44,6 +44,17 @@ export function ActivitySidebar({
   isLoadingComments,
 }: ActivitySidebarProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new comments are added
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [comments.length]);
 
   const handleSubmitComment = async (content: string) => {
     setIsSubmitting(true);
@@ -67,14 +78,6 @@ export function ActivitySidebar({
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Comment Form - Fixed at top */}
-      <div className="flex-shrink-0 border-b border-border p-4 bg-card/80 backdrop-blur-sm">
-        <CommentForm
-          onSubmit={handleSubmitComment}
-          isLoading={isSubmitting}
-        />
-      </div>
-
       {/* Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-card/50">
         <h2 className="text-base font-semibold text-foreground">Historial</h2>
@@ -91,13 +94,21 @@ export function ActivitySidebar({
       </div>
 
       {/* Timeline - Scrollable */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <ActivityTimeline
           focusSessions={focusSessions}
           comments={comments}
           onDeleteComment={onDeleteComment}
           isLoadingSessions={isLoadingSessions}
           isLoadingComments={isLoadingComments}
+        />
+      </div>
+
+      {/* Comment Form - Fixed at bottom */}
+      <div className="flex-shrink-0 border-t border-border p-4 bg-card/80 backdrop-blur-sm">
+        <CommentForm
+          onSubmit={handleSubmitComment}
+          isLoading={isSubmitting}
         />
       </div>
     </div>
