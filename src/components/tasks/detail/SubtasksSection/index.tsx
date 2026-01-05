@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Subtask, SubtaskSuggestion } from '@/types/subtasks';
 import { SubtasksList } from './SubtasksList';
 import { SubtaskInput } from './SubtaskInput';
-import { AISuggestionsModal } from './AISuggestionsModal';
+import { AISuggestionsInline } from './AISuggestionsInline';
 import { SubtasksProgress } from './SubtasksProgress';
 
 interface Task {
@@ -45,7 +45,7 @@ export function SubtasksSection({
 }: SubtasksSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiSuggestions, setAISuggestions] = useState<SubtaskSuggestion[]>([]);
 
@@ -75,7 +75,7 @@ export function SubtasksSection({
         selected: true,
       }));
       setAISuggestions(suggestions);
-      setShowAIModal(true);
+      setShowAISuggestions(true);
     } catch (error) {
       console.error('Error generating AI subtasks:', error);
     } finally {
@@ -85,7 +85,12 @@ export function SubtasksSection({
 
   const handleApplyAISuggestions = async (suggestions: SubtaskSuggestion[]) => {
     await onAddFromAI(suggestions);
-    setShowAIModal(false);
+    setShowAISuggestions(false);
+    setAISuggestions([]);
+  };
+
+  const handleCloseAISuggestions = () => {
+    setShowAISuggestions(false);
     setAISuggestions([]);
   };
 
@@ -164,6 +169,20 @@ export function SubtasksSection({
             />
           )}
 
+          {/* AI Suggestions inline */}
+          {showAISuggestions && aiSuggestions.length > 0 && (
+            <AISuggestionsInline
+              suggestions={aiSuggestions}
+              onClose={handleCloseAISuggestions}
+              onApply={handleApplyAISuggestions}
+              onUpdateSuggestion={(index, updates) => {
+                setAISuggestions((prev) =>
+                  prev.map((s, i) => (i === index ? { ...s, ...updates } : s))
+                );
+              }}
+            />
+          )}
+
           {/* Subtasks list */}
           {isLoading ? (
             <div className="py-4 text-center text-muted-foreground">
@@ -187,18 +206,6 @@ export function SubtasksSection({
         </div>
       )}
 
-      {/* AI Suggestions Modal */}
-      <AISuggestionsModal
-        isOpen={showAIModal}
-        suggestions={aiSuggestions}
-        onClose={() => setShowAIModal(false)}
-        onApply={handleApplyAISuggestions}
-        onUpdateSuggestion={(index, updates) => {
-          setAISuggestions((prev) =>
-            prev.map((s, i) => (i === index ? { ...s, ...updates } : s))
-          );
-        }}
-      />
     </div>
   );
 }

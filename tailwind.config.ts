@@ -15,6 +15,15 @@ const config: Config = {
       },
     },
     extend: {
+      animation: {
+        'toast-progress': 'toast-progress linear forwards',
+      },
+      keyframes: {
+        'toast-progress': {
+          from: { transform: 'scaleX(1)' },
+          to: { transform: 'scaleX(0)' },
+        },
+      },
       colors: {
         primary: {
           main: 'var(--primary-main)',

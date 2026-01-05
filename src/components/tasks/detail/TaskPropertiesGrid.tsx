@@ -248,8 +248,9 @@ export function TaskPropertiesGrid({
           <input
             ref={dateInputRef}
             type="date"
-            value={dueDate || ''}
+            value={dueDate ? dueDate.split('T')[0] : ''}
             onChange={(e) => onDueDateChange(e.target.value || null)}
+            onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
             className="absolute inset-0 opacity-0 cursor-pointer"
           />
         </div>

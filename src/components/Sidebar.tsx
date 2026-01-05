@@ -39,7 +39,7 @@ export default function Sidebar() {
   ];
 
   const secondaryNavigation = [
-    { name: 'Configuración', href: '/settings', icon: Settings },
+    { name: 'Ajustes', href: '/settings', icon: Settings },
   ];
 
   // Update main content margin when sidebar state changes
@@ -99,13 +99,13 @@ export default function Sidebar() {
             </li>
 
             <li>
-              <button 
+              <button
                 onClick={() => openCreateTaskModal()}
                 className="nav-link w-full hover:bg-accent/10"
-                title={!expanded ? 'Agregar tarea' : undefined}
+                title={!expanded ? 'Agregar' : undefined}
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
-                <span className="nav-text">Agregar tarea</span>
+                <span className="nav-text">Agregar</span>
               </button>
             </li>
 
@@ -135,10 +135,10 @@ export default function Sidebar() {
                 <button
                   onClick={() => signOut()}
                   className="nav-link w-full text-left hover:text-red-500"
-                  title={!expanded ? 'Cerrar sesión' : undefined}
+                  title={!expanded ? 'Salir' : undefined}
                 >
                   <LogOut className="h-5 w-5 flex-shrink-0" />
-                  <span className="nav-text">Cerrar sesión</span>
+                  <span className="nav-text">Salir</span>
                 </button>
               </div>
             </li>

@@ -110,6 +110,29 @@ const ToastDescription = React.forwardRef<
 ))
 ToastDescription.displayName = ToastPrimitives.Description.displayName
 
+const ToastProgress = React.forwardRef<
+  HTMLDivElement,
+  { duration: number; variant?: "default" | "destructive" | null }
+>(({ duration, variant }, ref) => (
+  <div
+    ref={ref}
+    className="absolute bottom-0 left-0 h-1 w-full overflow-hidden rounded-b-md"
+  >
+    <div
+      className={cn(
+        "h-full w-full origin-left animate-toast-progress",
+        variant === "destructive"
+          ? "bg-red-200"
+          : "bg-primary-main"
+      )}
+      style={{
+        animationDuration: `${duration}ms`,
+      }}
+    />
+  </div>
+))
+ToastProgress.displayName = "ToastProgress"
+
 type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
@@ -124,4 +147,5 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
+  ToastProgress,
 }

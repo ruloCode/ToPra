@@ -185,17 +185,15 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
               </>
             )}
 
-            <button
-              onClick={handlePause}
-              className={`
-                p-1 rounded-md bg-red-500/20 hover:bg-red-500/30
-                transition-colors
-                ${expanded ? 'ml-auto' : ''}
-              `}
-              title="Pausar temporizador"
-            >
-              <Pause className="h-3.5 w-3.5 text-red-500" />
-            </button>
+{expanded && (
+              <button
+                onClick={handlePause}
+                className="p-1 rounded-md bg-red-500/20 hover:bg-red-500/30 transition-colors ml-auto"
+                title="Pausar temporizador"
+              >
+                <Pause className="h-3.5 w-3.5 text-red-500" />
+              </button>
+            )}
           </button>
         </DropdownMenuTrigger>
 

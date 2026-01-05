@@ -15,6 +15,9 @@ interface TimerState {
   timerStartTime: number | null;
   lastSyncTime: number | null;
   currentSessionId: string | null; // ID de la sesión activa en Supabase
+  activeTaskId: string | null; // ID de la tarea activa
+  activeTaskName: string | null; // Nombre de la tarea activa
+  dailyGoalMinutes: number; // Meta diaria en minutos
 
   // Actions
   setMode: (mode: TimerMode) => void;
@@ -28,6 +31,9 @@ interface TimerState {
   setTimerStartTime: (time: number | null) => void;
   setLastSyncTime: (time: number | null) => void;
   setCurrentSessionId: (id: string | null) => void;
+  setActiveTaskName: (name: string | null) => void;
+  setActiveTask: (id: string, name: string) => void;
+  clearActiveTask: () => void;
   resetTimer: () => void;
   syncTimerState: () => void;
   getFormattedTime: () => string;
@@ -48,6 +54,9 @@ export const useTimerStore = create<TimerState>()(
       timerStartTime: null,
       lastSyncTime: null,
       currentSessionId: null,
+      activeTaskId: null,
+      activeTaskName: null,
+      dailyGoalMinutes: 120, // 2 horas por defecto
 
       setMode: (mode) => set({ mode }),
       setIsRunning: (isRunning) => {
@@ -88,6 +97,9 @@ export const useTimerStore = create<TimerState>()(
       setTimerStartTime: (timerStartTime) => set({ timerStartTime }),
       setLastSyncTime: (lastSyncTime) => set({ lastSyncTime }),
       setCurrentSessionId: (currentSessionId) => set({ currentSessionId }),
+      setActiveTaskName: (activeTaskName) => set({ activeTaskName }),
+      setActiveTask: (activeTaskId, activeTaskName) => set({ activeTaskId, activeTaskName }),
+      clearActiveTask: () => set({ activeTaskId: null, activeTaskName: null }),
       resetTimer: () => {
         const state = get();
         set({
@@ -100,6 +112,8 @@ export const useTimerStore = create<TimerState>()(
           countdown: 0,
           lastSyncTime: null,
           currentSessionId: null,
+          activeTaskId: null,
+          activeTaskName: null,
         });
       },
       syncTimerState: () => {
@@ -173,6 +187,8 @@ export const useTimerStore = create<TimerState>()(
         isRunning: state.isRunning,
         timerStartTime: state.timerStartTime,
         currentSessionId: state.currentSessionId,
+        activeTaskId: state.activeTaskId,
+        activeTaskName: state.activeTaskName,
       }),
     }
   )
