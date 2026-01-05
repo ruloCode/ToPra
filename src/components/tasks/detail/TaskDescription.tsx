@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Edit2Icon, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -12,14 +12,26 @@ interface TaskDescriptionProps {
   isLoading?: boolean;
 }
 
+const MAX_COLLAPSED_HEIGHT = 200; // px
+
 export function TaskDescription({ description, onSave, isLoading = false }: TaskDescriptionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [descriptionInput, setDescriptionInput] = useState(description || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDescriptionInput(description || '');
+  }, [description]);
+
+  // Measure content height to determine if truncation is needed
+  useEffect(() => {
+    if (contentRef.current) {
+      const contentHeight = contentRef.current.scrollHeight;
+      setNeedsTruncation(contentHeight > MAX_COLLAPSED_HEIGHT);
+    }
   }, [description]);
 
   const handleSave = async () => {
@@ -38,9 +50,6 @@ export function TaskDescription({ description, onSave, isLoading = false }: Task
     setIsEditing(false);
     setDescriptionInput(description || '');
   };
-
-  // Check if description is long enough to need expansion
-  const isLongDescription = description && description.length > 500;
 
   if (isEditing) {
     return (
@@ -94,6 +103,7 @@ export function TaskDescription({ description, onSave, isLoading = false }: Task
       {description ? (
         <div className="relative">
           <div
+            ref={contentRef}
             className={cn(
               "prose prose-sm dark:prose-invert max-w-none",
               "prose-headings:text-foreground prose-p:text-foreground/80",
@@ -102,7 +112,10 @@ export function TaskDescription({ description, onSave, isLoading = false }: Task
               "prose-pre:bg-muted prose-pre:border prose-pre:border-border",
               "prose-ul:text-foreground/80 prose-ol:text-foreground/80",
               "prose-li:marker:text-muted-foreground",
-              !isExpanded && isLongDescription && "max-h-[300px] overflow-hidden"
+              "transition-all duration-300 ease-in-out overflow-hidden",
+              !isExpanded && needsTruncation
+                ? "max-h-[200px]"
+                : "max-h-[5000px]"
             )}
           >
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -110,29 +123,44 @@ export function TaskDescription({ description, onSave, isLoading = false }: Task
             </ReactMarkdown>
           </div>
 
-          {isLongDescription && (
-            <>
-              {!isExpanded && (
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
+          {/* Gradient overlay */}
+          <div
+            className={cn(
+              "absolute bottom-0 left-0 right-0 h-16",
+              "bg-gradient-to-t from-background via-background/80 to-transparent",
+              "pointer-events-none transition-opacity duration-300",
+              !isExpanded && needsTruncation ? "opacity-100" : "opacity-0"
+            )}
+          />
+
+          {/* Show more/less button */}
+          {needsTruncation && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              aria-expanded={isExpanded}
+              className={cn(
+                "flex items-center justify-center gap-2 w-full",
+                "px-3 py-2 mt-3 rounded-md",
+                "text-sm font-medium text-muted-foreground",
+                "bg-secondary/30 hover:bg-secondary/50",
+                "border border-border/50",
+                "transition-all duration-200",
+                "hover:text-foreground"
               )}
-              <button
-                type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-1 text-sm text-accent hover:text-accent/80 mt-2"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="h-4 w-4" />
-                    Ver menos
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-4 w-4" />
-                    Ver mas
-                  </>
-                )}
-              </button>
-            </>
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  <span>Ver menos</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  <span>Ver mas</span>
+                </>
+              )}
+            </button>
           )}
         </div>
       ) : (
