@@ -17,11 +17,11 @@ interface TooltipData {
 const getStatusText = (status: string): string => {
   switch (status) {
     case 'completed':
-      return 'Completed';
+      return 'Completada';
     case 'interrupted':
-      return 'Interrupted';
+      return 'Interrumpida';
     case 'active':
-      return 'In Progress';
+      return 'En progreso';
     default:
       return status;
   }
@@ -54,13 +54,13 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
     return (
       <div className="p-3 bg-background border shadow-lg rounded-lg relative z-50">
         <div className="absolute inset-0 bg-popover/20 rounded-lg -z-10" />
-        <p className="text-sm font-medium text-foreground">Time: {label}</p>
+        <p className="text-sm font-medium text-foreground">Hora: {label}</p>
         <p className="text-sm text-muted-foreground">
-          Duration: {payload[0]?.value} minutes
+          Duración: {payload[0]?.value} minutos
         </p>
         {tasks.length > 0 && (
           <div className="text-sm text-muted-foreground mt-1.5">
-            <p className="font-medium text-foreground">Tasks:</p>
+            <p className="font-medium text-foreground">Tareas:</p>
             <ul className="list-disc list-inside mt-0.5 space-y-0.5">
               {tasks.map((task) => (
                 <li key={task.id} className="truncate max-w-[200px]">
@@ -71,7 +71,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
           </div>
         )}
         <p className={`text-sm mt-1.5 font-medium ${statusColors[status] || ''}`}>
-          Status: {getStatusText(status)}
+          Estado: {getStatusText(status)}
         </p>
       </div>
     );
@@ -127,15 +127,15 @@ export function DailyFocusTimeline({ sessions }: DailyFocusTimelineProps) {
   if (groupedData.length === 0) {
     return (
       <div className="w-full h-[200px] mt-4 flex flex-col items-center justify-center bg-card rounded-lg border">
-        <h3 className="text-lg font-semibold mb-2">Time Distribution</h3>
-        <p className="text-muted-foreground">No sessions to display</p>
+        <h3 className="text-lg font-semibold mb-2">Distribución de tiempo</h3>
+        <p className="text-muted-foreground">No hay sesiones para mostrar</p>
       </div>
     );
   }
 
   return (
     <div className="w-full p-4 mt-4 bg-card rounded-lg border">
-      <h3 className="text-lg font-semibold mb-4">Time Distribution</h3>
+      <h3 className="text-lg font-semibold mb-4">Distribución de tiempo</h3>
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
@@ -159,7 +159,7 @@ export function DailyFocusTimeline({ sessions }: DailyFocusTimelineProps) {
             />
             <YAxis
               label={{ 
-                value: 'Minutes', 
+                value: 'Minutos', 
                 angle: -90, 
                 position: 'insideLeft',
                 style: { 
@@ -179,7 +179,7 @@ export function DailyFocusTimeline({ sessions }: DailyFocusTimelineProps) {
             />
             <Bar
               dataKey="duration"
-              name="Duration"
+              name="Duración"
               radius={[4, 4, 0, 0]}
               className="transition-all duration-200 hover:opacity-90"
             >

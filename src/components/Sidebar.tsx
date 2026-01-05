@@ -32,14 +32,14 @@ export default function Sidebar() {
   const isActive = (path: string) => pathname === path;
 
   const navigation = [
-    { name: 'Today', href: '/', icon: Home },
-    { name: 'Tasks', href: '/tasks', icon: ListTodo },
-    { name: 'Focus', href: '/focus', icon: Target },
-    { name: 'Analytics', href: '/analytics', icon: BarChart },
+    { name: 'Hoy', href: '/', icon: Home },
+    { name: 'Tareas', href: '/tasks', icon: ListTodo },
+    { name: 'Enfoque', href: '/focus', icon: Target },
+    { name: 'Estadísticas', href: '/analytics', icon: BarChart },
   ];
 
   const secondaryNavigation = [
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Configuración', href: '/settings', icon: Settings },
   ];
 
   // Update main content margin when sidebar state changes
@@ -57,7 +57,7 @@ export default function Sidebar() {
       <button
         onClick={toggleSidebar}
         className="sidebar-toggle bg-white dark:bg-zinc-900 dark:text-white dark:border-[#28282F]"
-        aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+        aria-label={expanded ? "Contraer barra lateral" : "Expandir barra lateral"}
       >
         {expanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
@@ -102,10 +102,10 @@ export default function Sidebar() {
               <button 
                 onClick={() => openCreateTaskModal()}
                 className="nav-link w-full hover:bg-accent/10"
-                title={!expanded ? 'Add Task' : undefined}
+                title={!expanded ? 'Agregar tarea' : undefined}
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
-                <span className="nav-text">Add Task</span>
+                <span className="nav-text">Agregar tarea</span>
               </button>
             </li>
 
@@ -135,10 +135,10 @@ export default function Sidebar() {
                 <button
                   onClick={() => signOut()}
                   className="nav-link w-full text-left hover:text-red-500"
-                  title={!expanded ? 'Log out' : undefined}
+                  title={!expanded ? 'Cerrar sesión' : undefined}
                 >
                   <LogOut className="h-5 w-5 flex-shrink-0" />
-                  <span className="nav-text">Log out</span>
+                  <span className="nav-text">Cerrar sesión</span>
                 </button>
               </div>
             </li>

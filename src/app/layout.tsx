@@ -43,7 +43,7 @@ const inter = localFont({
 
 export const metadata: Metadata = {
   title: "To-Pra",
-  description: "Task management and productivity app",
+  description: "Aplicación de gestión de tareas y productividad",
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -66,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`h-full overflow-x-hidden ${inter.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`h-full overflow-x-hidden ${inter.variable}`} suppressHydrationWarning>
       <head>
         {GA_TRACKING_ID && (
           <>

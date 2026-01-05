@@ -21,7 +21,7 @@ export default function TaskList({
   onUpdate,
   onDelete,
   onEdit,
-  emptyMessage = "No tasks found",
+  emptyMessage = "No se encontraron tareas",
 }: TaskListProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [sortBy, setSortBy] = useState<"priority" | "dueDate">("priority");
@@ -117,7 +117,7 @@ export default function TaskList({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search tasks..."
+            placeholder="Buscar tareas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 w-full border-border dark:border-[#28282F]"
@@ -126,7 +126,7 @@ export default function TaskList({
         
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-sm font-medium text-text-secondary">
-            {sortedTasks.length} {sortedTasks.length === 1 ? "task" : "tasks"}
+            {sortedTasks.length} {sortedTasks.length === 1 ? "tarea" : "tareas"}
             {selectedTag && <span className="ml-1">con etiqueta &quot;{selectedTag}&quot;</span>}
             {searchQuery && <span className="ml-1">coinciden con &quot;{searchQuery}&quot;</span>}
           </h2>
@@ -138,7 +138,7 @@ export default function TaskList({
                   onClick={() => setIsTagDropdownOpen(!isTagDropdownOpen)}
                 >
                   <span className="truncate">
-                    {selectedTag || "All tags"}
+                    {selectedTag || "Todas las etiquetas"}
                   </span>
                   {selectedTag && (
                     <button
@@ -157,7 +157,7 @@ export default function TaskList({
                     <div className="p-2 bg-background">
                       <Input
                         type="text"
-                        placeholder="Search tag..."
+                        placeholder="Buscar etiqueta..."
                         value={tagSearchQuery}
                         onChange={(e) => setTagSearchQuery(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -173,7 +173,7 @@ export default function TaskList({
                           setTagSearchQuery("");
                         }}
                       >
-                        All tags
+                        Todas las etiquetas
                       </div>
 
                       {filteredTags.map(tag => (
@@ -200,8 +200,8 @@ export default function TaskList({
               onChange={(e) => setSortBy(e.target.value as "priority" | "dueDate")}
               className="w-full sm:w-auto rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground dark:bg-zinc-900 dark:text-white dark:border-[#28282F] [&>option]:dark:bg-zinc-900 [&>option]:bg-white"
             >
-              <option value="priority">Sort by priority</option>
-              <option value="dueDate">Sort by due date</option>
+              <option value="priority">Ordenar por prioridad</option>
+              <option value="dueDate">Ordenar por fecha</option>
             </select>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function TaskList({
         {editingTask && (
           <div className="mb-8 rounded-lg border bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-medium text-gray-900">
-              Edit Task
+              Editar tarea
             </h2>
             <CreateTaskForm
               initialTask={editingTask}

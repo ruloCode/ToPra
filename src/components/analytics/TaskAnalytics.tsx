@@ -52,10 +52,10 @@ export default function TaskAnalytics() {
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
-        <h3 className="text-lg font-semibold text-foreground">Task Overview</h3>
+        <h3 className="text-lg font-semibold text-foreground">Resumen de tareas</h3>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="animate-in slide-in-from-left duration-500">
-            <p className="text-sm text-muted-foreground">Completion Rate</p>
+            <p className="text-sm text-muted-foreground">Tasa de completitud</p>
             <p className="text-2xl font-bold text-foreground">{Math.round(metrics.completionRate * 100)}%</p>
             <Progress 
               value={metrics.completionRate * 100} 
@@ -66,7 +66,7 @@ export default function TaskAnalytics() {
             />
           </div>
           <div className="animate-in slide-in-from-right duration-500">
-            <p className="text-sm text-muted-foreground">Tasks Completed</p>
+            <p className="text-sm text-muted-foreground">Tareas completadas</p>
             <p className="text-2xl font-bold text-foreground">{metrics.completedTasks}/{metrics.totalTasks}</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function TaskAnalytics() {
 
       {labelData.length > 0 && (
         <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Task Labels Distribution</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Distribución de etiquetas</h3>
           <div className="w-full h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -97,7 +97,7 @@ export default function TaskAnalytics() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value, name) => [`${value} tasks`, name]} 
+                  formatter={(value, name) => [`${value} tareas`, name]} 
                   contentStyle={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     border: '1px solid #ccc',

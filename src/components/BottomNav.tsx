@@ -24,10 +24,10 @@ export const BottomNav = () => {
   if (!user) return null;
 
   const navigation = [
-    { name: 'Today', href: '/', icon: Home },
-    { name: 'Tasks', href: '/tasks', icon: ListTodo },
-    { name: 'Focus', href: '/focus', icon: Target },
-    { name: 'Analytics', href: '/analytics', icon: BarChart },
+    { name: 'Hoy', href: '/', icon: Home },
+    { name: 'Tareas', href: '/tasks', icon: ListTodo },
+    { name: 'Enfoque', href: '/focus', icon: Target },
+    { name: 'Estadísticas', href: '/analytics', icon: BarChart },
   ];
 
   const leftNav = navigation.slice(0, 2);
@@ -65,7 +65,7 @@ export const BottomNav = () => {
         <button 
           onClick={handleAddTask}
           className="fab"
-          aria-label="Add new task"
+          aria-label="Agregar nueva tarea"
         >
           <Plus className="h-6 w-6" />
         </button>

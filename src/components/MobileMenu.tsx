@@ -31,12 +31,12 @@ export function MobileMenu() {
           <DropdownMenuItem asChild className="dark:hover:bg-accent/10">
             <Link href="/settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              <span>Settings</span>
+              <span>Configuración</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 dark:hover:bg-accent/10">
             <LogOut className="h-4 w-4" />
-            <span>Logout</span>
+            <span>Cerrar sesión</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

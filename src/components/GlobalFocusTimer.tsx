@@ -141,7 +141,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
+    return new Date(dateString).toLocaleTimeString('es-ES', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
@@ -165,7 +165,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
               transition-colors cursor-pointer
               ${expanded ? 'justify-start' : 'justify-center'}
             `}
-            title={!expanded ? `Focus: ${displayTime}` : undefined}
+            title={!expanded ? `Enfoque: ${displayTime}` : undefined}
           >
             <div className="relative">
               <Timer className="h-5 w-5 text-primary-main flex-shrink-0" />
@@ -192,7 +192,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
                 transition-colors
                 ${expanded ? 'ml-auto' : ''}
               `}
-              title="Pause timer"
+              title="Pausar temporizador"
             >
               <Pause className="h-3.5 w-3.5 text-red-500" />
             </button>
@@ -209,10 +209,10 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
           <div className="flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-text-secondary" />
-              <span className="text-sm font-medium">Focus Time</span>
+              <span className="text-sm font-medium">Tiempo de enfoque</span>
             </div>
             <span className="text-xs text-text-secondary">
-              Today: {formatDuration(totalTodayMinutes)}
+              Hoy: {formatDuration(totalTodayMinutes)}
             </span>
           </div>
 
@@ -229,7 +229,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
                 className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/20 hover:bg-red-500/30 transition-colors"
               >
                 <Pause className="h-3.5 w-3.5 text-red-500" />
-                <span className="text-xs text-red-500 font-medium">Pause</span>
+                <span className="text-xs text-red-500 font-medium">Pausar</span>
               </button>
             </div>
             {currentTaskName && (
@@ -238,7 +238,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
               </p>
             )}
             <p className="text-xs text-text-secondary mt-1">
-              Started at {formatTime(activeSession.start_time)}
+              Iniciado a las {formatTime(activeSession.start_time)}
             </p>
           </div>
           <DropdownMenuSeparator />
@@ -247,7 +247,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
           {todaySessions.length > 0 && (
             <>
               <DropdownMenuLabel className="text-xs text-text-secondary">
-                Today&apos;s Sessions
+                Sesiones de hoy
               </DropdownMenuLabel>
               <div className="max-h-48 overflow-y-auto">
                 {todaySessions
@@ -259,7 +259,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
                       className="flex items-center justify-between cursor-pointer"
                     >
                       <span className="text-sm truncate max-w-[180px]">
-                        {session.task?.title || 'No task'}
+                        {session.task?.title || 'Sin tarea'}
                       </span>
                       <span className="text-xs text-text-secondary">
                         {formatDuration(session.duration || 0)}
@@ -277,7 +277,7 @@ export default function GlobalFocusTimer({ expanded = true }: GlobalFocusTimerPr
               href="/focus"
               className="flex items-center justify-between cursor-pointer"
             >
-              <span className="text-sm font-medium">Go to Focus</span>
+              <span className="text-sm font-medium">Ir a Enfoque</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </DropdownMenuItem>

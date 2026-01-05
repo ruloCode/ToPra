@@ -46,7 +46,7 @@ export function TaskSearch({ onTaskSelect, selectedTask }: TaskSearchProps) {
       <div className="w-full relative">
         <Input
           type="text"
-          placeholder="Search tasks..."
+          placeholder="Buscar tareas..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-3 py-2 text-sm sm:text-base rounded-md border border-input bg-background"

@@ -44,14 +44,14 @@ export function FocusMode({
         await updateSessionTask(task?.id || null);
         setSelectedTask(task);
         toast({
-          title: task ? "Task updated" : "Task removed",
-          description: task ? "A new task has been linked to the session" : "The task has been unlinked from the session",
+          title: task ? "Tarea actualizada" : "Tarea eliminada",
+          description: task ? "Se ha vinculado una nueva tarea a la sesión" : "Se ha desvinculado la tarea de la sesión",
         });
       } catch (error) {
         console.error('Error updating session task:', error);
         toast({
           title: "Error",
-          description: "Could not update the session task",
+          description: "No se pudo actualizar la tarea de la sesión",
           variant: "destructive",
         });
       }
@@ -69,14 +69,14 @@ export function FocusMode({
       await historyRef.current?.reloadSessions();
 
       toast({
-        title: "Well done!",
-        description: `You have completed a ${elapsedMinutes}-minute session.`,
+        title: "¡Bien hecho!",
+        description: `Has completado una sesión de ${elapsedMinutes} minutos.`,
       });
     } catch (error) {
       console.error('Error finishing session:', error);
       toast({
         title: "Error",
-        description: "Could not save the session.",
+        description: "No se pudo guardar la sesión.",
         variant: "destructive",
       });
     }
@@ -91,14 +91,14 @@ export function FocusMode({
       await interruptSession();
       await historyRef.current?.reloadSessions();
       toast({
-        title: "Session interrupted",
-        description: `You completed ${durationInMinutes} minutes of focus.`,
+        title: "Sesión interrumpida",
+        description: `Completaste ${durationInMinutes} minutos de enfoque.`,
       });
     } catch (error) {
       console.error('Error interrupting session:', error);
       toast({
         title: "Error",
-        description: "Could not interrupt the session properly.",
+        description: "No se pudo interrumpir la sesión correctamente.",
         variant: "destructive",
       });
     }
@@ -113,13 +113,13 @@ export function FocusMode({
       await completeSession();
       await historyRef.current?.reloadSessions();
       toast({
-        title: "Congratulations!",
-        description: `You have completed ${durationInMinutes} minutes of focus.`,
+        title: "¡Felicidades!",
+        description: `Has completado ${durationInMinutes} minutos de enfoque.`,
       });
     } catch {
       toast({
         title: "Error",
-        description: "Could not complete the session properly.",
+        description: "No se pudo completar la sesión correctamente.",
         variant: "destructive",
       });
     }
@@ -130,7 +130,7 @@ export function FocusMode({
     if (!user) {
       toast({
         title: "Error",
-        description: "You must be logged in to record your focus time.",
+        description: "Debes iniciar sesión para registrar tu tiempo de enfoque.",
         variant: "destructive",
       });
       return;
@@ -149,16 +149,16 @@ export function FocusMode({
       await historyRef.current?.reloadSessions();
 
       toast({
-        title: "Session started",
+        title: "Sesión iniciada",
         description: mode === 'timer'
-          ? "Your scheduled focus session has started."
-          : "Your free focus session has started.",
+          ? "Tu sesión de enfoque programada ha comenzado."
+          : "Tu sesión de enfoque libre ha comenzado.",
       });
     } catch (error) {
       console.error('Error creating session:', error);
       toast({
         title: "Error",
-        description: "Could not start the focus session.",
+        description: "No se pudo iniciar la sesión de enfoque.",
         variant: "destructive",
       });
     }
@@ -182,7 +182,7 @@ export function FocusMode({
     } catch {
       toast({
         title: 'Error',
-        description: 'Could not activate fullscreen mode',
+        description: 'No se pudo activar el modo de pantalla completa',
         variant: 'destructive',
       });
     }
@@ -202,7 +202,7 @@ export function FocusMode({
       <div className="w-full bg-card rounded-lg shadow-lg overflow-hidden">
         <div className="space-y-2 sm:space-y-4">
           <div className="p-2 sm:p-4 border-b">
-            <h2 className="text-sm sm:text-base lg:text-lg font-medium mb-2">Select task (optional)</h2>
+            <h2 className="text-sm sm:text-base lg:text-lg font-medium mb-2">Seleccionar tarea (opcional)</h2>
             <TaskSearch
               selectedTask={selectedTask}
               onTaskSelect={handleTaskSelect}

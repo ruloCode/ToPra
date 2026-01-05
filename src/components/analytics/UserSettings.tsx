@@ -75,8 +75,8 @@ export default function UserSettings() {
       saveUserSettings(user.id, settings);
 
       toast({
-        title: "Settings saved",
-        description: "Your preferences have been updated successfully.",
+        title: "Configuración guardada",
+        description: "Tus preferencias han sido actualizadas correctamente.",
       });
 
       // Apply settings
@@ -84,8 +84,8 @@ export default function UserSettings() {
     } catch (error) {
       console.error('Error saving settings:', error);
       toast({
-        title: "Error saving settings",
-        description: "Please try again later.",
+        title: "Error al guardar la configuración",
+        description: "Por favor, intenta de nuevo más tarde.",
         variant: "destructive",
       });
     } finally {
@@ -152,10 +152,10 @@ export default function UserSettings() {
   return (
     <div className="space-y-6 settings-section" role="form" aria-label="User settings">
       <Card className="p-6" id="profile-section">
-        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Profile Settings</h3>
+        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Configuración del perfil</h3>
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Display Name</label>
+            <label className="text-sm font-medium">Nombre para mostrar</label>
             <input
               type="text"
               value={settings.profile.displayName}
@@ -166,7 +166,7 @@ export default function UserSettings() {
                 }))
               }
               className="w-[180px] px-3 py-2 rounded-md border border-input bg-white dark:bg-zinc-900 dark:text-white"
-              placeholder="Your name"
+              placeholder="Tu nombre"
             />
           </div>
 
@@ -175,13 +175,13 @@ export default function UserSettings() {
       </Card>
 
       <Card className="p-6" id="appearance-section">
-        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Appearance Settings</h3>
-        <div className="space-y-4" role="group" aria-label="Appearance settings">
+        <h3 className="text-lg font-semibold mb-4" tabIndex={0}>Configuración de apariencia</h3>
+        <div className="space-y-4" role="group" aria-label="Configuración de apariencia">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Theme</label>
+              <label className="text-sm font-medium">Tema</label>
               <span className="text-xs px-2 py-1 rounded-full bg-accent/10">
-                {isDark ? 'Dark' : 'Light'} mode active
+                Modo {isDark ? 'oscuro' : 'claro'} activo
               </span>
             </div>
             <Select
@@ -189,12 +189,12 @@ export default function UserSettings() {
               onValueChange={handleThemeChange}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select theme" />
+                <SelectValue placeholder="Seleccionar tema" />
               </SelectTrigger>
               <SelectContent className='bg-white border-border'>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
+                <SelectItem value="light">Claro</SelectItem>
+                <SelectItem value="dark">Oscuro</SelectItem>
+                <SelectItem value="system">Sistema</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -274,7 +274,7 @@ export default function UserSettings() {
           aria-live="polite"
           
         >
-          {isSaving ? "Saving..." : "Save Settings"}
+          {isSaving ? "Guardando..." : "Guardar configuración"}
         </Button>
       </div>
     </div>

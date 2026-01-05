@@ -8,7 +8,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto md:max-w-[60vw] p-4 text-text-secondary">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold mb-6">Configuración</h1>
 
       {/* Tags Management Section */}
       <div className="mb-8 p-4 bg-card rounded-lg border border-border">

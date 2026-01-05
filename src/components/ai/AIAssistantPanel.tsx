@@ -133,7 +133,7 @@ export function AIAssistantPanel({
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center">
             <Sparkles className="h-4 w-4 text-white" />
           </div>
-          <h2 className="font-semibold text-foreground">Brain</h2>
+          <h2 className="font-semibold text-foreground">Cerebro IA</h2>
         </div>
         <button
           onClick={onClose}
@@ -259,7 +259,7 @@ export function AIAssistantPanel({
           <div className="flex items-center gap-2 bg-background rounded-xl px-4 py-3 border border-border">
             <input
               type="text"
-              placeholder="Tell AI what to do next"
+              placeholder="Dile a la IA qué hacer"
               className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.currentTarget.value.trim()) {

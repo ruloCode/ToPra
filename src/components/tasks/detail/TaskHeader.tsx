@@ -77,10 +77,10 @@ export function TaskHeader({
                 ? "bg-purple-500 text-white"
                 : "hover:bg-secondary text-muted-foreground hover:text-foreground"
             )}
-            title={showAI ? 'Cerrar AI' : 'Ask AI'}
+            title={showAI ? 'Cerrar IA' : 'Preguntar a IA'}
           >
             <Sparkles className="h-5 w-5" />
-            <span className="text-sm font-medium hidden sm:inline">Ask AI</span>
+            <span className="text-sm font-medium hidden sm:inline">Preguntar a IA</span>
           </button>
         )}
 

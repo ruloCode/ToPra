@@ -57,18 +57,18 @@ export default function HistoricalStats() {
   return (
     <Card className="p-4 transition-all duration-300 hover:shadow-lg dark:border-[#28282F]">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-foreground">Historical Progress</h3>
+        <h3 className="text-lg font-semibold text-foreground">Progreso histórico</h3>
         <Select
           value={timeRange}
           onValueChange={(value: TimeRange) => setTimeRange(value)}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select time range" />
+            <SelectValue placeholder="Seleccionar rango" />
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
-            <SelectItem value="week">Last 7 days</SelectItem>
-            <SelectItem value="month">Last 30 days</SelectItem>
-            <SelectItem value="year">Last 12 months</SelectItem>
+            <SelectItem value="week">Últimos 7 días</SelectItem>
+            <SelectItem value="month">Últimos 30 días</SelectItem>
+            <SelectItem value="year">Últimos 12 meses</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -93,13 +93,13 @@ export default function HistoricalStats() {
             />
             <YAxis yAxisId="left" className="text-muted-foreground text-xs" />
             <YAxis yAxisId="right" orientation="right" className="text-muted-foreground text-xs" />
-            <Tooltip content={<CustomTooltip title="Daily Progress" />} />
+            <Tooltip content={<CustomTooltip title="Progreso diario" />} />
             <Legend />
             <Line
               yAxisId="left"
               type="monotone"
               dataKey="tasksCompleted"
-              name="Tasks Completed"
+              name="Tareas completadas"
               stroke="var(--accent)"
               activeDot={{ r: 8 }}
               strokeWidth={2}
@@ -109,7 +109,7 @@ export default function HistoricalStats() {
               yAxisId="left"
               type="monotone"
               dataKey="sessionsCompleted"
-              name="Focus Sessions"
+              name="Sesiones de enfoque"
               stroke="#82ca9d"
               strokeWidth={2}
               className="opacity-80 hover:opacity-100 transition-opacity"
@@ -118,7 +118,7 @@ export default function HistoricalStats() {
               yAxisId="right"
               type="monotone"
               dataKey="productivityScore"
-              name="Productivity Score"
+              name="Puntuación de productividad"
               stroke="#ffc658"
               strokeWidth={2}
               className="opacity-80 hover:opacity-100 transition-opacity"

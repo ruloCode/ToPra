@@ -80,7 +80,7 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
         </div>
         <div>
           <p className="text-sm text-muted-foreground">
-            {todayOnly ? 'Completed tasks today' : 'Total vs Completed'}
+            {todayOnly ? 'Tareas completadas hoy' : 'Total vs Completadas'}
           </p>
           <p className="text-lg font-semibold text-foreground">
             {todayOnly ? completedTasks : `${completedTasks}/${totalTasks}`}
@@ -93,7 +93,7 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
           <Target className="h-5 w-5 text-blue-500" />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Focus Time</p>
+          <p className="text-sm text-muted-foreground">Tiempo de enfoque</p>
           <p className="text-lg font-semibold text-foreground">{formatFocusTime(focusTime)}</p>
         </div>
       </div>
@@ -103,9 +103,9 @@ export default function TaskStats({ tasks, todayOnly = false }: TaskStatsProps) 
           <Calendar className="h-5 w-5 text-yellow-500" />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Upcoming</p>
+          <p className="text-sm text-muted-foreground">Próximas</p>
           <p className="text-lg font-semibold text-foreground">
-            {upcomingTasks} {upcomingTasks === 1 ? 'task' : 'tasks'}
+            {upcomingTasks} {upcomingTasks === 1 ? 'tarea' : 'tareas'}
           </p>
         </div>
       </div>

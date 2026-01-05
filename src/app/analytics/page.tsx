@@ -15,8 +15,8 @@ export default function AnalyticsPage() {
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto md:max-w-[60vw]">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Track your progress and productivity metrics</p>
+          <h1 className="text-3xl font-bold text-foreground">Estadísticas</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Rastrea tu progreso y métricas de productividad</p>
         </header>
         
         <div className="grid gap-8">
@@ -43,7 +43,7 @@ export default function AnalyticsPage() {
         </div>
 
         <footer className="mt-12 text-center text-sm text-muted-foreground">
-          <p>Data is updated in real-time. Last refreshed: {lastRefreshed || '...'}</p>
+          <p>Los datos se actualizan en tiempo real. Última actualización: {lastRefreshed || '...'}</p>
         </footer>
       </div>
     </main>

@@ -102,7 +102,7 @@ export const FocusHistory = forwardRef<FocusHistoryRef, FocusHistoryProps>(({ on
       <Card className="p-6">
         <div className="flex items-center justify-center text-muted-foreground">
           <span className="loading loading-spinner loading-md mr-2" />
-          Loading sessions...
+          Cargando sesiones...
         </div>
       </Card>
     );
@@ -111,7 +111,7 @@ export const FocusHistory = forwardRef<FocusHistoryRef, FocusHistoryProps>(({ on
   if (!sessions.length) {
     return (
       <Card className="p-6 text-center text-muted-foreground">
-       Not yet any focus sessions registered.
+       Aún no hay sesiones de enfoque registradas.
       </Card>
     );
   }
@@ -119,14 +119,14 @@ export const FocusHistory = forwardRef<FocusHistoryRef, FocusHistoryProps>(({ on
   return (
     <>
       <div className="space-y-3 sm:space-y-4">
-        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Session History</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Historial de sesiones</h2>
         <div className="grid gap-2 sm:gap-4">
           {sessions.map((session) => (
             <Card key={session.id} className="p-3 sm:p-4 hover:shadow-md transition-shadow">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm sm:text-base truncate">
-                    {session.task ? session.task.title : 'Session without task'}
+                    {session.task ? session.task.title : 'Sesión sin tarea'}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     {format(new Date(session.start_time), 'PPp')}
@@ -154,7 +154,7 @@ export const FocusHistory = forwardRef<FocusHistoryRef, FocusHistoryProps>(({ on
                     className="text-xs sm:text-sm px-2 py-1 h-auto"
                     onClick={() => handleDelete(session.id)}
                   >
-                    Delete
+                    Eliminar
                   </Button>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export const FocusHistory = forwardRef<FocusHistoryRef, FocusHistoryProps>(({ on
               )}
               {session.rating && (
                 <div className="mt-2 flex items-center gap-1">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Rating:</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">Calificación:</span>
                   <span className="font-medium text-xs sm:text-sm">{session.rating}/5</span>
                 </div>
               )}
@@ -191,17 +191,17 @@ function getStatusColor(status: string) {
 function getStatusText(status: string) {
   switch (status) {
     case 'completed':
-      return 'Completed';
+      return 'Completada';
     case 'interrupted':
-      return 'Interrupted';
+      return 'Interrumpida';
     case 'active':
-      return 'In Progress';
+      return 'En progreso';
     default:
       return status;
   }
 }
 
 function formatDuration(minutes: number | null): string {
-  if (!minutes) return 'In Progress';
-  return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+  if (!minutes) return 'En progreso';
+  return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
 }

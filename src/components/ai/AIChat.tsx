@@ -209,7 +209,7 @@ export const AIChat = forwardRef<AIChatHandle, AIChatProps>(({
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Tell AI what to do next"
+                  placeholder="Dile a la IA qué hacer"
                   rows={1}
                   className="flex-1 resize-none bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 min-h-[24px] max-h-[80px]"
                   style={{

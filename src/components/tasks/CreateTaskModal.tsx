@@ -20,8 +20,8 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
   const handleTaskCreated = (fromChat: boolean = false) => {
     onSuccess();
     toast({
-      title: "Success!",
-      description: "The task has been created successfully",
+      title: "¡Éxito!",
+      description: "La tarea ha sido creada correctamente",
       duration: 3000,
     });
     
@@ -45,7 +45,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
         className="fixed left-0 right-0 bottom-0 sm:left-[50%] sm:top-[50%] sm:-translate-x-[50%] sm:-translate-y-[50%] sm:bottom-auto sm:max-w-[600px] sm:h-auto rounded-t-lg sm:rounded-lg p-0 bg-white dark:bg-background-paper border border-border dark:border-[#28282F]"
       >
         <DialogHeader className="px-6 py-4 border-b border-border dark:border-[#28282F]">
-          <DialogTitle>{taskToEdit ? 'Edit Task' : 'Create New Task'}</DialogTitle>
+          <DialogTitle>{taskToEdit ? 'Editar tarea' : 'Crear nueva tarea'}</DialogTitle>
         </DialogHeader>
 
         {taskToEdit ? (
@@ -58,7 +58,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSuccess, taskToEdit
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 px-6 bg-white dark:bg-background-paper">
-              <TabsTrigger value="form">Form</TabsTrigger>
+              <TabsTrigger value="form">Formulario</TabsTrigger>
               <TabsTrigger value="chat">Chat</TabsTrigger>
             </TabsList>
 

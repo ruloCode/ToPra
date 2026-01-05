@@ -6,6 +6,7 @@ import Auth from "@/components/Auth";
 import TaskList from "@/components/tasks/TaskList";
 import TaskStats from "@/components/tasks/TaskStats";
 import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Task, TaskStatus } from "@/lib/tasks";
 import { useTaskModal } from "@/contexts/TaskModalContext";
 import { useTasks } from "@/contexts/TaskContext";
@@ -27,7 +28,7 @@ export default function TasksPage() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">Cargando...</div>
       </div>
     );
   }
@@ -59,10 +60,10 @@ export default function TasksPage() {
     <main className="main-content min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto md:max-w-[60vw]">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">All Tasks</h1>
+          <h1 className="text-3xl font-bold text-foreground">Todas las tareas</h1>
           <p className="mt-1 text-sm text-muted-foreground">
            
-          {format(today, "EEEE, MMMM d")}
+          {format(today, "EEEE, d 'de' MMMM", { locale: es })}
           </p>
         </div>
 
@@ -84,7 +85,7 @@ export default function TasksPage() {
                     }`}
                   >
                     <ListFilter className="h-3.5 w-3.5" />
-                    All
+                    Todas
                   </button>
                   <button
                     onClick={() => setFilter('pending')}
@@ -95,7 +96,7 @@ export default function TasksPage() {
                     }`}
                   >
                     <ListTodo className="h-3.5 w-3.5" />
-                    Pending
+                    Pendientes
                   </button>
                   <button
                     onClick={() => setFilter('completed')}
@@ -106,7 +107,7 @@ export default function TasksPage() {
                     }`}
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    Completed
+                    Completadas
                   </button>
                 </div>
               </div>
@@ -114,13 +115,13 @@ export default function TasksPage() {
                 onClick={handleAddTask}
                 className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90 transition-colors"
               >
-                Add Task
+                Agregar tarea
               </button>
             </div>
 
             {tasksLoading ? (
               <div className="flex h-40 items-center justify-center">
-                <div className="text-muted-foreground">Loading tasks...</div>
+                <div className="text-muted-foreground">Cargando tareas...</div>
               </div>
             ) : (
               <TaskList
@@ -128,7 +129,7 @@ export default function TasksPage() {
                 onUpdate={refreshTasks}
                 onDelete={refreshTasks}
                 onEdit={handleEditTask}
-                emptyMessage={`No ${filter === 'all' ? '' : filter} tasks yet`}
+                emptyMessage={filter === 'all' ? 'No hay tareas aún' : filter === 'pending' ? 'No hay tareas pendientes' : 'No hay tareas completadas'}
               />
             )}
           </section>
