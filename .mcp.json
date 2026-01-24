@@ -3,6 +3,14 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp"
+    },
+    "elevenlabs": {
+      "type": "stdio",
+      "command": "/Users/rulocode/.local/bin/uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "sk_e8b5e8ea3c4a096ab76dbb3d646692b999665ed1c068a468"
+      }
     }
   }
 }

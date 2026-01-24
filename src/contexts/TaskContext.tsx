@@ -31,11 +31,21 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  // Load tasks automatically when user is available
+  useEffect(() => {
+    if (user) {
+      refreshTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only depend on user to avoid infinite loop
+
   // Real-time subscription for task changes
   useEffect(() => {
     if (!user) return;
 
     const subscription = subscribeToTasks(user.id, (payload) => {
+      console.log('[TaskContext] Realtime event:', payload.eventType, payload.new?.title || payload.old?.id);
+
       if (payload.eventType === 'INSERT') {
         setTasks(prev => [payload.new, ...prev]);
       } else if (payload.eventType === 'UPDATE') {

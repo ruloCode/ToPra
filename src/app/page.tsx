@@ -4,55 +4,39 @@ import { useAuth } from '@/components/AuthProvider';
 import Auth from '@/components/Auth';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Task, TaskStatus, getTasks } from '@/lib/tasks';
-import { useCallback, useEffect, useState } from 'react';
+import { Task, TaskStatus } from '@/lib/tasks';
+import { useMemo } from 'react';
 import TaskList from '@/components/tasks/TaskList';
 import TaskStats from '@/components/tasks/TaskStats';
 import { useTaskModal } from '@/contexts/TaskModalContext';
 import { loadUserSettings } from '@/lib/settings';
+import { useTasks } from '@/contexts/TaskContext';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
   const { openCreateTaskModal } = useTaskModal();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const { tasks: allTasks, isLoading: isLoadingTasks, refreshTasks } = useTasks();
   const today = new Date();
-  
+
   const userSettings = user ? loadUserSettings(user.id) : null;
   const displayName = userSettings?.profile.displayName;
 
-  const fetchTasks = useCallback(async () => {
-    if (!user) return;
-    
-    setIsLoadingTasks(true);
-    try {
-      const allTasks = await getTasks({ userId: user.id });
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
+  // Filtrar tareas localmente: pendientes + completadas hoy
+  const tasks = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
-      // Incluir todas las tareas pendientes y las completadas de hoy
-      const filteredTasks = allTasks.filter(task => {
-        if (task.status === TaskStatus.COMPLETED) {
-          const completedDate = new Date(task.updated_at);
-          return completedDate >= todayStart && completedDate <= todayEnd;
-        }
-        // Incluir todas las tareas pendientes
-        return task.status === TaskStatus.PENDING;
-      });
-
-      setTasks(filteredTasks);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } finally {
-      setIsLoadingTasks(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    return allTasks.filter((task: Task) => {
+      if (task.status === TaskStatus.COMPLETED) {
+        const completedDate = new Date(task.updated_at);
+        return completedDate >= todayStart && completedDate <= todayEnd;
+      }
+      // Incluir todas las tareas pendientes
+      return task.status === TaskStatus.PENDING;
+    });
+  }, [allTasks]);
 
   if (isLoading) {
     return (
@@ -67,11 +51,11 @@ export default function Home() {
   }
 
   const handleAddTask = () => {
-    openCreateTaskModal(fetchTasks);
+    openCreateTaskModal(refreshTasks);
   };
 
   const handleEditTask = (task: Task) => {
-    openCreateTaskModal(fetchTasks, task);
+    openCreateTaskModal(refreshTasks, task);
   };
 
   return (
@@ -115,8 +99,8 @@ export default function Home() {
             ) : (
               <TaskList
                 tasks={tasks}
-                onUpdate={fetchTasks}
-                onDelete={fetchTasks}
+                onUpdate={refreshTasks}
+                onDelete={refreshTasks}
                 onEdit={handleEditTask}
                 emptyMessage="No hay tareas para hoy"
                 todayOnly={true}

@@ -11,6 +11,8 @@ import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
 import { MobileMenu } from "@/components/MobileMenu";
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { VoiceCoachProvider } from '@/contexts/VoiceCoachContext';
+import { VoiceButton, VoiceWidget } from '@/components/voice';
 import Script from 'next/script';
 import { GA_TRACKING_ID } from '@/lib/analytics';
 
@@ -68,6 +70,10 @@ export default function RootLayout({
   return (
     <html lang="es" className={`h-full overflow-x-hidden ${inter.variable}`} suppressHydrationWarning>
       <head>
+        {/* DM Sans font for Voice Coach */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
         {GA_TRACKING_ID && (
           <>
             <Script
@@ -98,6 +104,7 @@ export default function RootLayout({
               <TagProvider>
                 <TaskProvider>
                   <TaskModalProvider>
+                      <VoiceCoachProvider>
                 <div className="flex min-h-screen pb-[64px] md:pb-0 relative overflow-x-hidden">
                   <Sidebar />
                   <div className="flex-1 overflow-auto">
@@ -107,8 +114,11 @@ export default function RootLayout({
                     </div>
                   </div>
                   <BottomNav />
+                  <VoiceButton />
+                  <VoiceWidget />
                 </div>
                 <Toaster />
+                      </VoiceCoachProvider>
                 </TaskModalProvider>
                 </TaskProvider>
               </TagProvider>

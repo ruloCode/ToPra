@@ -1,3 +1,23 @@
+export interface VoiceCoachSettings {
+  enabled: boolean;
+  voiceId: string;
+  autoListen: boolean;
+  showTranscript: boolean;
+}
+
+export interface AudioSettings {
+  enabled: boolean;
+  volume: number;
+  voiceId: string;
+  preferences: {
+    timerSounds: boolean;
+    motivationalVoice: boolean;
+    aiVoice: boolean;
+    notificationSounds: boolean;
+    ambientMusic: boolean;
+  };
+}
+
 export interface UserSettings {
   theme: 'light' | 'dark' | 'system';
   language: 'en' | 'es';
@@ -21,6 +41,8 @@ export interface UserSettings {
     timeZone: string;
     weekStartsOn: 'sunday' | 'monday';
   };
+  voiceCoach: VoiceCoachSettings;
+  audio: AudioSettings;
 }
 
 export const defaultSettings: UserSettings = {
@@ -45,6 +67,24 @@ export const defaultSettings: UserSettings = {
     displayName: '',
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     weekStartsOn: 'monday',
+  },
+  voiceCoach: {
+    enabled: true,
+    voiceId: 'cgSgspJ2msm6clMCkdW9', // Jessica - voz por defecto de ElevenLabs
+    autoListen: false,
+    showTranscript: true,
+  },
+  audio: {
+    enabled: true,
+    volume: 80,
+    voiceId: 'cgSgspJ2msm6clMCkdW9',
+    preferences: {
+      timerSounds: true,
+      motivationalVoice: true,
+      aiVoice: false,
+      notificationSounds: true,
+      ambientMusic: false,
+    },
   },
 };
 
