@@ -12,8 +12,15 @@ export function buildContextString(data: VoiceCoachData): string {
     : 'Sin sesión activa';
 
   // Format tasks with short IDs for reference
-  const formatTaskWithId = (t: TaskSummary) =>
-    `[${t.shortId}] "${t.title}" (P${t.priority})`;
+  const formatTaskWithId = (t: TaskSummary) => {
+    const tagsStr = t.tags && t.tags.length > 0 ? ` [${t.tags.join(', ')}]` : '';
+    return `[${t.shortId}] "${t.title}" (P${t.priority})${tagsStr}`;
+  };
+
+  // Available user tags
+  const availableTags = data.tags.available.length > 0
+    ? data.tags.available.map(t => `${t.name} (${t.color})`).join(', ')
+    : 'Sin tags';
 
   // High priority tasks (max 5)
   const highPriorityList = data.tasks.highPriority.length > 0
@@ -78,6 +85,9 @@ ${allPendingList}
 ## Subtareas de tarea activa
 ${subtasksList}
 
+## Tags Disponibles
+${availableTags}
+
 ## Estadísticas Semana
 - Minutos esta semana: ${data.stats.weeklyFocusMinutes}
 - vs semana anterior: ${data.stats.weekOverWeekChange >= 0 ? '+' : ''}${data.stats.weekOverWeekChange}%`;
@@ -115,10 +125,18 @@ export function buildVoiceCoachSystemPrompt(context: VoiceCoachData): string {
 
   const pendingCount = context.tasks.pending + context.tasks.inProgress;
 
-  // Format all pending tasks with short IDs for reference
+  // Format all pending tasks with short IDs for reference (include tags)
   const pendingTasksWithIds = context.tasks.allPending.slice(0, 10)
-    .map(t => `[${t.shortId}] ${t.title}`)
+    .map(t => {
+      const tagsStr = t.tags && t.tags.length > 0 ? ` [${t.tags.join(', ')}]` : '';
+      return `[${t.shortId}] ${t.title}${tagsStr}`;
+    })
     .join('\n');
+
+  // Available user tags
+  const availableTagsList = context.tags.available.length > 0
+    ? context.tags.available.map(t => `- ${t.name} (${t.color})`).join('\n')
+    : 'Sin tags creados';
 
   // Format subtasks of active task
   const activeSubtasks = context.subtasks.activeTaskSubtasks.slice(0, 5)
@@ -171,6 +189,9 @@ ${pendingTasksWithIds || 'Ninguna'}
 ### Subtareas de Tarea Activa
 ${activeSubtasks}
 
+### Tags Disponibles del Usuario
+${availableTagsList}
+
 ## CAPACIDADES COMPLETAS
 
 ### 1. Control de Sesiones de Enfoque
@@ -180,6 +201,7 @@ ${activeSubtasks}
 - **complete_session**: Terminar sesión → [ACTION:complete_session]
 - **rate_session**: Calificar sesión (1-5) → [ACTION:rate_session:RATING]
 - **add_session_note**: Agregar nota → [ACTION:add_session_note:TEXTO]
+- **change_session_task**: Cambiar tarea de sesión → [ACTION:change_session_task:ID_O_TÍTULO]
 
 ### 2. Gestión de Tareas (CRUD Completo)
 - **create_task**: Crear tarea → [ACTION:create_task:título]
@@ -189,6 +211,7 @@ ${activeSubtasks}
     - [ACTION:create_task:Llamar al doctor|3]
     - [ACTION:create_task:Preparar presentación|4|Para la reunión del lunes]
 - **complete_task**: Completar tarea → [ACTION:complete_task:ID_O_TÍTULO]
+- **set_task_status**: Cambiar estado → [ACTION:set_task_status:ID|pending/in_progress/completed]
 - **edit_task**: Editar tarea → [ACTION:edit_task:ID|campo|valor]
   - Campos: title, priority (1-4), description, due_date, status
 - **delete_task**: Eliminar tarea → [ACTION:delete_task:ID|confirmar]
@@ -196,20 +219,52 @@ ${activeSubtasks}
 - **search_task**: Buscar tareas → [ACTION:search_task:QUERY]
 - **get_task_details**: Ver detalles → [ACTION:get_task_details:ID]
 
-### 3. Gestión de Subtareas
+### 3. Gestión de Tags
+- **add_tag_to_task**: Asignar tag → [ACTION:add_tag_to_task:ID_TAREA|nombre_tag]
+- **remove_tag_from_task**: Quitar tag → [ACTION:remove_tag_from_task:ID_TAREA|nombre_tag]
+- **create_tag**: Crear nuevo tag → [ACTION:create_tag:nombre|color]
+  - Colores válidos: blue, yellow, green, red, purple, teal, orange, pink
+- **list_tags**: Listar tags disponibles → [ACTION:list_tags]
+- **delete_tag**: Eliminar tag → [ACTION:delete_tag:nombre|confirmar]
+  - ⚠️ Requiere confirmación
+
+### 4. Sistema de Comentarios
+- **add_comment**: Agregar comentario → [ACTION:add_comment:ID_TAREA|texto del comentario]
+  - Usa "currentTaskId" para la tarea activa
+- **list_comments**: Listar comentarios → [ACTION:list_comments:ID_TAREA]
+- **delete_comment**: Eliminar comentario → [ACTION:delete_comment:ID_COMENTARIO|confirmar]
+  - ⚠️ Requiere confirmación
+
+### 5. Gestión de Subtareas
 - **create_subtask**: Crear subtarea → [ACTION:create_subtask:taskId|título|prioridad]
   - Usa "currentTaskId" para la tarea activa
 - **complete_subtask**: Completar subtarea → [ACTION:complete_subtask:ID_O_TÍTULO]
+- **edit_subtask**: Editar subtarea → [ACTION:edit_subtask:ID|campo|valor]
+  - Campos: title, priority (1-4), status
 - **delete_subtask**: Eliminar subtarea → [ACTION:delete_subtask:ID_O_TÍTULO]
+
+## Cómo Identificar Tareas en Acciones
+
+IMPORTANTE: Cuando necesites ejecutar una acción sobre una tarea, NUNCA uses "ID_TAREA" literalmente.
+En su lugar, usa una de estas opciones:
+
+1. **Nombre/título de la tarea**: Si el usuario menciona el nombre de la tarea, usa ese nombre
+   - Usuario: "Agrega el tag trabajo a revisar emails" → usa "revisar emails" como identificador
+
+2. **currentTaskId**: Si hay sesión de enfoque activa y el usuario dice "mi tarea actual" o "esta tarea"
+   - Usuario: "Agrega un tag a mi tarea actual" → usa "currentTaskId"
+
+3. **ID corto**: Si tienes el shortId del contexto (8 caracteres, ej: "abc12345"), puedes usarlo directamente
+
+El sistema buscará automáticamente por ID o por título parcial.
 
 ## Reglas de Respuesta
 1. SIEMPRE responde en español
 2. Mantén respuestas MUY CORTAS (1-3 oraciones, serán habladas por TTS)
 3. Cuando ejecutes una acción, confirma brevemente lo que hiciste
 4. Para eliminar, SIEMPRE pide confirmación primero
-5. Usa el ID corto de 8 caracteres para referir tareas
-6. Nunca inventes datos - usa SOLO el contexto proporcionado
-7. Si el usuario pregunta estadísticas, usa los datos reales del contexto
+5. Nunca inventes datos - usa SOLO el contexto proporcionado
+6. Si el usuario pregunta estadísticas, usa los datos reales del contexto
 
 ## Ejemplos de Interacción
 
@@ -217,12 +272,12 @@ Usuario: "¿Cómo voy hoy?"
 Respuesta: "Llevas ${context.stats.todayFocusMinutes} de ${context.user.dailyGoalMinutes} minutos, ${context.stats.dailyProgressPercent}% de tu meta. ${context.stats.tasksCompletedToday > 0 ? `${context.stats.tasksCompletedToday} tareas completadas. ` : ''}${context.stats.currentStreak > 0 ? `¡Racha de ${context.stats.currentStreak} días!` : '¡Empecemos tu racha!'}"
 
 Usuario: "Cambia la prioridad de revisar documentos a urgente"
-Respuesta: "Listo, prioridad actualizada a urgente." [ACTION:edit_task:ID_TAREA|priority|4]
+Respuesta: "Listo, prioridad actualizada a urgente." [ACTION:edit_task:revisar documentos|priority|4]
 
 Usuario: "Elimina la tarea de comprar café"
 Respuesta: "¿Seguro que quieres eliminar 'Comprar café'? Dime 'sí' para confirmar."
 Usuario: "Sí"
-Respuesta: "Eliminada." [ACTION:delete_task:ID_TAREA|confirmar]
+Respuesta: "Eliminada." [ACTION:delete_task:comprar café|confirmar]
 
 Usuario: "Agrega una subtarea para revisar sección 1"
 Respuesta: "Subtarea agregada a tu tarea actual." [ACTION:create_subtask:currentTaskId|Revisar sección 1|2]
@@ -234,7 +289,39 @@ Usuario: "Inicia 25 minutos"
 Respuesta: "¡Arrancamos! 25 minutos de enfoque. ¡Tú puedes!" [ACTION:start_focus_session:25]
 
 Usuario: "¿Qué tareas tengo vencidas?"
-Respuesta: "${context.tasks.overdue.length > 0 ? `Tienes ${context.tasks.overdue.length} vencidas: ${context.tasks.overdue.map(t => t.title).join(', ')}. ¿Empezamos con alguna?` : '¡Ninguna vencida! Estás al día.'}"`;
+Respuesta: "${context.tasks.overdue.length > 0 ? `Tienes ${context.tasks.overdue.length} vencidas: ${context.tasks.overdue.map(t => t.title).join(', ')}. ¿Empezamos con alguna?` : '¡Ninguna vencida! Estás al día.'}"
+
+Usuario: "Cambia el estado de revisar emails a en progreso"
+Respuesta: "Listo, cambié el estado a en progreso." [ACTION:set_task_status:revisar emails|in_progress]
+
+Usuario: "Agrega el tag trabajo a mi tarea de revisar emails"
+Respuesta: "Tag agregado a la tarea." [ACTION:add_tag_to_task:revisar emails|trabajo]
+
+Usuario: "Agrega el tag urgente a mi tarea actual" (hay timer activo)
+Respuesta: "Tag agregado." [ACTION:add_tag_to_task:currentTaskId|urgente]
+
+Usuario: "Crea un tag llamado urgente con color rojo"
+Respuesta: "Tag 'urgente' creado con color rojo." [ACTION:create_tag:urgente|red]
+
+Usuario: "¿Qué tags tengo disponibles?"
+Respuesta: "Tienes estos tags: ${context.tags.available.length > 0 ? context.tags.available.map(t => t.name).join(', ') : 'ninguno creado aún'}." [ACTION:list_tags]
+
+Usuario: "Agrega un comentario a mi tarea: necesito revisar los anexos"
+Respuesta: "Comentario agregado." [ACTION:add_comment:currentTaskId|necesito revisar los anexos]
+
+Usuario: "¿Qué comentarios tiene mi tarea?"
+Respuesta: "Déjame revisar los comentarios." [ACTION:list_comments:currentTaskId]
+
+Usuario: "Quiero trabajar en otra tarea durante esta sesión"
+Respuesta: "¿En cuál tarea quieres enfocarte?"
+Usuario: "En preparar presentación"
+Respuesta: "Listo, cambié la sesión a trabajar en 'preparar presentación'." [ACTION:change_session_task:preparar presentación]
+
+Usuario: "Cambia la descripción de mi tarea actual a revisar todos los anexos"
+Respuesta: "Descripción actualizada." [ACTION:edit_task:currentTaskId|description|revisar todos los anexos]
+
+Usuario: "Quita el tag personal de comprar leche"
+Respuesta: "Tag quitado." [ACTION:remove_tag_from_task:comprar leche|personal]`;
 }
 
 function formatTaskListWithIds(tasks: TaskSummary[]): string {
@@ -457,6 +544,205 @@ export const VOICE_COACH_TOOLS = [
     },
   },
 
+  // ========== SESSION TASK CHANGE ==========
+  {
+    type: 'function' as const,
+    function: {
+      name: 'change_session_task',
+      description: 'Cambia la tarea asociada a la sesión de enfoque activa',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: {
+            type: 'string',
+            description: 'ID corto o título de la tarea',
+          },
+        },
+        required: ['taskId'],
+      },
+    },
+  },
+
+  // ========== TASK STATUS ==========
+  {
+    type: 'function' as const,
+    function: {
+      name: 'set_task_status',
+      description: 'Cambia el estado de una tarea (pending, in_progress, completed)',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: {
+            type: 'string',
+            description: 'ID corto o título de la tarea',
+          },
+          status: {
+            type: 'string',
+            description: 'Nuevo estado: pending, in_progress, o completed',
+          },
+        },
+        required: ['taskId', 'status'],
+      },
+    },
+  },
+
+  // ========== TAG TOOLS ==========
+  {
+    type: 'function' as const,
+    function: {
+      name: 'add_tag_to_task',
+      description: 'Agrega un tag a una tarea',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: {
+            type: 'string',
+            description: 'ID corto o título de la tarea',
+          },
+          tagName: {
+            type: 'string',
+            description: 'Nombre del tag a agregar',
+          },
+        },
+        required: ['taskId', 'tagName'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'remove_tag_from_task',
+      description: 'Quita un tag de una tarea',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: {
+            type: 'string',
+            description: 'ID corto o título de la tarea',
+          },
+          tagName: {
+            type: 'string',
+            description: 'Nombre del tag a quitar',
+          },
+        },
+        required: ['taskId', 'tagName'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'create_tag',
+      description: 'Crea un nuevo tag para el usuario',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Nombre del tag',
+          },
+          color: {
+            type: 'string',
+            description: 'Color: blue, yellow, green, red, purple, teal, orange, pink',
+          },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_tags',
+      description: 'Lista todos los tags disponibles del usuario',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'delete_tag',
+      description: 'Elimina un tag del usuario (requiere confirmación)',
+      parameters: {
+        type: 'object',
+        properties: {
+          tagName: {
+            type: 'string',
+            description: 'Nombre del tag a eliminar',
+          },
+          confirmation: {
+            type: 'string',
+            description: 'Debe ser "confirmar" para ejecutar',
+          },
+        },
+        required: ['tagName', 'confirmation'],
+      },
+    },
+  },
+
+  // ========== COMMENT TOOLS ==========
+  {
+    type: 'function' as const,
+    function: {
+      name: 'add_comment',
+      description: 'Agrega un comentario a una tarea',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: {
+            type: 'string',
+            description: 'ID de la tarea (usa "currentTaskId" para la tarea activa)',
+          },
+          content: {
+            type: 'string',
+            description: 'Texto del comentario',
+          },
+        },
+        required: ['content'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_comments',
+      description: 'Lista los comentarios de una tarea',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: {
+            type: 'string',
+            description: 'ID de la tarea (usa "currentTaskId" para la tarea activa)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'delete_comment',
+      description: 'Elimina un comentario (requiere confirmación)',
+      parameters: {
+        type: 'object',
+        properties: {
+          commentId: {
+            type: 'string',
+            description: 'ID del comentario a eliminar',
+          },
+          confirmation: {
+            type: 'string',
+            description: 'Debe ser "confirmar" para ejecutar',
+          },
+        },
+        required: ['commentId', 'confirmation'],
+      },
+    },
+  },
+
   // ========== SUBTASK TOOLS ==========
   {
     type: 'function' as const,
@@ -497,6 +783,31 @@ export const VOICE_COACH_TOOLS = [
           },
         },
         required: ['subtaskId'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'edit_subtask',
+      description: 'Edita una subtarea (título, prioridad o estado)',
+      parameters: {
+        type: 'object',
+        properties: {
+          subtaskId: {
+            type: 'string',
+            description: 'ID o título de la subtarea',
+          },
+          field: {
+            type: 'string',
+            description: 'Campo a editar: title, priority, status',
+          },
+          value: {
+            type: 'string',
+            description: 'Nuevo valor',
+          },
+        },
+        required: ['subtaskId', 'field', 'value'],
       },
     },
   },

@@ -18,6 +18,12 @@ import {
   WeeklyStats,
   ProductivityStreak,
 } from '@/lib/voiceCoachStats';
+import { getUserTags, Tag } from '@/lib/tags';
+
+export interface TagSummary {
+  name: string;
+  color: string;
+}
 
 export interface VoiceCoachData {
   timer: {
@@ -59,6 +65,9 @@ export interface VoiceCoachData {
   };
   user: {
     dailyGoalMinutes: number;
+  };
+  tags: {
+    available: TagSummary[]; // User's available tags
   };
 }
 
@@ -139,6 +148,7 @@ export function useVoiceCoachData(): VoiceCoachData {
   const [dailyProgress, setDailyProgress] = useState<DailyProgress | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
   const [streak, setStreak] = useState<ProductivityStreak | null>(null);
+  const [userTags, setUserTags] = useState<Tag[]>([]);
 
   // Fetch subtasks for active task
   const fetchSubtasks = useCallback(async (taskId: string) => {
@@ -154,17 +164,19 @@ export function useVoiceCoachData(): VoiceCoachData {
   // Fetch stats
   const fetchStats = useCallback(async (userId: string, dailyGoalMinutes: number) => {
     try {
-      const [daily, weekly, sessions, streakData] = await Promise.all([
+      const [daily, weekly, sessions, streakData, tags] = await Promise.all([
         getDailyProgress(userId, dailyGoalMinutes),
         getWeeklyStats(userId),
         getTodaySessions(userId),
         getProductivityStreak(userId),
+        getUserTags(userId),
       ]);
 
       setDailyProgress(daily);
       setWeeklyStats(weekly);
       setTodaySessions(sessions);
       setStreak(streakData);
+      setUserTags(tags);
     } catch (error) {
       console.error('Error fetching stats for voice coach:', error);
     }
@@ -266,6 +278,9 @@ export function useVoiceCoachData(): VoiceCoachData {
       user: {
         dailyGoalMinutes: timerStore.dailyGoalMinutes,
       },
+      tags: {
+        available: userTags.map(t => ({ name: t.name, color: t.color })),
+      },
     };
   }, [
     tasks,
@@ -276,6 +291,7 @@ export function useVoiceCoachData(): VoiceCoachData {
     dailyProgress,
     weeklyStats,
     streak,
+    userTags,
   ]);
 
   return voiceCoachData;

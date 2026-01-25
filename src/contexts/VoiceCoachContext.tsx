@@ -12,6 +12,8 @@ import { createSubtask, updateSubtask, deleteSubtask } from '@/lib/subtasks';
 import { SubtaskStatusEnum } from '@/types/subtasks';
 import { rateSession, addSessionNote } from '@/lib/voiceCoachStats';
 import { useAuth } from '@/components/AuthProvider';
+import { createComment, getCommentsByTaskId, deleteComment } from '@/lib/comments';
+import { createTag, getUserTags, deleteTag, Tag, TAG_COLORS } from '@/lib/tags';
 
 export type VoiceCoachStatus =
   | 'idle'
@@ -76,7 +78,25 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
   // Get context data for AI
   const voiceCoachData = useVoiceCoachData();
   const { refreshTasks } = useTasks();
-  const { startSession, completeSession: completeFocusSession } = useFocusSession();
+  const { startSession, completeSession: completeFocusSession, updateSessionTask } = useFocusSession();
+
+  // State for user tags (cached)
+  const [userTags, setUserTags] = useState<Tag[]>([]);
+
+  // Fetch user tags on mount
+  useEffect(() => {
+    if (user?.id) {
+      getUserTags(user.id).then(setUserTags).catch(console.error);
+    }
+  }, [user?.id]);
+
+  // Helper to refresh user tags
+  const refreshUserTags = useCallback(async () => {
+    if (user?.id) {
+      const tags = await getUserTags(user.id);
+      setUserTags(tags);
+    }
+  }, [user?.id]);
   const timerStore = useTimerStore();
 
   // Track if we've sent initial context
@@ -203,7 +223,17 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
         case 'edit_task': {
           // params format: "taskId|campo|valor"
           const [taskIdOrTitle, field, value] = action.params.split('|');
-          const task = findTask(taskIdOrTitle);
+
+          // Support for currentTaskId
+          let task;
+          if (taskIdOrTitle === 'currentTaskId') {
+            const activeId = timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId;
+            if (activeId) {
+              task = voiceCoachData.tasks.allPending.find(t => t.id === activeId);
+            }
+          } else {
+            task = findTask(taskIdOrTitle);
+          }
 
           if (!task) {
             console.warn('Task not found for edit:', taskIdOrTitle);
@@ -423,6 +453,317 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
           break;
         }
 
+        case 'change_session_task': {
+          // params: taskId or title
+          const identifier = action.params.trim();
+          const task = findTask(identifier);
+
+          if (task) {
+            await updateSessionTask(task.id);
+            console.log('[VoiceCoach] Session task changed to:', task.title);
+            forceContextUpdate();
+          } else {
+            console.warn('[VoiceCoach] Task not found for session change:', identifier);
+          }
+          break;
+        }
+
+        // ========== TASK STATUS ACTIONS ==========
+        case 'set_task_status': {
+          // params format: "taskId|status"
+          const [taskIdOrTitle, newStatus] = action.params.split('|');
+
+          // Support for currentTaskId
+          let task;
+          if (taskIdOrTitle === 'currentTaskId') {
+            const activeId = timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId;
+            if (activeId) {
+              task = voiceCoachData.tasks.allPending.find(t => t.id === activeId);
+            }
+          } else {
+            task = findTask(taskIdOrTitle);
+          }
+
+          if (!task) {
+            console.warn('[VoiceCoach] Task not found for status change:', taskIdOrTitle);
+            break;
+          }
+
+          const validStatuses = ['pending', 'in_progress', 'completed'];
+          const statusToSet = newStatus?.toLowerCase().trim();
+
+          if (!validStatuses.includes(statusToSet)) {
+            console.warn('[VoiceCoach] Invalid status:', newStatus);
+            break;
+          }
+
+          await updateTask(task.id, { status: statusToSet as 'pending' | 'in_progress' | 'completed' });
+          console.log('[VoiceCoach] Task status changed:', task.title, '->', statusToSet);
+          await refreshTasks();
+          forceContextUpdate();
+          break;
+        }
+
+        // ========== TAG ACTIONS ==========
+        case 'add_tag_to_task': {
+          // params format: "taskId|tagName"
+          const [taskIdOrTitle, tagName] = action.params.split('|');
+
+          // Support for currentTaskId
+          let task;
+          if (taskIdOrTitle === 'currentTaskId') {
+            const activeId = timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId;
+            if (activeId) {
+              task = voiceCoachData.tasks.allPending.find(t => t.id === activeId);
+            }
+          } else {
+            task = findTask(taskIdOrTitle);
+          }
+
+          if (!task) {
+            console.warn('[VoiceCoach] Task not found for adding tag:', taskIdOrTitle);
+            break;
+          }
+
+          const tagToAdd = tagName?.trim().toLowerCase();
+          if (!tagToAdd) {
+            console.warn('[VoiceCoach] Tag name is required');
+            break;
+          }
+
+          // Get current task to get existing tags
+          const fullTask = await getTaskById(task.id);
+          const currentTags = fullTask?.tags || [];
+
+          if (!currentTags.includes(tagToAdd)) {
+            await updateTask(task.id, { tags: [...currentTags, tagToAdd] });
+            console.log('[VoiceCoach] Tag added to task:', tagToAdd, '->', task.title);
+            await refreshTasks();
+            forceContextUpdate();
+          } else {
+            console.log('[VoiceCoach] Tag already exists on task:', tagToAdd);
+          }
+          break;
+        }
+
+        case 'remove_tag_from_task': {
+          // params format: "taskId|tagName"
+          const [taskIdOrTitle, tagName] = action.params.split('|');
+
+          // Support for currentTaskId
+          let task;
+          if (taskIdOrTitle === 'currentTaskId') {
+            const activeId = timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId;
+            if (activeId) {
+              task = voiceCoachData.tasks.allPending.find(t => t.id === activeId);
+            }
+          } else {
+            task = findTask(taskIdOrTitle);
+          }
+
+          if (!task) {
+            console.warn('[VoiceCoach] Task not found for removing tag:', taskIdOrTitle);
+            break;
+          }
+
+          const tagToRemove = tagName?.trim().toLowerCase();
+          if (!tagToRemove) {
+            console.warn('[VoiceCoach] Tag name is required');
+            break;
+          }
+
+          // Get current task to get existing tags
+          const fullTask = await getTaskById(task.id);
+          const currentTags = fullTask?.tags || [];
+
+          const updatedTags = currentTags.filter(t => t.toLowerCase() !== tagToRemove);
+          if (updatedTags.length < currentTags.length) {
+            await updateTask(task.id, { tags: updatedTags });
+            console.log('[VoiceCoach] Tag removed from task:', tagToRemove, '<-', task.title);
+            await refreshTasks();
+            forceContextUpdate();
+          } else {
+            console.log('[VoiceCoach] Tag not found on task:', tagToRemove);
+          }
+          break;
+        }
+
+        case 'create_tag': {
+          // params format: "tagName|color"
+          if (!user) {
+            console.warn('[VoiceCoach] Cannot create tag: user not authenticated');
+            break;
+          }
+
+          const [tagName, colorName] = action.params.split('|');
+          const name = tagName?.trim();
+
+          if (!name) {
+            console.warn('[VoiceCoach] Tag name is required');
+            break;
+          }
+
+          // Validate color or default to blue
+          const validColors = TAG_COLORS.map(c => c.name);
+          const color = validColors.includes(colorName?.toLowerCase()) ? colorName.toLowerCase() : 'blue';
+
+          await createTag({ user_id: user.id, name, color });
+          console.log('[VoiceCoach] Tag created:', name, 'with color:', color);
+          await refreshUserTags();
+          break;
+        }
+
+        case 'list_tags': {
+          // No params - returns user tags
+          console.log('[VoiceCoach] User tags:', userTags.map(t => `${t.name} (${t.color})`).join(', '));
+          break;
+        }
+
+        case 'delete_tag': {
+          // params format: "tagName|confirmar"
+          const [tagName, confirmation] = action.params.split('|');
+
+          if (confirmation?.toLowerCase() !== 'confirmar' && confirmation?.toLowerCase() !== 'confirm') {
+            console.warn('[VoiceCoach] Tag deletion requires confirmation');
+            break;
+          }
+
+          const tagToDelete = userTags.find(
+            t => t.name.toLowerCase() === tagName?.toLowerCase().trim()
+          );
+
+          if (tagToDelete) {
+            await deleteTag(tagToDelete.id);
+            console.log('[VoiceCoach] Tag deleted:', tagToDelete.name);
+            await refreshUserTags();
+          } else {
+            console.warn('[VoiceCoach] Tag not found:', tagName);
+          }
+          break;
+        }
+
+        // ========== COMMENT ACTIONS ==========
+        case 'add_comment': {
+          // params format: "taskId|comment text"
+          if (!user) {
+            console.warn('[VoiceCoach] Cannot add comment: user not authenticated');
+            break;
+          }
+
+          const [taskIdOrTitle, ...commentParts] = action.params.split('|');
+          const commentText = commentParts.join('|').trim();
+
+          // Use provided taskId or fall back to active task
+          let taskId = taskIdOrTitle;
+          if (taskIdOrTitle === 'currentTaskId' || !taskIdOrTitle) {
+            taskId = timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId || '';
+          } else {
+            const task = findTask(taskIdOrTitle);
+            if (task) taskId = task.id;
+          }
+
+          if (!taskId) {
+            console.warn('[VoiceCoach] Cannot add comment: no task specified or active');
+            break;
+          }
+
+          if (!commentText) {
+            console.warn('[VoiceCoach] Comment text is required');
+            break;
+          }
+
+          await createComment({ user_id: user.id, task_id: taskId, content: commentText });
+          console.log('[VoiceCoach] Comment added to task');
+          break;
+        }
+
+        case 'list_comments': {
+          // params: taskId or title (optional, defaults to active task)
+          const identifier = action.params.trim();
+
+          let taskId = identifier;
+          if (identifier === 'currentTaskId' || !identifier) {
+            taskId = timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId || '';
+          } else {
+            const task = findTask(identifier);
+            if (task) taskId = task.id;
+          }
+
+          if (!taskId) {
+            console.warn('[VoiceCoach] Cannot list comments: no task specified or active');
+            break;
+          }
+
+          const comments = await getCommentsByTaskId(taskId);
+          console.log('[VoiceCoach] Task comments:', comments.map(c => c.content).join('; '));
+          break;
+        }
+
+        case 'delete_comment': {
+          // params format: "commentId|confirmar"
+          const [commentId, confirmation] = action.params.split('|');
+
+          if (confirmation?.toLowerCase() !== 'confirmar' && confirmation?.toLowerCase() !== 'confirm') {
+            console.warn('[VoiceCoach] Comment deletion requires confirmation');
+            break;
+          }
+
+          if (!commentId?.trim()) {
+            console.warn('[VoiceCoach] Comment ID is required');
+            break;
+          }
+
+          await deleteComment(commentId.trim());
+          console.log('[VoiceCoach] Comment deleted');
+          break;
+        }
+
+        // ========== SUBTASK EDIT ACTION ==========
+        case 'edit_subtask': {
+          // params format: "subtaskId|campo|valor"
+          const [subtaskIdOrTitle, field, value] = action.params.split('|');
+
+          const subtask = voiceCoachData.subtasks.activeTaskSubtasks.find(
+            s => s.id === subtaskIdOrTitle || s.title.toLowerCase().includes(subtaskIdOrTitle?.toLowerCase() || '')
+          );
+
+          if (!subtask) {
+            console.warn('[VoiceCoach] Subtask not found:', subtaskIdOrTitle);
+            break;
+          }
+
+          const updates: Record<string, unknown> = {};
+
+          switch (field?.toLowerCase()) {
+            case 'title':
+            case 'titulo':
+              updates.title = value?.trim();
+              break;
+            case 'priority':
+            case 'prioridad':
+              const priorityNum = parseInt(value, 10);
+              if (priorityNum >= 1 && priorityNum <= 4) {
+                updates.priority = priorityNum;
+              }
+              break;
+            case 'status':
+            case 'estado':
+              if (['pending', 'in_progress', 'completed'].includes(value?.toLowerCase())) {
+                updates.status = value.toLowerCase();
+              }
+              break;
+            default:
+              console.warn('[VoiceCoach] Unknown subtask field:', field);
+          }
+
+          if (Object.keys(updates).length > 0) {
+            await updateSubtask(subtask.id, updates);
+            console.log('[VoiceCoach] Subtask edited:', subtask.title, updates);
+            forceContextUpdate();
+          }
+          break;
+        }
+
         default:
           console.warn('[VoiceCoach] Unknown action:', action.name);
       }
@@ -432,12 +773,15 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
   }, [
     startSession,
     completeFocusSession,
+    updateSessionTask,
     timerStore,
     refreshTasks,
     voiceCoachData,
     user,
     findTask,
     forceContextUpdate,
+    userTags,
+    refreshUserTags,
   ]);
 
   // Add message to conversation history
