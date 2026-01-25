@@ -249,7 +249,9 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
               break;
             case 'priority':
             case 'prioridad':
-              const priorityNum = parseInt(value, 10);
+              // Support both string ("high", "medium", "low") and number formats
+              const priorityMap: Record<string, number> = { high: 1, alta: 1, medium: 2, media: 2, low: 3, baja: 3 };
+              const priorityNum = priorityMap[value?.toLowerCase()] || parseInt(value, 10);
               if (priorityNum >= 1 && priorityNum <= 4) {
                 updates.priority = priorityNum;
               }
@@ -265,8 +267,8 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
               break;
             case 'status':
             case 'estado':
-              if (['pending', 'in_progress', 'completed'].includes(value)) {
-                updates.status = value;
+              if (['pending', 'in_progress', 'completed'].includes(value?.toLowerCase())) {
+                updates.status = value.toLowerCase();
               }
               break;
             default:
@@ -536,7 +538,11 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
           const currentTags = fullTask?.tags || [];
 
           if (!currentTags.includes(tagToAdd)) {
-            await updateTask(task.id, { tags: [...currentTags, tagToAdd] });
+            await updateTask(task.id, {
+              tags: [...currentTags, tagToAdd],
+              priority: fullTask.priority,
+              status: fullTask.status,
+            });
             console.log('[VoiceCoach] Tag added to task:', tagToAdd, '->', task.title);
             await refreshTasks();
             forceContextUpdate();
@@ -576,9 +582,13 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
           const fullTask = await getTaskById(task.id);
           const currentTags = fullTask?.tags || [];
 
-          const updatedTags = currentTags.filter(t => t.toLowerCase() !== tagToRemove);
+          const updatedTags = currentTags.filter((t: string) => t.toLowerCase() !== tagToRemove);
           if (updatedTags.length < currentTags.length) {
-            await updateTask(task.id, { tags: updatedTags });
+            await updateTask(task.id, {
+              tags: updatedTags,
+              priority: fullTask.priority,
+              status: fullTask.status,
+            });
             console.log('[VoiceCoach] Tag removed from task:', tagToRemove, '<-', task.title);
             await refreshTasks();
             forceContextUpdate();
@@ -604,7 +614,7 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
           }
 
           // Validate color or default to blue
-          const validColors = TAG_COLORS.map(c => c.name);
+          const validColors: string[] = TAG_COLORS.map(c => c.name);
           const color = validColors.includes(colorName?.toLowerCase()) ? colorName.toLowerCase() : 'blue';
 
           await createTag({ user_id: user.id, name, color });
@@ -796,8 +806,459 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
     return newMessage;
   }, []);
 
-  // ElevenLabs conversation hook
+  // Helper to resolve taskId (handles currentTaskId special value)
+  const resolveTaskId = useCallback((taskIdParam: string | undefined): string | null => {
+    if (!taskIdParam || taskIdParam === 'currentTaskId') {
+      return timerStore.activeTaskId || voiceCoachData.sessions.activeSessionTaskId || null;
+    }
+    const task = findTask(taskIdParam);
+    return task?.id || null;
+  }, [timerStore.activeTaskId, voiceCoachData.sessions.activeSessionTaskId, findTask]);
+
+  // ElevenLabs conversation hook with Client Tools
   const conversation = useConversation({
+    // ========== CLIENT TOOLS (executed silently, not spoken) ==========
+    clientTools: {
+      // ===== TIMER ACTIONS =====
+      start_focus_session: async (params: { duration?: number }) => {
+        const duration = params.duration || 25;
+        await startSession({ duration });
+        console.log('[VoiceCoach] Client Tool: start_focus_session', duration);
+        return `Sesión de ${duration} minutos iniciada`;
+      },
+      pause_timer: async () => {
+        timerStore.setIsRunning(false);
+        console.log('[VoiceCoach] Client Tool: pause_timer');
+        return 'Timer pausado';
+      },
+      resume_timer: async () => {
+        if (timerStore.timeInSeconds > 0) {
+          timerStore.setIsRunning(true);
+        }
+        console.log('[VoiceCoach] Client Tool: resume_timer');
+        return 'Timer reanudado';
+      },
+      complete_session: async () => {
+        await completeFocusSession();
+        console.log('[VoiceCoach] Client Tool: complete_session');
+        return 'Sesión completada';
+      },
+
+      // ===== TASK CRUD ACTIONS =====
+      create_task: async (params: { title: string; priority?: number; description?: string }) => {
+        if (!user) return 'Error: usuario no autenticado';
+        if (!params.title?.trim()) return 'Error: título requerido';
+
+        await createTask({
+          user_id: user.id,
+          title: params.title.trim(),
+          priority: Math.min(Math.max(params.priority || 2, 1), 4),
+          status: 'pending',
+          description: params.description?.trim() || null,
+          due_date: null,
+          tags: [],
+          ai_metadata: { created_by: 'voice_coach' }
+        });
+        console.log('[VoiceCoach] Client Tool: create_task', params.title);
+        await refreshTasks();
+        forceContextUpdate();
+        return `Tarea "${params.title}" creada`;
+      },
+
+      complete_task: async (params: { taskId: string }) => {
+        const task = findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        await updateTask(task.id, { status: 'completed' });
+        console.log('[VoiceCoach] Client Tool: complete_task', task.title);
+        await refreshTasks();
+        forceContextUpdate();
+        return `Tarea "${task.title}" completada`;
+      },
+
+      edit_task: async (params: {
+        taskId: string;
+        // New format: direct fields from ElevenLabs
+        title?: string;
+        description?: string;
+        priority?: string | number;
+        due_date?: string;
+        status?: string;
+        // Legacy format: field/value
+        field?: string;
+        value?: string;
+      }) => {
+        const resolvedId = resolveTaskId(params.taskId);
+        const task = resolvedId ? voiceCoachData.tasks.allPending.find(t => t.id === resolvedId) : findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        const updates: Record<string, unknown> = {};
+
+        // New format: direct fields from ElevenLabs
+        if (params.title) {
+          updates.title = params.title.trim();
+        }
+        if (params.description !== undefined) {
+          updates.description = params.description?.trim() || null;
+        }
+        if (params.priority !== undefined) {
+          // Handle both string ("high", "medium", "low") and number (1-4) formats
+          const priorityMap: Record<string, number> = { high: 1, alta: 1, medium: 2, media: 2, low: 3, baja: 3 };
+          const priorityValue = typeof params.priority === 'string'
+            ? (priorityMap[params.priority.toLowerCase()] || parseInt(params.priority, 10))
+            : params.priority;
+          if (priorityValue >= 1 && priorityValue <= 4) {
+            updates.priority = priorityValue;
+          }
+        }
+        if (params.due_date !== undefined) {
+          updates.due_date = params.due_date?.trim() || null;
+        }
+        if (params.status) {
+          const statusLower = params.status.toLowerCase();
+          if (['pending', 'in_progress', 'completed'].includes(statusLower)) {
+            updates.status = statusLower;
+          }
+        }
+
+        // Legacy format: field + value (fallback if no direct fields provided)
+        if (params.field && params.value !== undefined && Object.keys(updates).length === 0) {
+          switch (params.field.toLowerCase()) {
+            case 'title':
+            case 'titulo':
+              updates.title = params.value.trim();
+              break;
+            case 'priority':
+            case 'prioridad':
+              const priorityMap: Record<string, number> = { high: 1, alta: 1, medium: 2, media: 2, low: 3, baja: 3 };
+              const priorityNum = priorityMap[params.value.toLowerCase()] || parseInt(params.value, 10);
+              if (priorityNum >= 1 && priorityNum <= 4) updates.priority = priorityNum;
+              break;
+            case 'description':
+            case 'descripcion':
+              updates.description = params.value.trim() || null;
+              break;
+            case 'due_date':
+            case 'fecha':
+              updates.due_date = params.value.trim() || null;
+              break;
+            case 'status':
+            case 'estado':
+              if (['pending', 'in_progress', 'completed'].includes(params.value.toLowerCase())) {
+                updates.status = params.value.toLowerCase();
+              }
+              break;
+          }
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await updateTask(task.id, updates);
+          console.log('[VoiceCoach] Client Tool: edit_task', task.title, updates);
+          await refreshTasks();
+          forceContextUpdate();
+          return `Tarea "${task.title}" actualizada`;
+        }
+        return 'No se especificaron campos válidos para actualizar';
+      },
+
+      delete_task: async (params: { taskId: string; confirmation: string }) => {
+        if (params.confirmation?.toLowerCase() !== 'confirmar' && params.confirmation?.toLowerCase() !== 'confirm') {
+          return 'Eliminación requiere confirmación';
+        }
+        const task = findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        await deleteTask(task.id);
+        console.log('[VoiceCoach] Client Tool: delete_task', task.title);
+        await refreshTasks();
+        forceContextUpdate();
+        return `Tarea "${task.title}" eliminada`;
+      },
+
+      set_task_status: async (params: { taskId: string; status: string }) => {
+        const resolvedId = resolveTaskId(params.taskId);
+        const task = resolvedId ? voiceCoachData.tasks.allPending.find(t => t.id === resolvedId) : findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        const validStatuses = ['pending', 'in_progress', 'completed'];
+        const statusToSet = params.status?.toLowerCase().trim();
+        if (!validStatuses.includes(statusToSet)) return 'Estado no válido';
+
+        await updateTask(task.id, { status: statusToSet as 'pending' | 'in_progress' | 'completed' });
+        console.log('[VoiceCoach] Client Tool: set_task_status', task.title, statusToSet);
+        await refreshTasks();
+        forceContextUpdate();
+        return `Estado de "${task.title}" cambiado a ${statusToSet}`;
+      },
+
+      // ===== TAG ACTIONS =====
+      add_tag_to_task: async (params: { taskId: string; tagName: string }) => {
+        const resolvedId = resolveTaskId(params.taskId);
+        const task = resolvedId ? voiceCoachData.tasks.allPending.find(t => t.id === resolvedId) : findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        const tagToAdd = params.tagName?.trim().toLowerCase();
+        if (!tagToAdd) return 'Nombre del tag requerido';
+
+        const fullTask = await getTaskById(task.id);
+        const currentTags = fullTask?.tags || [];
+
+        if (!currentTags.includes(tagToAdd)) {
+          await updateTask(task.id, {
+            tags: [...currentTags, tagToAdd],
+            priority: fullTask.priority,
+            status: fullTask.status,
+          });
+          console.log('[VoiceCoach] Client Tool: add_tag_to_task', tagToAdd, task.title);
+          await refreshTasks();
+          forceContextUpdate();
+          return `Tag "${tagToAdd}" agregado a "${task.title}"`;
+        }
+        return `Tag "${tagToAdd}" ya existe en la tarea`;
+      },
+
+      remove_tag_from_task: async (params: { taskId: string; tagName: string }) => {
+        const resolvedId = resolveTaskId(params.taskId);
+        const task = resolvedId ? voiceCoachData.tasks.allPending.find(t => t.id === resolvedId) : findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        const tagToRemove = params.tagName?.trim().toLowerCase();
+        if (!tagToRemove) return 'Nombre del tag requerido';
+
+        const fullTask = await getTaskById(task.id);
+        const currentTags = fullTask?.tags || [];
+        const updatedTags = currentTags.filter((t: string) => t.toLowerCase() !== tagToRemove);
+
+        if (updatedTags.length < currentTags.length) {
+          await updateTask(task.id, {
+            tags: updatedTags,
+            priority: fullTask.priority,
+            status: fullTask.status,
+          });
+          console.log('[VoiceCoach] Client Tool: remove_tag_from_task', tagToRemove, task.title);
+          await refreshTasks();
+          forceContextUpdate();
+          return `Tag "${tagToRemove}" removido de "${task.title}"`;
+        }
+        return `Tag "${tagToRemove}" no encontrado en la tarea`;
+      },
+
+      create_tag: async (params: { name: string; color?: string }) => {
+        if (!user) return 'Error: usuario no autenticado';
+        const name = params.name?.trim();
+        if (!name) return 'Nombre del tag requerido';
+
+        const validColors: string[] = TAG_COLORS.map(c => c.name);
+        const color = validColors.includes(params.color?.toLowerCase() || '') ? params.color!.toLowerCase() : 'blue';
+
+        await createTag({ user_id: user.id, name, color });
+        console.log('[VoiceCoach] Client Tool: create_tag', name, color);
+        await refreshUserTags();
+        return `Tag "${name}" creado con color ${color}`;
+      },
+
+      list_tags: async () => {
+        const tagsList = userTags.map(t => `${t.name} (${t.color})`).join(', ');
+        console.log('[VoiceCoach] Client Tool: list_tags');
+        return tagsList || 'Sin tags';
+      },
+
+      delete_tag: async (params: { tagName: string; confirmation: string }) => {
+        if (params.confirmation?.toLowerCase() !== 'confirmar' && params.confirmation?.toLowerCase() !== 'confirm') {
+          return 'Eliminación requiere confirmación';
+        }
+        const tagToDelete = userTags.find(t => t.name.toLowerCase() === params.tagName?.toLowerCase().trim());
+        if (!tagToDelete) return 'Tag no encontrado';
+
+        await deleteTag(tagToDelete.id);
+        console.log('[VoiceCoach] Client Tool: delete_tag', tagToDelete.name);
+        await refreshUserTags();
+        return `Tag "${tagToDelete.name}" eliminado`;
+      },
+
+      // ===== SESSION ACTIONS =====
+      rate_session: async (params: { rating: number }) => {
+        const rating = params.rating;
+        const sessionId = voiceCoachData.sessions.activeSessionId;
+
+        if (!sessionId) {
+          const recentSession = voiceCoachData.sessions.todaySessions.find(s => s.status === 'completed');
+          if (recentSession) {
+            await rateSession(recentSession.id, rating);
+            console.log('[VoiceCoach] Client Tool: rate_session (recent)', rating);
+            return `Sesión calificada con ${rating} estrellas`;
+          }
+          return 'No hay sesión para calificar';
+        }
+
+        await rateSession(sessionId, rating);
+        console.log('[VoiceCoach] Client Tool: rate_session', rating);
+        return `Sesión calificada con ${rating} estrellas`;
+      },
+
+      add_session_note: async (params: { note: string }) => {
+        const note = params.note?.trim();
+        if (!note) return 'Texto de nota requerido';
+
+        const sessionId = voiceCoachData.sessions.activeSessionId;
+        if (!sessionId) {
+          const recentSession = voiceCoachData.sessions.todaySessions.find(s => s.status === 'completed');
+          if (recentSession) {
+            await addSessionNote(recentSession.id, note);
+            console.log('[VoiceCoach] Client Tool: add_session_note (recent)');
+            return 'Nota agregada a la sesión';
+          }
+          return 'No hay sesión para agregar nota';
+        }
+
+        await addSessionNote(sessionId, note);
+        console.log('[VoiceCoach] Client Tool: add_session_note');
+        return 'Nota agregada a la sesión activa';
+      },
+
+      change_session_task: async (params: { taskId: string }) => {
+        const task = findTask(params.taskId);
+        if (!task) return 'Tarea no encontrada';
+
+        await updateSessionTask(task.id);
+        console.log('[VoiceCoach] Client Tool: change_session_task', task.title);
+        forceContextUpdate();
+        return `Sesión cambiada a "${task.title}"`;
+      },
+
+      // ===== SUBTASK ACTIONS =====
+      create_subtask: async (params: { taskId?: string; title: string; priority?: number }) => {
+        if (!user) return 'Error: usuario no autenticado';
+        if (!params.title?.trim()) return 'Título de subtarea requerido';
+
+        const taskId = resolveTaskId(params.taskId || 'currentTaskId');
+        if (!taskId) return 'No hay tarea activa para agregar subtarea';
+
+        await createSubtask({
+          user_id: user.id,
+          task_id: taskId,
+          title: params.title.trim(),
+          priority: params.priority || 2,
+        });
+        console.log('[VoiceCoach] Client Tool: create_subtask', params.title);
+        forceContextUpdate();
+        return `Subtarea "${params.title}" creada`;
+      },
+
+      complete_subtask: async (params: { subtaskId: string }) => {
+        const subtask = voiceCoachData.subtasks.activeTaskSubtasks.find(
+          s => s.id === params.subtaskId || s.title.toLowerCase().includes(params.subtaskId.toLowerCase())
+        );
+        if (!subtask) return 'Subtarea no encontrada';
+
+        await updateSubtask(subtask.id, { status: SubtaskStatusEnum.COMPLETED });
+        console.log('[VoiceCoach] Client Tool: complete_subtask', subtask.title);
+        forceContextUpdate();
+        return `Subtarea "${subtask.title}" completada`;
+      },
+
+      edit_subtask: async (params: { subtaskId: string; field: string; value: string }) => {
+        const subtask = voiceCoachData.subtasks.activeTaskSubtasks.find(
+          s => s.id === params.subtaskId || s.title.toLowerCase().includes(params.subtaskId?.toLowerCase() || '')
+        );
+        if (!subtask) return 'Subtarea no encontrada';
+
+        const updates: Record<string, unknown> = {};
+        switch (params.field?.toLowerCase()) {
+          case 'title':
+          case 'titulo':
+            updates.title = params.value?.trim();
+            break;
+          case 'priority':
+          case 'prioridad':
+            const priorityNum = parseInt(params.value, 10);
+            if (priorityNum >= 1 && priorityNum <= 4) updates.priority = priorityNum;
+            break;
+          case 'status':
+          case 'estado':
+            if (['pending', 'in_progress', 'completed'].includes(params.value?.toLowerCase())) {
+              updates.status = params.value.toLowerCase();
+            }
+            break;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await updateSubtask(subtask.id, updates);
+          console.log('[VoiceCoach] Client Tool: edit_subtask', subtask.title, updates);
+          forceContextUpdate();
+          return `Subtarea "${subtask.title}" actualizada`;
+        }
+        return 'Campo no válido';
+      },
+
+      delete_subtask: async (params: { subtaskId: string }) => {
+        const subtask = voiceCoachData.subtasks.activeTaskSubtasks.find(
+          s => s.id === params.subtaskId || s.title.toLowerCase().includes(params.subtaskId.toLowerCase())
+        );
+        if (!subtask) return 'Subtarea no encontrada';
+
+        await deleteSubtask(subtask.id);
+        console.log('[VoiceCoach] Client Tool: delete_subtask', subtask.title);
+        forceContextUpdate();
+        return `Subtarea "${subtask.title}" eliminada`;
+      },
+
+      // ===== COMMENT ACTIONS =====
+      add_comment: async (params: { taskId?: string; content: string }) => {
+        if (!user) return 'Error: usuario no autenticado';
+        if (!params.content?.trim()) return 'Texto del comentario requerido';
+
+        const taskId = resolveTaskId(params.taskId || 'currentTaskId');
+        if (!taskId) return 'No hay tarea para agregar comentario';
+
+        await createComment({ user_id: user.id, task_id: taskId, content: params.content.trim() });
+        console.log('[VoiceCoach] Client Tool: add_comment');
+        return 'Comentario agregado';
+      },
+
+      list_comments: async (params: { taskId?: string }) => {
+        const taskId = resolveTaskId(params.taskId || 'currentTaskId');
+        if (!taskId) return 'No hay tarea especificada';
+
+        const comments = await getCommentsByTaskId(taskId);
+        console.log('[VoiceCoach] Client Tool: list_comments', comments.length);
+        return comments.length > 0
+          ? comments.map(c => c.content).join('; ')
+          : 'Sin comentarios';
+      },
+
+      delete_comment: async (params: { commentId: string; confirmation: string }) => {
+        if (params.confirmation?.toLowerCase() !== 'confirmar' && params.confirmation?.toLowerCase() !== 'confirm') {
+          return 'Eliminación requiere confirmación';
+        }
+        if (!params.commentId?.trim()) return 'ID de comentario requerido';
+
+        await deleteComment(params.commentId.trim());
+        console.log('[VoiceCoach] Client Tool: delete_comment');
+        return 'Comentario eliminado';
+      },
+
+      // ===== SEARCH/INFO ACTIONS =====
+      search_task: async (params: { query: string }) => {
+        if (!user) return 'Error: usuario no autenticado';
+        const results = await searchTasks(user.id, params.query);
+        console.log('[VoiceCoach] Client Tool: search_task', results.length);
+        return results.slice(0, 5).map(t => t.title).join(', ') || 'Sin resultados';
+      },
+
+      get_task_details: async (params: { taskId: string }) => {
+        const taskSummary = findTask(params.taskId);
+        if (!taskSummary) return 'Tarea no encontrada';
+
+        const fullTask = await getTaskById(taskSummary.id);
+        console.log('[VoiceCoach] Client Tool: get_task_details', taskSummary.title);
+        return fullTask
+          ? `${fullTask.title} - P${fullTask.priority} - ${fullTask.status}${fullTask.description ? ` - ${fullTask.description}` : ''}`
+          : 'Detalles no disponibles';
+      },
+    },
+
+    // ========== CALLBACKS ==========
     onConnect: () => {
       console.log('ElevenLabs connected');
       setStatus('listening');
@@ -820,18 +1281,23 @@ export function VoiceCoachProvider({ children }: { children: React.ReactNode }) 
       } else if (message.source === 'ai') {
         // Agent response
         if (message.message) {
+          // Parse and clean any remaining action markers (fallback)
           const { cleanText, actions } = parseActions(message.message);
 
           if (cleanText) {
             addMessage('assistant', cleanText);
           }
 
-          // Execute any actions found in the response
+          // Execute any legacy actions found in the response (fallback for backwards compatibility)
           for (const action of actions) {
+            console.log('[VoiceCoach] Legacy action marker detected:', action.name);
             executeAction(action);
           }
         }
       }
+    },
+    onUnhandledClientToolCall: (toolCall) => {
+      console.warn('[VoiceCoach] Unhandled client tool call:', toolCall);
     },
     onModeChange: (mode) => {
       console.log('Mode changed:', mode);
