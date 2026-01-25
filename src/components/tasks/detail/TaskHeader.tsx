@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { VoiceCoachHeaderButton } from '@/components/voice';
 
 interface TaskHeaderProps {
   taskId: string;
@@ -83,6 +84,9 @@ export function TaskHeader({
             <span className="text-sm font-medium hidden sm:inline">Preguntar a IA</span>
           </button>
         )}
+
+        {/* Voice Coach Toggle */}
+        <VoiceCoachHeaderButton />
 
         {/* Timer Toggle */}
         <button

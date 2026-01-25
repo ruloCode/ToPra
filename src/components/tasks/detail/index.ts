@@ -4,5 +4,6 @@ export { TaskTitle } from './TaskTitle';
 export { TaskPropertiesGrid } from './TaskPropertiesGrid';
 export { TaskDescription } from './TaskDescription';
 export { SubtasksSection } from './SubtasksSection';
+export { AttachmentsSection } from './AttachmentsSection';
 export { TaskFocusSection } from './TaskFocusSection';
 export { ActivitySidebar } from './ActivitySidebar';

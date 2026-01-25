@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Mic, MicOff, Loader2, Volume2 } from 'lucide-react';
 import { useVoiceCoach } from '@/contexts/VoiceCoachContext';
 import { cn } from '@/lib/utils';
@@ -156,9 +157,13 @@ export function VoiceButton() {
   const { status, isOpen, toggleCoach, isSupported } = useVoiceCoach();
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
+  const pathname = usePathname();
 
-  // Hide button when voice coach is open (widget is shown instead)
-  if (!isSupported || isOpen) {
+  // Check if we're on a task detail page (pattern: /tasks/[id])
+  const isTaskDetailPage = pathname?.startsWith('/tasks/') && pathname !== '/tasks';
+
+  // Hide button when voice coach is open, not supported, or on task detail page
+  if (!isSupported || isOpen || isTaskDetailPage) {
     return null;
   }
 

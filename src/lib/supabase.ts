@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let supabaseInstance: SupabaseClient | null = null;
 
-function getSupabaseClient(): SupabaseClient {
+export function getSupabaseClient(): SupabaseClient {
   if (supabaseInstance) {
     return supabaseInstance;
   }
@@ -113,6 +113,22 @@ export type Database = {
           updated_at: string;
           completed_at: string | null;
           ai_generated: boolean;
+        };
+      };
+      task_attachments: {
+        Row: {
+          id: string;
+          user_id: string;
+          task_id: string;
+          file_name: string;
+          file_size: number;
+          file_type: string;
+          mime_type: string;
+          storage_path: string;
+          public_url: string | null;
+          description: string | null;
+          created_at: string;
+          updated_at: string;
         };
       };
     };

@@ -13,6 +13,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { createFocusSession, updateFocusSession, FocusSessionStatus, getFocusSessions } from '@/lib/focus';
 import { useComments } from '@/hooks/useComments';
 import { useSubtasks } from '@/hooks/useSubtasks';
+import { useAttachments } from '@/hooks/useAttachments';
+import { useVoiceMemo } from '@/hooks/useVoiceMemo';
 
 // Import new components
 import {
@@ -22,10 +24,12 @@ import {
   TaskPropertiesGrid,
   TaskDescription,
   SubtasksSection,
+  AttachmentsSection,
   TaskFocusSection,
   ActivitySidebar,
 } from '@/components/tasks/detail';
 import { AIAssistantPanel } from '@/components/ai';
+import { VoiceMemosSection } from '@/components/voice';
 
 // Type for focus sessions with task info
 type FocusSessionWithTask = {
@@ -89,6 +93,37 @@ export default function TaskDetailPage() {
     completedCount,
     totalCount,
   } = useSubtasks(id as string, user?.id);
+
+  // Attachments hook
+  const {
+    attachments,
+    isLoading: isLoadingAttachments,
+    isUploading,
+    uploadProgress,
+    upload: uploadAttachment,
+    remove: removeAttachment,
+    download: downloadAttachment,
+    imageCount,
+    documentCount,
+    totalCount: attachmentCount,
+  } = useAttachments(id as string, user?.id);
+
+  // Voice memos hook
+  const {
+    recording,
+    isSupported: voiceSupported,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    cancelRecording,
+    voiceMemos,
+    isLoading: isLoadingVoiceMemos,
+    saveAndTranscribe,
+    deleteMemo,
+    isTranscribing,
+    transcriptionProgress,
+  } = useVoiceMemo(id as string, user?.id);
 
   // Fetch task
   const fetchTask = useCallback(async () => {
@@ -577,6 +612,35 @@ export default function TaskDetailPage() {
             description={task.description}
             onSave={handleDescriptionSave}
             isLoading={isUpdating}
+          />
+
+          <AttachmentsSection
+            attachments={attachments}
+            isLoading={isLoadingAttachments}
+            isUploading={isUploading}
+            uploadProgress={uploadProgress}
+            totalCount={attachmentCount}
+            imageCount={imageCount}
+            documentCount={documentCount}
+            onUpload={uploadAttachment}
+            onDownload={downloadAttachment}
+            onDelete={removeAttachment}
+          />
+
+          <VoiceMemosSection
+            recording={recording}
+            isSupported={voiceSupported}
+            isTranscribing={isTranscribing}
+            transcriptionProgress={transcriptionProgress}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            onPauseRecording={pauseRecording}
+            onResumeRecording={resumeRecording}
+            onCancelRecording={cancelRecording}
+            onSaveRecording={saveAndTranscribe}
+            voiceMemos={voiceMemos}
+            isLoading={isLoadingVoiceMemos}
+            onDeleteMemo={deleteMemo}
           />
 
           <SubtasksSection
